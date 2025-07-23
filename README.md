@@ -1,15 +1,20 @@
-# Any client
+# Any tasks
 
 Anytype has great desktop, Android and iOS clients. This project focuses on cross-platform compatibility using Dioxus, a modern Rust framework.
 
 The client is currently in active development and supports only the desktop version of Anytype. The android version will beome available upon the release of the Anytype API for Android.
 
+
+<div align="center">
+  <img src="./notes/ui.jpg" width="500">
+</div>
+
 ## Features
 
-[x] Auth with Bearer token
-[x] Chose space
-[x] View tasks
-[ ] ...
+- [x] Auth with Bearer token
+- [x] Chose space
+- [x] View tasks
+- [ ] ...
 
 ## Development
 
