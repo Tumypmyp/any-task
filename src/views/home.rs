@@ -4,11 +4,9 @@ use crate::Route;
 const STYLE_CSS: Asset = asset!("/assets/styling/style.css");
 
 #[component]
-pub fn Home() -> Element {
-    
+pub fn Home() -> Element {   
     _ = document::eval("document.documentElement.setAttribute('data-theme', 'dark');");
     
-    let nav = navigator();
     let spaces = use_resource(|| async move {
         let mut config = openapi::apis::configuration::Configuration::new();
         config.bearer_access_token = Some(TOKEN.read().clone());
@@ -43,8 +41,7 @@ pub fn Home() -> Element {
 pub static TOKEN: GlobalSignal<String> = Global::new(|| "".to_string());
 #[component]
 pub fn Token() -> Element {
-    let mut name = use_signal(|| "".to_string());
-
+    // let mut name = use_signal(|| "".to_string());
     rsx! {
         document::Link { rel: "stylesheet", href: STYLE_CSS }
         input {

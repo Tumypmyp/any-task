@@ -2,8 +2,7 @@
 
 Anytype has great desktop, Android and iOS clients. This project focuses on cross-platform compatibility using Dioxus, a modern Rust framework.
 
-The client is currently in active development and supports only the desktop version of Anytype. The android version will beome available upon the release of the Anytype API for Android.
-
+The client is currently in active development and supports only the desktop version of Anytype. The Android version will become available upon the release of the Anytype API for Android.
 
 <div align="center">
   <img src="./notes/ui.jpg" width="500">

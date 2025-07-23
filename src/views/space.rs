@@ -2,6 +2,7 @@ use crate::views::Search;
 use dioxus::prelude::*;
 use crate::views::actions::Actions;
 use crate::views::*;
+use crate::Route;
 
 #[component]
 pub fn Space(id: String) -> Element {
@@ -12,17 +13,26 @@ pub fn Space(id: String) -> Element {
             config.bearer_access_token = Some(home::TOKEN.read().clone());
 
             openapi::apis::spaces_api::get_space(&config, "2025-05-20", &value.read())
-                .await
-                .unwrap()
+                .await           
     });
     
-    match space.read().clone() {
-        Some(s ) => {
+    match &*space.read() {
+        Some(Ok(s)) => {
             name.set(s.clone().space.clone().unwrap().name.unwrap());
-            tracing::debug!("{:#?}", s.space.unwrap().name.unwrap());
+            tracing::debug!("{:#?}", s.space.clone().unwrap().name.unwrap());
         },
-        _ => {}
+        Some(Err(e)) => {
+            tracing::debug!("error 1.1 {} ", e);
+        
+            let nav = navigator();
+            nav.push(Route::Home{});
+        
+        },
+        _ => {
+            tracing::debug!("error 1 ");
+        }
     };
+    
     rsx! {
         div { id: "title-holder",
             button { class: "button", "data-style": "ghost", "{name}" }

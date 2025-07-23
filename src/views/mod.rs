@@ -9,3 +9,6 @@ pub use actions::Actions;
 
 mod search;
 pub use search::Search;
+
+mod task;
+pub use task::Task;

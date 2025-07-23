@@ -11,6 +11,7 @@ const THEME_CSS: Asset = asset!("/assets/styling/theme.css");
 #[rustfmt::skip]
 enum Route {
     #[route("/")]
+    #[redirect("/:..segments", |segments: Vec<String>| Route::Home {})]
     Home {},
 
     #[route("/space/:id")]
