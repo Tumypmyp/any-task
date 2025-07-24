@@ -99,3 +99,7 @@ a #done {
   /* padding-left: 5; */
 	/* margin-left: 5; */
 }
+
+#token-holder {
+	padding: 10px;
+}

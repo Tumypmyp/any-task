@@ -23,7 +23,11 @@ script = []
 identifier = "com.Tumypmyp"
 publisher = "Tumypmyp"
 icon = ["assets/favicon.ico"]
+category = "Productivity"
+short_description = "Cross-platform Anytype client"
 
 [bundle.windows]
 icon_path = "assets/favicon.ico"
-webview_install_mode = "Skip"
+
+[bundle.windows.webview_install_mode.EmbedBootstrapper]
+silent = true

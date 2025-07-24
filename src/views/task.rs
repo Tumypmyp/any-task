@@ -6,6 +6,7 @@ use crate::views::API_CLIENT;
 
 #[component]
 pub fn Task(space_id: String, object_id: String, done: bool, name: String) -> Element {
+    let mut done = use_signal(|| done);
     rsx!{
         div { "class": "button-holder",
             button {
@@ -13,7 +14,7 @@ pub fn Task(space_id: String, object_id: String, done: bool, name: String) -> El
                 width: "90vw",
                 display: "flex",
                 "flex-direction": "row",
-                "data-style": if done { "outline" } else { "secondary" },
+                "data-style": if done() { "secondary" } else { "outline" },
                 "{name}"
                 div { "class": "checkbox-holder",
                     Checkbox {
@@ -23,15 +24,17 @@ pub fn Task(space_id: String, object_id: String, done: bool, name: String) -> El
                         on_checked_change: move |e| {
                             let sp = space_id.clone();
                             let ob = object_id.clone();
+                            *done.write() = if e == CheckboxState::Checked { true } else { false };
+
                             API_CLIENT
                                 .read()
                                 .update_done_property(
                                     sp,
                                     ob,
-                                    if e == CheckboxState::Checked { true } else { false },
+                                    *done.read(),
                                 );
                         },
-                        default_checked: if done { CheckboxState::Checked } else { CheckboxState::Unchecked },
+                        default_checked: if done() { CheckboxState::Checked } else { CheckboxState::Unchecked },
                         CheckboxIndicator { class: "checkbox-indicator",
                             svg {
                                 class: "checkbox-check-icon",

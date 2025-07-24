@@ -1,4 +1,7 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use dioxus::prelude::*;
+use dioxus_desktop;
+use std::env;
 
 use views::*;
 mod views;
@@ -20,8 +23,15 @@ enum Route {
     #[route("/auth")]
     Token {}
  }
+
 fn main() {
-    dioxus::launch(App);
+    if cfg!(target_os = "windows") {
+        let user_data_dir = env::var("LOCALAPPDATA").expect("env var LOCALAPPDATA not found");
+        let cfg = dioxus_desktop::Config::new().with_data_directory(user_data_dir);
+        dioxus_desktop::launch::launch(App, vec![], vec![Box::new(cfg)])
+    } else {
+        dioxus::launch(App);
+    }
 }
 
 #[component]
