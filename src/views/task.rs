@@ -2,8 +2,10 @@ use dioxus::prelude::*;
 
 use dioxus_primitives::checkbox::{Checkbox, CheckboxIndicator, CheckboxState};
 
+use crate::views::API_CLIENT;
+
 #[component]
-pub fn Task(done: bool, name: String, id: String) -> Element {
+pub fn Task(space_id: String, object_id: String, done: bool, name: String) -> Element {
     rsx!{
         div { "class": "button-holder",
             button {
@@ -19,9 +21,16 @@ pub fn Task(done: bool, name: String, id: String) -> Element {
                         name: "tos-check",
                         aria_label: "Done",
                         on_checked_change: move |e| {
-                            tracing::debug!("on checked{:#?}", e);
+                            let sp = space_id.clone();
+                            let ob = object_id.clone();
+                            API_CLIENT
+                                .read()
+                                .update_done_property(
+                                    sp,
+                                    ob,
+                                    if e == CheckboxState::Checked { true } else { false },
+                                );
                         },
-                        // disabled: true,
                         default_checked: if done { CheckboxState::Checked } else { CheckboxState::Unchecked },
                         CheckboxIndicator { class: "checkbox-indicator",
                             svg {

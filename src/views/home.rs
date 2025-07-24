@@ -30,9 +30,6 @@ pub fn Home() -> Element {
         },
         Some(Err(e)) => {
             tracing::debug!("error: {:#?}", e);
-            let nav = navigator();
-            nav.push(Route::Token{});
-            
             crate::Error()
         }
         _ => rsx! ()

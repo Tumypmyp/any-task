@@ -5,7 +5,7 @@ Anytype has great desktop, Android and iOS clients. This project focuses on cros
 The client is currently in active development and supports only the desktop version of Anytype. The Android version will become available upon the release of the Anytype API for Android.
 
 <div align="center">
-  <img src="./notes/ui.jpg" width="500">
+  <img src="./notes/ui.jpg" width="1000">
 </div>
 
 ## Features
@@ -13,6 +13,7 @@ The client is currently in active development and supports only the desktop vers
 - [x] Auth with Bearer token
 - [x] Chose space
 - [x] View tasks
+- [x] Check/uncheck a task done property
 - [ ] ...
 
 ## Development

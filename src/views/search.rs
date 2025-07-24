@@ -1,6 +1,5 @@
 use dioxus::prelude::*;
 use crate::views::*;
-use crate::Route;
 
 const STYLE_CSS: Asset = asset!("/assets/styling/style.css");
 #[component]
@@ -25,14 +24,14 @@ pub fn Search(space_id: String) -> Element {
                                             Task {
                                                 done: checkbox.unwrap_or_default(),
                                                 name: object.clone().name.unwrap(),
-                                                id: object.clone().id.unwrap(),
+                                                space_id,
+                                                object_id: object.clone().id.unwrap(),
                                             }
                                         }
                                     }
                                     _ => rsx! {},
                                 }
                             }
-                            _ => rsx! {},
                         }
                     }
                 }
@@ -40,9 +39,6 @@ pub fn Search(space_id: String) -> Element {
         },
         Some(Err(e)) => {
             tracing::debug!("error: {:#?}", e);
-            let nav = navigator();
-            nav.push(Route::Home{});
-        
             crate::Error()
         },
         _ => rsx! ()

@@ -1,7 +1,8 @@
 [application]
+name = "Any tasks"
 
 [web.app]
-title = "Any"
+title = "Any tasks"
 
 # include `assets` in web platform
 [web.resource]
@@ -17,3 +18,12 @@ script = []
 # Javascript code file
 # serve: [dev-server] only
 script = []
+
+[bundle]
+identifier = "com.Tumypmyp"
+publisher = "Tumypmyp"
+icon = ["assets/favicon.ico"]
+
+[bundle.windows]
+icon_path = "assets/favicon.ico"
+webview_install_mode = "Skip"

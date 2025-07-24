@@ -1,3 +1,4 @@
+
 use dioxus::prelude::*;
 use openapi::apis::configuration::Configuration;
 use openapi::apis::*;
@@ -31,6 +32,22 @@ impl Client {
     pub async fn get_space(&self, space_id: &str) -> Result<ApimodelPeriodSpaceResponse, Error<openapi::apis::spaces_api::GetSpaceError>> {
         openapi::apis::spaces_api::get_space(&self.config, API_VERSION, space_id)
             .await
+    }
+    pub fn update_done_property(&self, space_id: String, object_id: String, done: bool) { // -> Result<ApimodelPeriodObjectResponse, Error<openapi::apis::objects_api::UpdateObjectError>> {
+        let config = self.config.clone();
+        spawn(async move {
+            let mut prop = ApimodelPeriodCheckboxPropertyLinkValue::new();
+            prop.key = "done".to_string().into();
+            prop.checkbox = done.into();
+
+            let mut req= openapi::models::ApimodelPeriodUpdateObjectRequest::new();
+            req.properties = Some(vec![ApimodelPeriodPropertyLinkWithValue::ApimodelPeriodCheckboxPropertyLinkValue(Box::new(prop))]);
+            
+            tracing::debug!("{:#?}", req);
+            let res = openapi::apis::objects_api::update_object(&config, API_VERSION, &space_id, &object_id, req)
+            .await;
+            tracing::debug!("{:#?}", res);
+        });
     }
 }
 
