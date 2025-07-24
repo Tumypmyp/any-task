@@ -17,6 +17,8 @@ enum Route {
     #[route("/space/:id")]
     Space { id: String },
     
+    #[route("/auth")]
+    Token {}
  }
 fn main() {
     dioxus::launch(App);

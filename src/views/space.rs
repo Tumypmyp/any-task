@@ -9,30 +9,21 @@ pub fn Space(id: String) -> Element {
     let value = use_signal(|| id.clone());
     let mut name = use_signal(|| "".to_string());    
     let space = use_resource(move || async move {
-            let mut config = openapi::apis::configuration::Configuration::new();
-            config.bearer_access_token = Some(home::TOKEN.read().clone());
-
-            openapi::apis::spaces_api::get_space(&config, "2025-05-20", &value.read())
-                .await           
+           API_CLIENT.read().get_space(&value.read()).await           
     });
     
     match &*space.read() {
         Some(Ok(s)) => {
             name.set(s.clone().space.clone().unwrap().name.unwrap());
-            tracing::debug!("{:#?}", s.space.clone().unwrap().name.unwrap());
         },
         Some(Err(e)) => {
-            tracing::debug!("error 1.1 {} ", e);
-        
+            tracing::debug!("error: {:#?}", e);
             let nav = navigator();
             nav.push(Route::Home{});
-        
         },
-        _ => {
-            tracing::debug!("error 1 ");
-        }
-    };
-    
+        _ => {}
+    }
+
     rsx! {
         div { id: "title-holder",
             button { class: "button", "data-style": "ghost", "{name}" }

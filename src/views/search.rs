@@ -7,14 +7,9 @@ const STYLE_CSS: Asset = asset!("/assets/styling/style.css");
 pub fn Search(space_id: String) -> Element {
     let space_id = use_signal(|| space_id.clone());
     let objects = use_resource(move || async move {
-        let mut config = openapi::apis::configuration::Configuration::new();
-        config.bearer_access_token = Some(home::TOKEN.read().clone());
-        let mut req = openapi::models::ApimodelPeriodSearchRequest::new();
-        req.types = vec!["task".to_string()].into();
-
-        openapi::apis::search_api::search_space(&config, "2025-05-20", &space_id.read(), req, None, None)
-            .await
-    });
+            API_CLIENT.read().get_tasks(&space_id.read()).await
+        }
+    );
     
     match &*objects.read() {
         Some(Ok(s)) => rsx! {
@@ -43,22 +38,14 @@ pub fn Search(space_id: String) -> Element {
                 }
             }
         },
-        
         Some(Err(e)) => {
-            tracing::debug!("error 2.1 {} ", e);
-        
+            tracing::debug!("error: {:#?}", e);
             let nav = navigator();
             nav.push(Route::Home{});
         
-            rsx! {
-                div { "Loading error dogs..." }
-            }
+            crate::Error()
         },
-        _ => {
-            tracing::debug!("error 2 ");
-            rsx! {
-                div { "Loading dogs..." }
-            }
-        }
+        _ => rsx! ()
+        
     }
 }
