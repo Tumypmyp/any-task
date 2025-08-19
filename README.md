@@ -11,10 +11,16 @@ The client is currently in active development and supports only the desktop vers
 ## Features
 
 - [x] Auth with Bearer token
-- [x] Chose space
+- [x] Choose space
 - [x] View tasks
-- [x] Check/uncheck a task done property
-- [ ] ...
+- [x] Check/uncheck Done property
+- [ ] Remember state of the app after closing
+- [ ] Auth with 4-digit code
+- [ ] Change Tag property
+- [ ] Choose query
+- [ ] Change Date/Time property
+- [ ] Timeline view
+
 
 ## Development
 

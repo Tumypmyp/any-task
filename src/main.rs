@@ -1,4 +1,4 @@
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+// #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use dioxus::prelude::*;
 use dioxus_desktop;
 use std::env;
@@ -36,6 +36,8 @@ fn main() {
 
 #[component]
 fn App() -> Element {
+    _ = document::eval("document.documentElement.setAttribute('data-theme', 'dark');");
+    
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
         document::Link { rel: "stylesheet", href: MAIN_CSS }

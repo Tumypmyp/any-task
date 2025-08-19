@@ -8,37 +8,29 @@ license = "Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = { version = "0.7.0-alpha.3", features = ["router", "fullstack"] }
-dioxus-liveview = { version = "0.7.0-alpha.3" }
-dioxus-server = { version = "0.7.0-alpha.3" }
-dioxus-desktop = { version = "0.7.0-alpha.3" }
+dioxus = { version = "0.7.0-rc.0", features = ["router", "fullstack"] }
+dioxus-liveview = { version = "0.7.0-rc.0" }
+dioxus-server = { version = "0.7.0-rc.0" }
+dioxus-desktop = { version = "0.7.0-rc.0", features = ["transparent"] }
+dioxus-web = { version = "0.7.0-rc.0" }
 
 reqwest = { version = "0.12.22", features = ["json"] }
 serde = { version = "1.0.219", features = ["derive"] }
 tracing = "0.1.41"
 openapi = { path = "api/openapi-2025-05-20" }
 dioxus-primitives = { git = "https://github.com/DioxusLabs/components", branch = "main" }
-
-[patch.crates-io]
-dioxus-geolocation = { git = "https://github.com/ealmloff/dioxus-std", branch = "0.7" }
-dioxus-notification = { git = "https://github.com/ealmloff/dioxus-std", branch = "0.7" }
-dioxus-sdk = { git = "https://github.com/ealmloff/dioxus-std", branch = "0.7" }
-dioxus_storage = { git = "https://github.com/ealmloff/dioxus-std", branch = "0.7" }
-dioxus-sync = { git = "https://github.com/ealmloff/dioxus-std", branch = "0.7" }
-dioxus-time = { git = "https://github.com/ealmloff/dioxus-std", branch = "0.7" }
-dioxus-util = { git = "https://github.com/ealmloff/dioxus-std", branch = "0.7" }
-dioxus-window = { git = "https://github.com/ealmloff/dioxus-std", branch = "0.7" }
+gloo-storage = "0.3.0"
+dirs = "6.0.0"
+serde_json = "1.0.143"
 
 [features]
 default = ["desktop"]
 # The feature that are only required for the web = ["dioxus/web"] build target should be optional and only enabled in the web = ["dioxus/web"] feature
-# web = ["dioxus/web"]
+web = ["dioxus/web"]
 # The feature that are only required for the desktop = ["dioxus/desktop"] build target should be optional and only enabled in the desktop = ["dioxus/desktop"] feature
 desktop = ["dioxus/desktop"]
 # The feature that are only required for the mobile = ["dioxus/mobile"] build target should be optional and only enabled in the mobile = ["dioxus/mobile"] feature
 mobile = ["dioxus/mobile"]
-
-[profile]
 
 [profile.wasm-dev]
 inherits = "dev"

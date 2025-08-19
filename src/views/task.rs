@@ -15,7 +15,7 @@ pub fn Task(space_id: String, object_id: String, done: bool, name: String) -> El
                 display: "flex",
                 "flex-direction": "row",
                 "data-style": if done() { "secondary" } else { "outline" },
-                "{name}"
+                "{name}--"
                 div { "class": "checkbox-holder",
                     Checkbox {
                         class: "checkbox",
@@ -26,13 +26,7 @@ pub fn Task(space_id: String, object_id: String, done: bool, name: String) -> El
                             let ob = object_id.clone();
                             *done.write() = if e == CheckboxState::Checked { true } else { false };
 
-                            API_CLIENT
-                                .read()
-                                .update_done_property(
-                                    sp,
-                                    ob,
-                                    *done.read(),
-                                );
+                            API_CLIENT.read().update_done_property(sp, ob, *done.read());
                         },
                         default_checked: if done() { CheckboxState::Checked } else { CheckboxState::Unchecked },
                         CheckboxIndicator { class: "checkbox-indicator",
