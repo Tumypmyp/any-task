@@ -111,6 +111,7 @@ Class | Method | HTTP request | Description
  - [ApimodelPeriodPropertyLink](docs/ApimodelPeriodPropertyLink.md)
  - [ApimodelPeriodPropertyLinkWithValue](docs/ApimodelPeriodPropertyLinkWithValue.md)
  - [ApimodelPeriodPropertyResponse](docs/ApimodelPeriodPropertyResponse.md)
+ - [ApimodelPeriodPropertyWithValue](docs/ApimodelPeriodPropertyWithValue.md)
  - [ApimodelPeriodSearchRequest](docs/ApimodelPeriodSearchRequest.md)
  - [ApimodelPeriodSelectPropertyLinkValue](docs/ApimodelPeriodSelectPropertyLinkValue.md)
  - [ApimodelPeriodSelectPropertyValue](docs/ApimodelPeriodSelectPropertyValue.md)

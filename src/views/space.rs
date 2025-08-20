@@ -1,7 +1,7 @@
-use crate::views::Search;
 use dioxus::prelude::*;
-use crate::views::actions::Actions;
-use crate::views::*;
+use crate::Search;
+use crate::Actions;
+use crate::API_CLIENT;
 use crate::Route;
 
 #[component]

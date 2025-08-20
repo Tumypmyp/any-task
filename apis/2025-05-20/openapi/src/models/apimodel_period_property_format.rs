@@ -37,7 +37,6 @@ pub enum ApimodelPeriodPropertyFormat {
     PropertyFormatPhone,
     #[serde(rename = "objects")]
     PropertyFormatObjects,
-
 }
 
 impl std::fmt::Display for ApimodelPeriodPropertyFormat {

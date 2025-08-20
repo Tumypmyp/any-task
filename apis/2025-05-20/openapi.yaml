@@ -1602,17 +1602,17 @@ components:
       type: object
     apimodel.PropertyWithValue:
       oneOf:
-        # - $ref: "#/components/schemas/apimodel.TextPropertyValue"
-        # - $ref: "#/components/schemas/apimodel.NumberPropertyValue"
-        # - $ref: "#/components/schemas/apimodel.SelectPropertyValue"
-        # - $ref: "#/components/schemas/apimodel.MultiSelectPropertyValue"
-        # - $ref: "#/components/schemas/apimodel.DatePropertyValue"
-        # - $ref: "#/components/schemas/apimodel.FilesPropertyValue"
+        - $ref: "#/components/schemas/apimodel.TextPropertyValue"
+        - $ref: "#/components/schemas/apimodel.NumberPropertyValue"
+        - $ref: "#/components/schemas/apimodel.SelectPropertyValue"
+        - $ref: "#/components/schemas/apimodel.MultiSelectPropertyValue"
+        - $ref: "#/components/schemas/apimodel.DatePropertyValue"
+        - $ref: "#/components/schemas/apimodel.FilesPropertyValue"
         - $ref: "#/components/schemas/apimodel.CheckboxPropertyValue"
-        # - $ref: "#/components/schemas/apimodel.URLPropertyValue"
-        # - $ref: "#/components/schemas/apimodel.EmailPropertyValue"
-        # - $ref: "#/components/schemas/apimodel.PhonePropertyValue"
-        # - $ref: "#/components/schemas/apimodel.ObjectsPropertyValue"
+        - $ref: "#/components/schemas/apimodel.URLPropertyValue"
+        - $ref: "#/components/schemas/apimodel.EmailPropertyValue"
+        - $ref: "#/components/schemas/apimodel.PhonePropertyValue"
+        - $ref: "#/components/schemas/apimodel.ObjectsPropertyValue"
       type: object
     apimodel.SearchRequest:
       properties:

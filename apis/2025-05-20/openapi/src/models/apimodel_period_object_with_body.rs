@@ -36,7 +36,7 @@ pub struct ApimodelPeriodObjectWithBody {
     pub object: Option<String>,
     /// The properties of the object
     #[serde(rename = "properties", skip_serializing_if = "Option::is_none")]
-    pub properties: Option<Vec<models::ApimodelPeriodCheckboxPropertyValue>>,
+    pub properties: Option<Vec<models::ApimodelPeriodPropertyWithValue>>,
     /// The snippet of the object, especially important for notes as they don't have a name
     #[serde(rename = "snippet", skip_serializing_if = "Option::is_none")]
     pub snippet: Option<String>,

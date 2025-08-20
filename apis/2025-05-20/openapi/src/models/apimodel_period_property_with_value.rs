@@ -12,18 +12,29 @@ use crate::models;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
+#[serde(tag = "format")]
 pub enum ApimodelPeriodPropertyWithValue {
+    #[serde(rename = "text")]
     ApimodelPeriodTextPropertyValue(Box<models::ApimodelPeriodTextPropertyValue>),
+    #[serde(rename = "number")]
     ApimodelPeriodNumberPropertyValue(Box<models::ApimodelPeriodNumberPropertyValue>),
+    #[serde(rename = "select")]
     ApimodelPeriodSelectPropertyValue(Box<models::ApimodelPeriodSelectPropertyValue>),
+    #[serde(rename = "multi_select")]
     ApimodelPeriodMultiSelectPropertyValue(Box<models::ApimodelPeriodMultiSelectPropertyValue>),
+    #[serde(rename = "date")]
     ApimodelPeriodDatePropertyValue(Box<models::ApimodelPeriodDatePropertyValue>),
+    #[serde(rename = "files")]
     ApimodelPeriodFilesPropertyValue(Box<models::ApimodelPeriodFilesPropertyValue>),
+    #[serde(rename = "checkbox")]
     ApimodelPeriodCheckboxPropertyValue(Box<models::ApimodelPeriodCheckboxPropertyValue>),
+    #[serde(rename = "url")]
     ApimodelPeriodUrlPropertyValue(Box<models::ApimodelPeriodUrlPropertyValue>),
+    #[serde(rename = "email")]
     ApimodelPeriodEmailPropertyValue(Box<models::ApimodelPeriodEmailPropertyValue>),
+    #[serde(rename = "phone")]
     ApimodelPeriodPhonePropertyValue(Box<models::ApimodelPeriodPhonePropertyValue>),
+    #[serde(rename = "objects")]
     ApimodelPeriodObjectsPropertyValue(Box<models::ApimodelPeriodObjectsPropertyValue>),
 }
 

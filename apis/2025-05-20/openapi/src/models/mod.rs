@@ -86,6 +86,8 @@ pub mod apimodel_period_property_link_with_value;
 pub use self::apimodel_period_property_link_with_value::ApimodelPeriodPropertyLinkWithValue;
 pub mod apimodel_period_property_response;
 pub use self::apimodel_period_property_response::ApimodelPeriodPropertyResponse;
+pub mod apimodel_period_property_with_value;
+pub use self::apimodel_period_property_with_value::ApimodelPeriodPropertyWithValue;
 pub mod apimodel_period_search_request;
 pub use self::apimodel_period_search_request::ApimodelPeriodSearchRequest;
 pub mod apimodel_period_select_property_link_value;

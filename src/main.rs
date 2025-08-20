@@ -6,6 +6,10 @@ use std::env;
 use views::*;
 mod views;
 
+use components::*;
+mod components;
+
+
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/styling/main.css");
 const THEME_CSS: Asset = asset!("/assets/styling/theme.css");
@@ -20,8 +24,8 @@ enum Route {
     #[route("/space/:id")]
     Space { id: String },
     
-    #[route("/auth")]
-    Token {}
+    #[route("/login")]
+    Login {}
  }
 
 fn main() {

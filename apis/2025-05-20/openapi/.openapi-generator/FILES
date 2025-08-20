@@ -46,6 +46,7 @@ docs/ApimodelPeriodPropertyFormat.md
 docs/ApimodelPeriodPropertyLink.md
 docs/ApimodelPeriodPropertyLinkWithValue.md
 docs/ApimodelPeriodPropertyResponse.md
+docs/ApimodelPeriodPropertyWithValue.md
 docs/ApimodelPeriodSearchRequest.md
 docs/ApimodelPeriodSelectPropertyLinkValue.md
 docs/ApimodelPeriodSelectPropertyValue.md
@@ -154,6 +155,7 @@ src/models/apimodel_period_property_format.rs
 src/models/apimodel_period_property_link.rs
 src/models/apimodel_period_property_link_with_value.rs
 src/models/apimodel_period_property_response.rs
+src/models/apimodel_period_property_with_value.rs
 src/models/apimodel_period_search_request.rs
 src/models/apimodel_period_select_property_link_value.rs
 src/models/apimodel_period_select_property_value.rs

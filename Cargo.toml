@@ -17,7 +17,7 @@ dioxus-web = { version = "0.7.0-rc.0" }
 reqwest = { version = "0.12.22", features = ["json"] }
 serde = { version = "1.0.219", features = ["derive"] }
 tracing = "0.1.41"
-openapi = { path = "api/openapi-2025-05-20" }
+openapi = { path = "apis/2025-05-20/openapi" }
 dioxus-primitives = { git = "https://github.com/DioxusLabs/components", branch = "main" }
 gloo-storage = "0.3.0"
 dirs = "6.0.0"

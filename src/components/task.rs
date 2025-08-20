@@ -1,8 +1,6 @@
 use dioxus::prelude::*;
-
 use dioxus_primitives::checkbox::{Checkbox, CheckboxIndicator, CheckboxState};
-
-use crate::views::API_CLIENT;
+use crate::API_CLIENT;
 
 #[component]
 pub fn Task(space_id: String, object_id: String, done: bool, name: String) -> Element {
@@ -15,7 +13,7 @@ pub fn Task(space_id: String, object_id: String, done: bool, name: String) -> El
                 display: "flex",
                 "flex-direction": "row",
                 "data-style": if done() { "secondary" } else { "outline" },
-                "{name}--"
+                "{name}"
                 div { "class": "checkbox-holder",
                     Checkbox {
                         class: "checkbox",
