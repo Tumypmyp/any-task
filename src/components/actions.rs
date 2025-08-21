@@ -1,6 +1,5 @@
 use crate::Route;
 use dioxus::prelude::*;
-
 #[component]
 pub fn Actions() -> Element {
     rsx! {
@@ -11,8 +10,6 @@ pub fn Actions() -> Element {
                 to: Route::Home {},
                 "Home"
             }
-                // reload page
         }
     }
 }
-

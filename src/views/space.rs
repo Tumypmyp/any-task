@@ -1,34 +1,36 @@
 use dioxus::prelude::*;
-use crate::Search;
-use crate::Actions;
 use crate::API_CLIENT;
-use crate::Route;
+use crate::Actions;
+use crate::Search;
 
 #[component]
 pub fn Space(id: String) -> Element {
-    let value = use_signal(|| id.clone());
-    let mut name = use_signal(|| "".to_string());    
-    let space = use_resource(move || async move {
-           API_CLIENT.read().get_space(&value.read()).await           
+    let id = use_signal(|| id.clone());
+    rsx! {
+        SpaceTitle { space_id: id }
+        Search { space_id: id() }
+        Actions {}
+    }
+}
+
+#[component]
+pub fn SpaceTitle(space_id: Signal<String>) -> Element {
+    let mut name = use_signal(|| "".to_string());
+    let resp = use_resource(move || async move {
+        API_CLIENT.read().get_space(space_id).await
     });
-    
-    match &*space.read() {
-        Some(Ok(s)) => {
-            name.set(s.clone().space.clone().unwrap().name.unwrap());
+    match &*resp.read() {
+        Some(Ok(p)) => {
+            println!("got space {p:#?}");
+            name.set(p.clone().space.unwrap().name.unwrap());
         },
-        Some(Err(e)) => {
-            tracing::debug!("error: {:#?}", e);
-            let nav = navigator();
-            nav.push(Route::Home{});
-        },
-        _ => {}
+        _ => { 
+        }
     }
 
     rsx! {
         div { id: "title-holder",
             button { class: "button", "data-style": "ghost", "{name}" }
         }
-        Search { space_id: id.clone() }
-        Actions {}
     }
 }

@@ -14,7 +14,7 @@ The client is currently in active development and supports only the desktop vers
 - [x] Choose space
 - [x] View tasks
 - [x] Check/uncheck Done property
-- [ ] Remember state of the app after closing
+- [x] Remember state of the app after closing
 - [ ] Auth with 4-digit code
 - [ ] Change Tag property
 - [ ] Choose query

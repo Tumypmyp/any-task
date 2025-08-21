@@ -1,19 +1,13 @@
-use dioxus::prelude::*;
-use crate::Route;
 use crate::API_CLIENT;
-
-
+use crate::Route;
+use dioxus::prelude::*;
 #[component]
-pub fn Home() -> Element {   
+pub fn Home() -> Element {
     _ = document::eval("document.documentElement.setAttribute('data-theme', 'dark');");
-    
-    let spaces = use_resource(|| async move {
-        API_CLIENT.read().list_spaces().await
-    });
-    
+    let spaces = use_resource(|| async move { API_CLIENT.read().list_spaces().await });
     match &*spaces.read() {
         Some(Ok(s)) => {
-            rsx!{
+            rsx! {
                 div { id: "space-list",
                     for space in s.clone().data.unwrap().clone() {
                         Link {
@@ -27,11 +21,11 @@ pub fn Home() -> Element {
                     }
                 }
             }
-        },
+        }
         Some(Err(e)) => {
             tracing::debug!("error: {:#?}", e);
             crate::Error()
         }
-        _ => rsx! ()
+        _ => rsx!(),
     }
 }

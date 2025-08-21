@@ -1,107 +1,156 @@
-
 use dioxus::prelude::*;
+use models::*;
 use openapi::apis::configuration::Configuration;
 use openapi::apis::*;
-use openapi::models as models;
-use models::*;
-
-use serde::{Deserialize, Serialize};
-
+use openapi::models;
 const API_VERSION: &str = "2025-05-20";
-
 pub struct Client {
     config: Configuration,
 }
-
-impl Client {    
+impl Client {
     fn new() -> Self {
-        Self { config: Configuration::new() }
+        Self {
+            config: Configuration::new(),
+        }
     }
     pub fn set_token(&mut self, token: String) {
         self.config.bearer_access_token = Some(token);
     }
-
-    pub async fn list_spaces(&self) -> Result<PaginationPeriodPaginatedResponseApimodelSpace, Error<openapi::apis::spaces_api::ListSpacesError>> {
+    pub async fn list_spaces(
+        &self,
+    ) -> Result<
+        PaginationPeriodPaginatedResponseApimodelSpace,
+        Error<openapi::apis::spaces_api::ListSpacesError>,
+    > {
         openapi::apis::spaces_api::list_spaces(&self.config, API_VERSION, None, None)
             .await
     }
-    pub async fn get_tasks(&self, space_id: &str) -> Result<PaginationPeriodPaginatedResponseApimodelObject, Error<openapi::apis::search_api::SearchSpaceError>> {
+    pub async fn list_properties(
+        &self,
+        space_id: &str,
+    ) -> Result<
+        PaginationPeriodPaginatedResponseApimodelProperty,
+        Error<openapi::apis::properties_api::ListPropertiesError>,
+    > {
+        openapi::apis::properties_api::list_properties(
+                &self.config,
+                API_VERSION,
+                space_id,
+                None,
+                None,
+            )
+            .await
+    }
+    pub async fn list_select_property_options(
+        &self,
+        space_id: &str,
+        property_id: &str,
+    ) -> Result<
+        openapi::models::PaginationPeriodPaginatedResponseApimodelTag,
+        Error<openapi::apis::tags_api::ListTagsError>,
+    > {
+        openapi::apis::tags_api::list_tags(
+                &self.config,
+                API_VERSION,
+                space_id,
+                property_id,
+            )
+            .await
+    }
+    pub async fn get_tasks(
+        &self,
+        space_id: &str,
+    ) -> Result<
+        PaginationPeriodPaginatedResponseApimodelObject,
+        Error<openapi::apis::search_api::SearchSpaceError>,
+    > {
         let mut req = openapi::models::ApimodelPeriodSearchRequest::new();
         req.types = vec!["task".to_string()].into();
-
-        openapi::apis::search_api::search_space(&self.config, API_VERSION, space_id, req, None, None)
+        openapi::apis::search_api::search_space(
+                &self.config,
+                API_VERSION,
+                space_id,
+                req,
+                None,
+                None,
+            )
             .await
     }
-    pub async fn get_space(&self, space_id: &str) -> Result<ApimodelPeriodSpaceResponse, Error<openapi::apis::spaces_api::GetSpaceError>> {
-        openapi::apis::spaces_api::get_space(&self.config, API_VERSION, space_id)
-            .await
+    pub async fn get_space(
+        &self,
+        space_id: Signal<String>,
+    ) -> Result<
+        ApimodelPeriodSpaceResponse, 
+        Error<openapi::apis::spaces_api::GetSpaceError>,
+    > {
+        openapi::apis::spaces_api::get_space(&self.config, API_VERSION, &space_id()).await    
     }
-    pub fn update_done_property(&self, space_id: String, object_id: String, done: bool) { // -> Result<ApimodelPeriodObjectResponse, Error<openapi::apis::objects_api::UpdateObjectError>> {
+    
+    pub fn get_property(
+        &self,
+        space_id: Signal<String>,
+        property_id: Signal<String>,
+    ) -> Option<ApimodelPeriodPropertyResponse> {
+        let config = use_signal(|| self.config.clone());
+        let resp = use_resource(move || async move {
+            openapi::apis::properties_api::get_property(
+                    &config(),
+                    API_VERSION,
+                    &space_id(),
+                    &property_id(),
+                )
+                .await
+        });
+        match &*resp.read() {
+            Some(Ok(p)) => Some(p.clone()),
+            _ => None,
+        }
+    }
+    pub fn update_done_property(&self, space_id: String, object_id: String, done: bool) {
         let config = self.config.clone();
         spawn(async move {
             let mut prop = ApimodelPeriodCheckboxPropertyLinkValue::new();
             prop.key = "done".to_string().into();
             prop.checkbox = done.into();
-
-            let mut req= ApimodelPeriodUpdateObjectRequest::new();
-            req.properties = Some(vec![ApimodelPeriodPropertyLinkWithValue::ApimodelPeriodCheckboxPropertyLinkValue(Box::new(prop))]);
-            
+            let mut req = ApimodelPeriodUpdateObjectRequest::new();
+            req.properties = Some(
+                vec![
+                    ApimodelPeriodPropertyLinkWithValue::ApimodelPeriodCheckboxPropertyLinkValue(
+                        Box::new(prop),
+                    ),
+                ],
+            );
             println!("{:#?}", req);
-            let res = openapi::apis::objects_api::update_object(&config, API_VERSION, &space_id, &object_id, req)
-            .await;
+            let res = openapi::apis::objects_api::update_object(
+                    &config,
+                    API_VERSION,
+                    &space_id,
+                    &object_id,
+                    req,
+                )
+                .await;
             println!("{:#?}", res);
         });
     }
 }
-
-pub static API_CLIENT: GlobalSignal<Client> = Global::new(|| Client::new());
-
-
-// Assuming you have all the necessary PropertyValue structs defined in your `models` module.
-// Example:
-// pub struct ApimodelPeriodTextPropertyValue { ... }
-// pub struct ApimodelPeriodCheckboxPropertyValue { ... }
-
-// This function maps a format enum to a value enum.
-fn create_default_property_by_format(
-    format: &models::ApimodelPeriodPropertyFormat,
-) -> models::ApimodelPeriodPropertyWithValue {
-    use models::ApimodelPeriodPropertyFormat as Format;
-    use models::ApimodelPeriodPropertyWithValue as Value;
-
-    match format {
-        Format::PropertyFormatText => {
-            Value::ApimodelPeriodTextPropertyValue(Box::new(models::ApimodelPeriodTextPropertyValue::default()))
+pub fn get_property_id_by_key<'a>(space_id: String, key: &str) -> Option<String> {
+    let properties = use_resource(move || {
+        let id = space_id.clone();
+        async move { API_CLIENT.read().list_properties(&id).await }
+    });
+    match &*properties.read() {
+        Some(Ok(props)) => {
+            for prop in props.data.clone().unwrap() {
+                if prop.key.unwrap() == key {
+                    return prop.id;
+                }
+            }
         }
-        Format::PropertyFormatNumber => {
-            Value::ApimodelPeriodNumberPropertyValue(Box::new(models::ApimodelPeriodNumberPropertyValue::default()))
+        Some(Err(e)) => {
+            println!("error: {:#?}", e);
         }
-        Format::PropertyFormatSelect => {
-            Value::ApimodelPeriodSelectPropertyValue(Box::new(models::ApimodelPeriodSelectPropertyValue::default()))
-        }
-        Format::PropertyFormatMultiSelect => {
-            Value::ApimodelPeriodMultiSelectPropertyValue(Box::new(models::ApimodelPeriodMultiSelectPropertyValue::default()))
-        }
-        Format::PropertyFormatDate => {
-            Value::ApimodelPeriodDatePropertyValue(Box::new(models::ApimodelPeriodDatePropertyValue::default()))
-        }
-        Format::PropertyFormatFiles => {
-            Value::ApimodelPeriodFilesPropertyValue(Box::new(models::ApimodelPeriodFilesPropertyValue::default()))
-        }
-        Format::PropertyFormatCheckbox => {
-            Value::ApimodelPeriodCheckboxPropertyValue(Box::new(models::ApimodelPeriodCheckboxPropertyValue::default()))
-        }
-        Format::PropertyFormatUrl => {
-            Value::ApimodelPeriodUrlPropertyValue(Box::new(models::ApimodelPeriodUrlPropertyValue::default()))
-        }
-        Format::PropertyFormatEmail => {
-            Value::ApimodelPeriodEmailPropertyValue(Box::new(models::ApimodelPeriodEmailPropertyValue::default()))
-        }
-        Format::PropertyFormatPhone => {
-            Value::ApimodelPeriodPhonePropertyValue(Box::new(models::ApimodelPeriodPhonePropertyValue::default()))
-        }
-        Format::PropertyFormatObjects => {
-            Value::ApimodelPeriodObjectsPropertyValue(Box::new(models::ApimodelPeriodObjectsPropertyValue::default()))
-        }
+        _ => {}
     }
+    None
 }
+pub static API_CLIENT: GlobalSignal<Client> = Global::new(|| Client::new());
