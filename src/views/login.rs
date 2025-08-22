@@ -3,7 +3,6 @@ use crate::Route;
 use crate::hooks::*;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
-
 #[derive(Debug, Serialize, Deserialize, PartialEq, Default)]
 pub struct AppSettings {
     pub token: String,

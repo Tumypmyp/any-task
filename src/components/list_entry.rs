@@ -1,17 +1,15 @@
 use dioxus::prelude::*;
 use openapi::models::*;
-use std::collections::HashMap;
 use crate::PropertyValue;
 #[derive(Clone, Props, PartialEq)]
-pub struct ListObjectProps {
+pub struct ListEntryProps {
     pub name: String,
     pub space_id: String,
     pub object_id: String,
-    pub properties: HashMap<String, Option<ApimodelPeriodPropertyWithValue>>,
-    pub ids_order: Vec<String>,
+    pub properties: Vec<Option<ApimodelPeriodPropertyWithValue>>,
 }
 #[component]
-pub fn ListObject(props: ListObjectProps) -> Element {
+pub fn ListEntry(props: ListEntryProps) -> Element {
     rsx! {
         div { "class": "button-holder", id: props.object_id,
             button {
@@ -21,12 +19,11 @@ pub fn ListObject(props: ListObjectProps) -> Element {
                 "flex-direction": "row",
                 "data-style": "outline",
                 "{props.name}"
-                for id in &props.ids_order {
-                    if let Some(p) = props.properties.get(id) {
+                for prop in props.properties {
+                    if let Some(p) = prop {
                         PropertyValue {
                             space_id: &props.space_id,
                             object_id: &props.object_id,
-                            property_id: id,
                             data: p.clone(),
                         }
                     }

@@ -2,7 +2,6 @@ use dioxus::prelude::*;
 use crate::API_CLIENT;
 use crate::Actions;
 use crate::Search;
-
 #[component]
 pub fn Space(id: String) -> Element {
     let id = use_signal(|| id.clone());
@@ -12,7 +11,6 @@ pub fn Space(id: String) -> Element {
         Actions {}
     }
 }
-
 #[component]
 pub fn SpaceTitle(space_id: Signal<String>) -> Element {
     let mut name = use_signal(|| "".to_string());
@@ -21,13 +19,10 @@ pub fn SpaceTitle(space_id: Signal<String>) -> Element {
     });
     match &*resp.read() {
         Some(Ok(p)) => {
-            println!("got space {p:#?}");
             name.set(p.clone().space.unwrap().name.unwrap());
-        },
-        _ => { 
         }
+        _ => {}
     }
-
     rsx! {
         div { id: "title-holder",
             button { class: "button", "data-style": "ghost", "{name}" }

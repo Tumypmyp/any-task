@@ -1,30 +1,92 @@
-use dioxus::html::switch;
 use dioxus::prelude::*;
 use openapi::models::*;
-use std::collections::HashMap;
 use std::vec;
-use crate::components::property;
+use crate::components::*;
 use crate::API_CLIENT;
-use crate::get_property_id_by_key;
-use crate::ListObject;
+// use crate::get_property_id_by_key;
+use crate::ListEntry;
 struct Object {
     name: String,
     object_id: String,
-    properties: HashMap<String, Option<ApimodelPeriodPropertyWithValue>>,
+properties: Vec<Option<ApimodelPeriodPropertyWithValue>>,
 }
+
+
 #[component]
 pub fn Search(space_id: String) -> Element {
     let space_id = use_signal(|| space_id.clone());
     let resp = use_resource(move || async move {
         API_CLIENT.read().get_tasks(&space_id.read()).await
     });
-    let keys: Vec<String> = vec!["done".to_string(), "status".to_string()];
-    let mut ids: Vec<String> = vec!["".to_string(); 2];
-    for (i, key) in keys.iter().enumerate() {
-        if let Some(id) = get_property_id_by_key(space_id.to_string(), key) {
-            ids[i] = id;
-        }
-    }
+    let keys: Signal<Vec<String>> = use_signal(|| vec!["done".to_string(), "status".to_string()]);
+    let mut ids: Signal<Vec<String>> = use_signal(|| vec!["".to_string(); 2]);
+    let mut default_values: Signal<Vec<Option<ApimodelPeriodPropertyWithValue>>> = use_signal(|| vec![None; 2]);
+    
+    use_effect(move || {
+        spawn(
+            async move {
+                for (i, key) in keys().clone().iter().enumerate() {
+                    let space_id = space_id().clone();
+                    let properties = API_CLIENT.read().list_properties(&space_id).await;
+                    match properties {
+                        Ok(props) => {
+                            for prop in props.data.clone().unwrap() {
+                                if prop.key.unwrap() == *key {
+                                    ids.write()[i] = prop.id.unwrap();
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            println!("error: {:#?}", e);
+                        }
+                    }
+
+                    let property_id = ids.read()[i].clone();
+                    let property = API_CLIENT.read().get_property(&space_id, property_id).await;
+                    // println!("result {property:#?}");
+                    match property {    
+                        Ok(r) => {
+                            let prop = r.clone().property.unwrap_or_default();
+                            // println!("r {r:#?}");
+                            default_values.write()[i] = match prop.format.unwrap_or_default() {
+                                ApimodelPeriodPropertyFormat::PropertyFormatSelect => {
+                                    Some(
+                                        ApimodelPeriodPropertyWithValue::ApimodelPeriodSelectPropertyValue(
+                                            Box::new(ApimodelPeriodSelectPropertyValue {
+                                                select: None,
+                                                format: prop.format,
+                                                id: prop.id,
+                                                key: prop.key,
+                                                name: prop.name,
+                                                object: prop.object,
+                                            }),
+                                        ),
+                                    )
+                                }
+                                ApimodelPeriodPropertyFormat::PropertyFormatCheckbox => {
+                                    Some(
+                                        ApimodelPeriodPropertyWithValue::ApimodelPeriodCheckboxPropertyValue(
+                                            Box::new(ApimodelPeriodCheckboxPropertyValue {
+                                                checkbox: None,
+                                                format: prop.format,
+                                                id: prop.id,
+                                                key: prop.key,
+                                                name: prop.name,
+                                                object: prop.object,
+                                            }),
+                                        ),
+                                    )
+                                }
+                                _ => None,
+                            };
+                        }
+                        _ => {},
+                    }
+                }
+            }
+        );
+    });
+    
     let mut objects = Vec::<Object>::new();
     match &*resp.read() {
         Some(Ok(s)) => {
@@ -32,19 +94,21 @@ pub fn Search(space_id: String) -> Element {
                 let mut obj = Object {
                     name: object.clone().name.unwrap(),
                     object_id: object.clone().id.unwrap(),
-                    properties: HashMap::new(),
+                    properties: vec![],
                 };
-                for (i, key) in keys.iter().enumerate() {
-                    let property_id = use_signal(|| ids[i].clone());
-                    let p = get_property_by_key(&object.properties.clone().unwrap(), key)
+                for (i, key) in keys().clone().iter().enumerate() {
+                    let p = get_object_property_by_key(
+                            &object.properties.clone().unwrap(),
+                            key,
+                        )
                         .cloned();
                     match p {
                         Some(prop) => {
-                            obj.properties.insert(property_id(), Some(prop));
+                            obj.properties.push(Some(prop));
                         }
                         _ => {
-                            let prop = default_property_value(space_id, property_id);
-                            obj.properties.insert(property_id(), prop);
+                            let prop = &default_values.read()[i];
+                            obj.properties.push(prop.clone());
                         }
                     }
                 }
@@ -57,55 +121,23 @@ pub fn Search(space_id: String) -> Element {
         _ => {}
     }
     rsx! {
+        // div {
+        // "{ids:#?} {default_values:#?}"
+        // }
         div { id: "object-list",
             for obj in objects.iter() {
-                ListObject {
+                ListEntry {
                     key: "{obj.object_id}",
                     name: obj.name.clone(),
                     space_id,
                     object_id: obj.object_id.clone(),
                     properties: obj.properties.clone(),
-                    ids_order: ids.clone(),
                 }
             }
         }
     }
 }
-fn default_property_value(
-    space_id: Signal<String>,
-    property_id: Signal<String>,
-) -> Option<ApimodelPeriodPropertyWithValue> {
-    let resp = API_CLIENT.read().get_property(space_id, property_id);
-    match resp {
-        Some(prop) => {
-            match prop.property {
-                Some(p) => {
-                    match p.format {
-                        Some(ApimodelPeriodPropertyFormat::PropertyFormatSelect) => {
-                            return Some(
-                                ApimodelPeriodPropertyWithValue::ApimodelPeriodSelectPropertyValue(
-                                    Box::new(ApimodelPeriodSelectPropertyValue::new()),
-                                ),
-                            );
-                        }
-                        Some(ApimodelPeriodPropertyFormat::PropertyFormatCheckbox) => {
-                            return Some(
-                                ApimodelPeriodPropertyWithValue::ApimodelPeriodCheckboxPropertyValue(
-                                    Box::new(ApimodelPeriodCheckboxPropertyValue::new()),
-                                ),
-                            );
-                        }
-                        _ => {}
-                    }
-                }
-                _ => {}
-            }
-        }
-        _ => {}
-    }
-    None
-}
-fn get_property_by_key<'a>(
+fn get_object_property_by_key<'a>(
     properties: &'a Vec<ApimodelPeriodPropertyWithValue>,
     target_name: &str,
 ) -> Option<&'a ApimodelPeriodPropertyWithValue> {

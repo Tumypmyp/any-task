@@ -5,33 +5,29 @@ use dioxus_primitives::select::{
 };
 use openapi::models::*;
 use crate::API_CLIENT;
-
 #[component]
 pub fn SelectPropertyValue(
     space_id: String,
     object_id: String,
-    property_id: String,
-    prop: Option<String>,
+    prop: Signal<ApimodelPeriodSelectPropertyValue>,
 ) -> Element {
     let space_id = use_signal(|| space_id.clone());
-    let property_id = use_signal(|| property_id.clone());
     let options = use_resource(move || {
         async move {
             API_CLIENT
                 .read()
-                .list_select_property_options(&space_id.read(), &property_id.read())
+                .list_select_property_options(&space_id.read(), &prop().id.unwrap())
                 .await
         }
     });
+    let mut val = use_signal(|| prop().name);
     if let Some(Ok(options)) = &*options.read() {
-        let mut val = use_signal(|| prop.clone());
         rsx! {
             div { "class": "select-holder",
                 Select::<Option<String>> {
                     class: "select",
-                    // value: v,
-                    placeholder: "{prop.clone().unwrap_or_default()}",
-                    default_value: prop.clone(),
+                    placeholder: "{prop().select.unwrap_or_default().name.clone().unwrap_or_default()}",
+                    default_value: prop().select.unwrap_or_default().name.clone(),
                     on_value_change: move |v: Option<Option<String>>| {
                         val.set(v.unwrap().clone());
                         println!("{val:#?}changed");
@@ -67,9 +63,6 @@ pub fn SelectPropertySelectList(options: Vec<ApimodelPeriodTag>) -> Element {
                             class: "select-option",
                             index: i,
                             value: name.clone(),
-                            // onmousedown: move |e| {
-                            //     println!("{e}");
-                            // }
                             text_value: name.clone(),
                             SelectItemIndicator {
                                 svg {

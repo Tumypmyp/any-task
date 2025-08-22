@@ -3,6 +3,8 @@ use models::*;
 use openapi::apis::configuration::Configuration;
 use openapi::apis::*;
 use openapi::models;
+
+use crate::components::property;
 const API_VERSION: &str = "2025-05-20";
 pub struct Client {
     config: Configuration,
@@ -80,31 +82,27 @@ impl Client {
         &self,
         space_id: Signal<String>,
     ) -> Result<
-        ApimodelPeriodSpaceResponse, 
+        ApimodelPeriodSpaceResponse,
         Error<openapi::apis::spaces_api::GetSpaceError>,
     > {
-        openapi::apis::spaces_api::get_space(&self.config, API_VERSION, &space_id()).await    
+        openapi::apis::spaces_api::get_space(&self.config, API_VERSION, &space_id())
+            .await
     }
-    
-    pub fn get_property(
+    pub async fn get_property(
         &self,
-        space_id: Signal<String>,
-        property_id: Signal<String>,
-    ) -> Option<ApimodelPeriodPropertyResponse> {
-        let config = use_signal(|| self.config.clone());
-        let resp = use_resource(move || async move {
-            openapi::apis::properties_api::get_property(
-                    &config(),
-                    API_VERSION,
-                    &space_id(),
-                    &property_id(),
-                )
-                .await
-        });
-        match &*resp.read() {
-            Some(Ok(p)) => Some(p.clone()),
-            _ => None,
-        }
+        space_id: &str,
+        property_id: String,
+    ) -> Result<
+        ApimodelPeriodPropertyResponse,
+        Error<openapi::apis::properties_api::GetPropertyError>
+    > {
+        openapi::apis::properties_api::get_property(
+                &self.config,
+                API_VERSION,
+                space_id,
+                &property_id.to_string(),
+            )
+            .await
     }
     pub fn update_done_property(&self, space_id: String, object_id: String, done: bool) {
         let config = self.config.clone();
@@ -133,24 +131,5 @@ impl Client {
         });
     }
 }
-pub fn get_property_id_by_key<'a>(space_id: String, key: &str) -> Option<String> {
-    let properties = use_resource(move || {
-        let id = space_id.clone();
-        async move { API_CLIENT.read().list_properties(&id).await }
-    });
-    match &*properties.read() {
-        Some(Ok(props)) => {
-            for prop in props.data.clone().unwrap() {
-                if prop.key.unwrap() == key {
-                    return prop.id;
-                }
-            }
-        }
-        Some(Err(e)) => {
-            println!("error: {:#?}", e);
-        }
-        _ => {}
-    }
-    None
-}
+
 pub static API_CLIENT: GlobalSignal<Client> = Global::new(|| Client::new());
