@@ -7,6 +7,7 @@ pub fn PropertyValue(
     space_id: String,
     object_id: String,
     data: Option<ApimodelPeriodPropertyWithValue>,
+    options: Option<Vec<ApimodelPeriodTag>>,
 ) -> Element {
     match data {
         Some(
@@ -18,7 +19,7 @@ pub fn PropertyValue(
                 CheckboxPropertyValue {
                     space_id: &space_id,
                     object_id: &object_id,
-                    prop: use_signal(|| checkbox.checkbox.unwrap_or_default()),
+                    prop: use_signal(|| *checkbox),
                 }
             }
         }
@@ -30,6 +31,7 @@ pub fn PropertyValue(
                     space_id: &space_id,
                     object_id: &object_id,
                     prop: use_signal(|| *select),
+                    options: options.unwrap_or_default(),
                 }
             }
         }

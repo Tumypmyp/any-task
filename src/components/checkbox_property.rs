@@ -1,11 +1,12 @@
 use dioxus::prelude::*;
 use dioxus_primitives::checkbox::{Checkbox, CheckboxIndicator, CheckboxState};
+use openapi::models::ApimodelPeriodCheckboxPropertyValue;
 use crate::API_CLIENT;
 #[component]
 pub fn CheckboxPropertyValue(
     space_id: String,
     object_id: String,
-    prop: Signal<bool>,
+    prop: Signal<ApimodelPeriodCheckboxPropertyValue>,
 ) -> Element {
     rsx! {
         div { "class": "checkbox-holder",
@@ -16,10 +17,14 @@ pub fn CheckboxPropertyValue(
                 on_checked_change: move |e| {
                     let sp = space_id.clone();
                     let ob = object_id.clone();
-                    *prop.write() = if e == CheckboxState::Checked { true } else { false };
-                    API_CLIENT.read().update_done_property(sp, ob, *prop.read());
+                    prop.write().checkbox = if e == CheckboxState::Checked {
+                        Some(true)
+                    } else {
+                        Some(false)
+                    };
+                    API_CLIENT.read().update_done_property(sp, ob, prop.read().checkbox);
                 },
-                default_checked: if prop() { CheckboxState::Checked } else { CheckboxState::Unchecked },
+                default_checked: if prop().checkbox.unwrap_or_default() { CheckboxState::Checked } else { CheckboxState::Unchecked },
                 CheckboxIndicator { class: "checkbox-indicator",
                     svg {
                         class: "checkbox-check-icon",

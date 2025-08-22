@@ -1,14 +1,13 @@
 use dioxus::prelude::*;
 use openapi::models::*;
 use std::vec;
-use crate::components::*;
 use crate::API_CLIENT;
-// use crate::get_property_id_by_key;
 use crate::ListEntry;
 struct Object {
     name: String,
     object_id: String,
-properties: Vec<Option<ApimodelPeriodPropertyWithValue>>,
+    properties: Vec<Option<ApimodelPeriodPropertyWithValue>>,
+    options: Vec<Option<Vec<ApimodelPeriodTag>>>,
 }
 
 
@@ -21,7 +20,8 @@ pub fn Search(space_id: String) -> Element {
     let keys: Signal<Vec<String>> = use_signal(|| vec!["done".to_string(), "status".to_string()]);
     let mut ids: Signal<Vec<String>> = use_signal(|| vec!["".to_string(); 2]);
     let mut default_values: Signal<Vec<Option<ApimodelPeriodPropertyWithValue>>> = use_signal(|| vec![None; 2]);
-    
+    let mut options: Signal<Vec<Option<Vec<ApimodelPeriodTag>>>> = use_signal(|| vec![None; 2]);
+
     use_effect(move || {
         spawn(
             async move {
@@ -41,13 +41,12 @@ pub fn Search(space_id: String) -> Element {
                         }
                     }
 
+                    // defaults
                     let property_id = ids.read()[i].clone();
-                    let property = API_CLIENT.read().get_property(&space_id, property_id).await;
-                    // println!("result {property:#?}");
+                    let property = API_CLIENT.read().get_property(&space_id, property_id.clone()).await;
                     match property {    
                         Ok(r) => {
                             let prop = r.clone().property.unwrap_or_default();
-                            // println!("r {r:#?}");
                             default_values.write()[i] = match prop.format.unwrap_or_default() {
                                 ApimodelPeriodPropertyFormat::PropertyFormatSelect => {
                                     Some(
@@ -82,6 +81,15 @@ pub fn Search(space_id: String) -> Element {
                         }
                         _ => {},
                     }
+
+                    // options
+                    let options_res = API_CLIENT
+                                .read()
+                                .list_select_property_options(&space_id, &property_id)
+                                .await;
+                    if let Ok(o) = options_res {
+                        options.write()[i] = o.data;
+                    }
                 }
             }
         );
@@ -95,8 +103,10 @@ pub fn Search(space_id: String) -> Element {
                     name: object.clone().name.unwrap(),
                     object_id: object.clone().id.unwrap(),
                     properties: vec![],
+                    options: vec![],
                 };
                 for (i, key) in keys().clone().iter().enumerate() {
+                    obj.options.push(options.read()[i].clone());
                     let p = get_object_property_by_key(
                             &object.properties.clone().unwrap(),
                             key,
@@ -121,9 +131,6 @@ pub fn Search(space_id: String) -> Element {
         _ => {}
     }
     rsx! {
-        // div {
-        // "{ids:#?} {default_values:#?}"
-        // }
         div { id: "object-list",
             for obj in objects.iter() {
                 ListEntry {
@@ -132,6 +139,7 @@ pub fn Search(space_id: String) -> Element {
                     space_id,
                     object_id: obj.object_id.clone(),
                     properties: obj.properties.clone(),
+                    options: obj.options.clone(),
                 }
             }
         }

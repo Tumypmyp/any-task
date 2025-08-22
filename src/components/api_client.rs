@@ -4,8 +4,10 @@ use openapi::apis::configuration::Configuration;
 use openapi::apis::*;
 use openapi::models;
 
-use crate::components::property;
 const API_VERSION: &str = "2025-05-20";
+
+pub static API_CLIENT: GlobalSignal<Client> = Global::new(|| Client::new());
+
 pub struct Client {
     config: Configuration,
 }
@@ -104,12 +106,12 @@ impl Client {
             )
             .await
     }
-    pub fn update_done_property(&self, space_id: String, object_id: String, done: bool) {
+    pub fn update_done_property(&self, space_id: String, object_id: String, done: Option<bool>) {
         let config = self.config.clone();
         spawn(async move {
             let mut prop = ApimodelPeriodCheckboxPropertyLinkValue::new();
             prop.key = "done".to_string().into();
-            prop.checkbox = done.into();
+            prop.checkbox = done;
             let mut req = ApimodelPeriodUpdateObjectRequest::new();
             req.properties = Some(
                 vec![
@@ -130,6 +132,29 @@ impl Client {
             println!("{:#?}", res);
         });
     }
+    
+    pub async fn  update_select_property(&self, space_id: String, object_id: String, property_key: String, option: Option<String>) {
+        let mut prop = ApimodelPeriodSelectPropertyLinkValue::new();
+        prop.key = property_key.into();
+        prop.select = option;
+        let mut req = ApimodelPeriodUpdateObjectRequest::new();
+        req.properties = Some(
+            vec![
+                ApimodelPeriodPropertyLinkWithValue::ApimodelPeriodSelectPropertyLinkValue(
+                    Box::new(prop),
+                ),
+            ],
+        );
+        let res = openapi::apis::objects_api::update_object(
+                &self.config,
+                API_VERSION,
+                &space_id,
+                &object_id,
+                req,
+            )
+            .await;
+        println!("{:#?}", res);
+        
+    }
 }
 
-pub static API_CLIENT: GlobalSignal<Client> = Global::new(|| Client::new());

@@ -7,6 +7,7 @@ pub struct ListEntryProps {
     pub space_id: String,
     pub object_id: String,
     pub properties: Vec<Option<ApimodelPeriodPropertyWithValue>>,
+    pub options: Vec<Option<Vec<ApimodelPeriodTag>>>,
 }
 #[component]
 pub fn ListEntry(props: ListEntryProps) -> Element {
@@ -19,12 +20,13 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
                 "flex-direction": "row",
                 "data-style": "outline",
                 "{props.name}"
-                for prop in props.properties {
+                for (i , prop) in props.properties.iter().enumerate() {
                     if let Some(p) = prop {
                         PropertyValue {
                             space_id: &props.space_id,
                             object_id: &props.object_id,
                             data: p.clone(),
+                            options: props.options[i].clone(),
                         }
                     }
                 }

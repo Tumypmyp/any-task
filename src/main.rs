@@ -9,6 +9,7 @@ const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/styling/main.css");
 const THEME_CSS: Asset = asset!("/assets/styling/theme.css");
 const STYLE_CSS: Asset = asset!("/assets/styling/style.css");
+
 #[derive(Clone, Routable)]
 #[rustfmt::skip]
 enum Route {
