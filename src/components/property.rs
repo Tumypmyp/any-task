@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 use openapi::models::*;
 use crate::components::select_property::SelectPropertyValue;
 use crate::components::checkbox_property::CheckboxPropertyValue;
+use crate::components::date_property::DatePropertyValue;
 #[component]
 pub fn PropertyValue(
     space_id: String,
@@ -32,6 +33,19 @@ pub fn PropertyValue(
                     object_id: &object_id,
                     prop: use_signal(|| *select),
                     options: options.unwrap_or_default(),
+                }
+            }
+        }
+        Some(
+            ApimodelPeriodPropertyWithValue::ApimodelPeriodDatePropertyValue(
+                date,
+            ) 
+        ) => {
+            rsx! {
+                DatePropertyValue {
+                    space_id: &space_id,
+                    object_id: &object_id,
+                    prop: use_signal(|| *date),
                 }
             }
         }

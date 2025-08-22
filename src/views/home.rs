@@ -24,7 +24,8 @@ pub fn Home() -> Element {
         }
         Some(Err(e)) => {
             tracing::debug!("error: {:#?}", e);
-            crate::Error()
+            crate::error(e.to_string());
+            rsx!()
         }
         _ => rsx!(),
     }
