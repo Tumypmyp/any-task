@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use dioxus_desktop::{Config, WindowBuilder};
-use dioxus_desktop::wry::dpi::PhysicalSize; // Import PhysicalSize
+use dioxus_desktop::wry::dpi::PhysicalSize;
 use dioxus_desktop;
 
 use dioxus_primitives::toast::ToastProvider;
@@ -19,7 +19,7 @@ const STYLE_CSS: Asset = asset!("/assets/styling/style.css");
 #[rustfmt::skip]
 enum Route {
     #[route("/")]
-    #[redirect("/:.._s", |_s:Vec<String>|Route::Home{})]
+    #[redirect("/:.._s", |_s:Vec<String>|Route::Login{})]
     Home {},
     #[route("/space/:id")]
     Space { id: String },
@@ -27,7 +27,10 @@ enum Route {
     Login {},
 }
 fn main() {
-        let window_config = WindowBuilder::new()
+    dioxus::logger::initialize_default();
+    tracing::info!("starting app");
+
+    let window_config = WindowBuilder::new()
             .with_title("AnyTasks")
             .with_visible(true)
             .with_focused(true)
@@ -50,12 +53,13 @@ fn main() {
     } else {
         Config::new().with_window(window_config)
     };
-
+    tracing::info!("config is ready");
     dioxus_desktop::launch::launch(App, vec![], vec![Box::new(cfg)]);
 }
 #[component]
 fn App() -> Element {
     _ = document::eval("document.documentElement.setAttribute('data-theme', 'dark');");
+    tracing::info!("app is running");
     rsx! {
         ToastProvider {
             document::Link { rel: "icon", href: FAVICON }

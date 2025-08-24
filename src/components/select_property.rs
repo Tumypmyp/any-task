@@ -16,9 +16,9 @@ pub fn SelectPropertyValue(
     let space_id_clone = use_signal(|| space_id.clone());
     let object_id_clone = use_signal(|| object_id.clone());
     rsx! {
-        div { "class": "select-holder",
+        div { class: "select-holder",
             Select::<Option<String>> {
-                class: "select",
+                "class": "select",
                 placeholder: "{prop().select.unwrap_or_default().name.clone().unwrap_or_default()}",
                 default_value: prop().select.unwrap_or_default().name.clone(),
                 on_value_change: move |v: Option<Option<String>>| {
@@ -35,9 +35,9 @@ pub fn SelectPropertyValue(
                     });
                 },
                 SelectTrigger {
-                    class: "select-trigger",
-                    aria_label: "select",
-                    width: "8rem",
+                    "class": "select-trigger",
+                    "aria_label": "select",
+                    "width": "8rem",
                     SelectValue {}
                     svg {
                         class: "select-expand-icon",
@@ -54,12 +54,12 @@ pub fn SelectPropertyValue(
 #[component]
 pub fn SelectPropertySelectList(options: Vec<ApimodelPeriodTag>) -> Element {
     rsx! {
-        SelectList { class: "select-list",
-            SelectGroup { class: "select-group",
+        SelectList { "class": "select-list",
+            SelectGroup { "class": "select-group",
                 for (i , option) in options.clone().iter().enumerate() {
                     if let Some(name) = &option.name {
                         SelectOption::<Option<String>> {
-                            class: "select-option",
+                            "class": "select-option",
                             index: i,
                             value: option.id.clone().unwrap(),
                             text_value: name.clone(),

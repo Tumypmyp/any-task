@@ -11,19 +11,19 @@ pub fn Home() -> Element {
         Some(Ok(s)) => {
             rsx! {
                 div { id: "space-list",
-                    for space in s.clone().data.unwrap().clone() {
-                        div { class: "button-holder", key: "{space.clone().id.unwrap()}",
+                    for space in s.clone().data.unwrap_or_default().clone() {
+                        div { class: "button-holder", key: "{space.clone().id.unwrap_or_default()}",
                             button {
                                 class: "button",
-                                // "height": "10vh",
-                                // "width": "20vw",
+                                width: "90vw",
+                                height: "10vh",
                                 "data-style": "primary",
                                 onclick: move |_| {
                                     nav.push(Route::Space {
-                                        id: space.clone().id.unwrap(),
+                                        id: space.clone().id.unwrap_or_default(),
                                     });
                                 },
-                                "{space.clone().name.unwrap()}"
+                                "{space.clone().name.unwrap_or_default()}"
                             }
                         }
                     }

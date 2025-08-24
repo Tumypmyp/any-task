@@ -6,7 +6,7 @@ pub fn Actions() -> Element {
     
     rsx! {
         div { id: "actions-holder",
-            div { "class": "button-holder",
+            div { class: "button-holder",
                 button {
                     class: "button",
                     "data-style": "outline",

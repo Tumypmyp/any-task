@@ -9,11 +9,11 @@ pub fn CheckboxPropertyValue(
     prop: Signal<ApimodelPeriodCheckboxPropertyValue>,
 ) -> Element {
     rsx! {
-        div { "class": "checkbox-holder",
+        div { class: "checkbox-holder",
             Checkbox {
-                class: "checkbox",
+                "class": "checkbox",
                 name: "tos-check",
-                aria_label: "checkbox",
+                "aria_label": "checkbox",
                 on_checked_change: move |e| {
                     let sp = space_id.clone();
                     let ob = object_id.clone();
@@ -25,7 +25,7 @@ pub fn CheckboxPropertyValue(
                     API_CLIENT.read().update_done_property(sp, ob, prop.read().checkbox);
                 },
                 default_checked: if prop().checkbox.unwrap_or_default() { CheckboxState::Checked } else { CheckboxState::Unchecked },
-                CheckboxIndicator { class: "checkbox-indicator",
+                CheckboxIndicator { "class": "checkbox-indicator",
                     svg {
                         class: "checkbox-check-icon",
                         view_box: "0 0 24 24",

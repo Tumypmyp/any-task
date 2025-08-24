@@ -14,6 +14,7 @@ async fn check_and_save_token(
     token_signal: Signal<String>,
     mut settings_signal: Signal<AppSettings>,
 ) {
+    tracing::info!("reading API token");
     let new_token = token_signal.read().trim().to_string();
     API_CLIENT.write().set_token(new_token.clone());
     match API_CLIENT.read().list_spaces().await {
@@ -34,6 +35,7 @@ async fn check_and_save_token(
 }
 #[component]
 pub fn Login() -> Element {
+    tracing::info!("login page");
     let settings = use_signal(|| {
         get_data::<AppSettings>(USER_SETTINGS_KEY)
             .unwrap_or_else(|e| {

@@ -17,7 +17,7 @@ pub fn Search(space_id: String) -> Element {
     let resp = use_resource(move || async move {
         API_CLIENT.read().get_tasks(&space_id.read()).await
     });
-    let keys: Signal<Vec<String>> = use_signal(|| vec!["title".to_string(), "status".to_string(), "created_date".to_string(), "done".to_string()]);
+    let keys: Signal<Vec<String>> = use_signal(|| vec!["title".to_string(), "status".to_string(), "date".to_string(), "done".to_string()]);
     let mut ids: Signal<Vec<String>> = use_signal(|| vec!["".to_string(); 4]);
     let mut default_values: Signal<Vec<Option<ApimodelPeriodPropertyWithValue>>> = use_signal(|| vec![None; 4]);
     let mut options: Signal<Vec<Option<Vec<ApimodelPeriodTag>>>> = use_signal(|| vec![None; 4]);
@@ -39,7 +39,7 @@ pub fn Search(space_id: String) -> Element {
                             }
                         }
                         Err(e) => {
-                            println!("error: {:#?}", e);
+                            tracing::error!("error: {:#?}", e);
                         }
                     }
 
@@ -128,7 +128,7 @@ pub fn Search(space_id: String) -> Element {
             }
         }
         Some(Err(e)) => {
-            println!("error: {:#?}", e);
+            tracing::error!("error: {:#?}", e);
         }
         _ => {}
     }

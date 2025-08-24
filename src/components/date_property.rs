@@ -9,13 +9,13 @@ pub fn DatePropertyValue(
     object_id: String,
     prop: Signal<ApimodelPeriodDatePropertyValue>,
 ) -> Element {
-    println!("date is {prop:#?}");
+    tracing::debug!("date is {prop:#?}");
     let date = prop().date.unwrap_or_default();
     let d = DateTime::parse_from_rfc3339(&date).unwrap_or_default();
     let date = d.format("%d/%m/%y");
     
     rsx! {
-        div { "class": "button-holder", key: "{object_id}",
+        div { class: "button-holder", key: "{object_id}",
             button {
                 class: "button",
                 width: "20vw",

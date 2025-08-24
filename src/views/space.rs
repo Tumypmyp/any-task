@@ -20,7 +20,7 @@ pub fn SpaceTitle(space_id: Signal<String>) -> Element {
     });
     match &*resp.read() {
         Some(Ok(p)) => {
-            name.set(p.clone().space.unwrap().name.unwrap());
+            name.set(p.clone().space.unwrap_or_default().name.unwrap_or_default());
         }
         _ => {}
     }

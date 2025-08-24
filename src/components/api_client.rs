@@ -120,7 +120,7 @@ impl Client {
                     ),
                 ],
             );
-            println!("{:#?}", req);
+            tracing::debug!("{:#?}", req);
             let res = openapi::apis::objects_api::update_object(
                     &config,
                     API_VERSION,
@@ -129,7 +129,7 @@ impl Client {
                     req,
                 )
                 .await;
-            println!("{:#?}", res);
+            tracing::debug!("{:#?}", res);
         });
     }
     
@@ -153,7 +153,7 @@ impl Client {
                 req,
             )
             .await;
-        println!("{:#?}", res);
+        tracing::debug!("{:#?}", res);
         
     }
 }
