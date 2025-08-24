@@ -4,7 +4,6 @@ use dioxus_primitives::select::{
     SelectValue,
 };
 use openapi::models::*;
-
 use crate::components::API_CLIENT;
 #[component]
 pub fn SelectPropertyValue(

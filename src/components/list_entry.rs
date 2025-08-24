@@ -21,11 +21,7 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
                 "data-style": "outline",
                 div { class: "properties-holder",
                     div { class: "button-holder",
-                        button {
-                            class: "button",
-                            "data-style": "outline",
-                            "{props.name}"
-                        }
+                        button { class: "button", "data-style": "outline", "{props.name}" }
                     }
                     for (i , prop) in props.properties.iter().enumerate() {
                         if let Some(p) = prop {

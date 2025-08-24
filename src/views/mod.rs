@@ -4,3 +4,4 @@ mod home;
 pub use home::Home;
 mod login;
 pub use login::Login;
+pub use login::Logout;

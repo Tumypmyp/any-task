@@ -3,9 +3,7 @@ use crate::Route;
 use crate::hooks::*;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
-
 pub const USER_SETTINGS_KEY: &str = "user_settings";
-
 #[derive(Debug, Serialize, Deserialize, PartialEq, Default)]
 pub struct AppSettings {
     pub token: String,
@@ -14,7 +12,7 @@ async fn check_and_save_token(
     token_signal: Signal<String>,
     mut settings_signal: Signal<AppSettings>,
 ) {
-    tracing::info!("reading API token");
+    tracing::info!("Validating API token");
     let new_token = token_signal.read().trim().to_string();
     API_CLIENT.write().set_token(new_token.clone());
     match API_CLIENT.read().list_spaces().await {
@@ -33,6 +31,34 @@ async fn check_and_save_token(
         }
     }
 }
+async fn remove_token() {
+    let settings = AppSettings {
+        token: "".to_string(),
+    };
+    match save_data(USER_SETTINGS_KEY, &settings) {
+        Ok(_) => tracing::debug!("Settings saved successfully!"),
+        Err(e) => tracing::error!("Error saving settings: {}", e),
+    }
+    let nav = navigator();
+    nav.push(Route::Login {});
+}
+#[component]
+pub fn Logout() -> Element {
+    rsx! {
+        div { id: "actions-holder",
+            div { class: "button-holder",
+                button {
+                    class: "button",
+                    "data-style": "outline",
+                    onclick: move |_| {
+                        spawn(remove_token());
+                    },
+                    "Logout"
+                }
+            }
+        }
+    }
+}
 #[component]
 pub fn Login() -> Element {
     tracing::info!("login page");
@@ -41,7 +67,7 @@ pub fn Login() -> Element {
             .unwrap_or_else(|e| {
                 tracing::error!("Error loading settings: {}", e);
                 AppSettings {
-                    token: "some-token".to_string(),
+                    token: "".to_string(),
                 }
             })
     });
@@ -51,11 +77,11 @@ pub fn Login() -> Element {
         div { id: "login-holder",
             input {
                 class: "input",
-                placeholder: "Paste your Anytype token",
+                placeholder: "Paste your Anytype API token",
+                style: "width: 50vw",
                 value: "{token.read()}",
                 oninput: move |event| {
                     *token.write() = event.value();
-                    spawn(check_and_save_token(token, settings));
                 },
             }
             div { class: "button-holder",

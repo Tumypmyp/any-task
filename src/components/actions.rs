@@ -3,7 +3,6 @@ use dioxus::prelude::*;
 #[component]
 pub fn Actions() -> Element {
     let nav = navigator();
-    
     rsx! {
         div { id: "actions-holder",
             div { class: "button-holder",
@@ -14,7 +13,7 @@ pub fn Actions() -> Element {
                         nav.push(Route::Home {});
                     },
                     "Home"
-                } 
+                }
             }
         }
     }

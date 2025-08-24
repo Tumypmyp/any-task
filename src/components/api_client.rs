@@ -3,11 +3,8 @@ use models::*;
 use openapi::apis::configuration::Configuration;
 use openapi::apis::*;
 use openapi::models;
-
 const API_VERSION: &str = "2025-05-20";
-
 pub static API_CLIENT: GlobalSignal<Client> = Global::new(|| Client::new());
-
 pub struct Client {
     config: Configuration,
 }
@@ -96,7 +93,7 @@ impl Client {
         property_id: String,
     ) -> Result<
         ApimodelPeriodPropertyResponse,
-        Error<openapi::apis::properties_api::GetPropertyError>
+        Error<openapi::apis::properties_api::GetPropertyError>,
     > {
         openapi::apis::properties_api::get_property(
                 &self.config,
@@ -106,7 +103,12 @@ impl Client {
             )
             .await
     }
-    pub fn update_done_property(&self, space_id: String, object_id: String, done: Option<bool>) {
+    pub fn update_done_property(
+        &self,
+        space_id: String,
+        object_id: String,
+        done: Option<bool>,
+    ) {
         let config = self.config.clone();
         spawn(async move {
             let mut prop = ApimodelPeriodCheckboxPropertyLinkValue::new();
@@ -132,8 +134,13 @@ impl Client {
             tracing::debug!("{:#?}", res);
         });
     }
-    
-    pub async fn  update_select_property(&self, space_id: String, object_id: String, property_key: String, option: Option<String>) {
+    pub async fn update_select_property(
+        &self,
+        space_id: String,
+        object_id: String,
+        property_key: String,
+        option: Option<String>,
+    ) {
         let mut prop = ApimodelPeriodSelectPropertyLinkValue::new();
         prop.key = property_key.into();
         prop.select = option;
@@ -154,7 +161,5 @@ impl Client {
             )
             .await;
         tracing::debug!("{:#?}", res);
-        
     }
 }
-

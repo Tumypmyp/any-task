@@ -2,7 +2,6 @@ use dioxus::prelude::*;
 use dioxus_desktop::{Config, WindowBuilder};
 use dioxus_desktop::wry::dpi::PhysicalSize;
 use dioxus_desktop;
-
 use dioxus_primitives::toast::ToastProvider;
 use std::env;
 use std::path::PathBuf;
@@ -14,7 +13,6 @@ const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/styling/main.css");
 const THEME_CSS: Asset = asset!("/assets/styling/theme.css");
 const STYLE_CSS: Asset = asset!("/assets/styling/style.css");
-
 #[derive(Clone, Routable)]
 #[rustfmt::skip]
 enum Route {
@@ -29,12 +27,11 @@ enum Route {
 fn main() {
     dioxus::logger::initialize_default();
     tracing::info!("starting app");
-
     let window_config = WindowBuilder::new()
-            .with_title("AnyTasks")
-            .with_visible(true)
-            .with_focused(true)
-            .with_inner_size(PhysicalSize::new(900, 1300));
+        .with_title("AnyTasks")
+        .with_visible(true)
+        .with_focused(true)
+        .with_inner_size(PhysicalSize::new(900, 1300));
     let cfg = if cfg!(target_os = "windows") {
         let user_data_dir = env::var("LOCALAPPDATA")
             .expect("env var LOCALAPPDATA not found");

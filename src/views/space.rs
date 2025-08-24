@@ -2,7 +2,6 @@ use dioxus::prelude::*;
 use crate::API_CLIENT;
 use crate::Actions;
 use crate::Search;
-
 #[component]
 pub fn Space(id: String) -> Element {
     let id = use_signal(|| id.clone());
