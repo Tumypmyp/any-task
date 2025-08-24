@@ -1,9 +1,7 @@
 use dioxus::prelude::*;
 use openapi::models::*;
-use crate::components::select_property::SelectPropertyValue;
-use crate::components::checkbox_property::CheckboxPropertyValue;
-use crate::components::date_property::DatePropertyValue;
-use crate::components::text_property::TextPropertyValue;
+use crate::property::*;
+
 #[component]
 pub fn PropertyValue(
     space_id: String,

@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use crate::components::Title;
 use crate::API_CLIENT;
 use crate::Actions;
 use crate::Search;
@@ -24,8 +25,6 @@ pub fn SpaceTitle(space_id: Signal<String>) -> Element {
         _ => {}
     }
     rsx! {
-        div { id: "title-holder",
-            button { class: "button", "data-style": "ghost", "{name}" }
-        }
+        Title {  title: "{name}"}
     }
 }

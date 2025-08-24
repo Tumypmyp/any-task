@@ -2,6 +2,8 @@ use crate::API_CLIENT;
 use crate::Route;
 use dioxus::prelude::*;
 use crate::Logout;
+use crate::Title;
+
 #[component]
 pub fn Home() -> Element {
     let nav = navigator();
@@ -10,6 +12,7 @@ pub fn Home() -> Element {
     match &*spaces.read() {
         Some(Ok(s)) => {
             rsx! {
+                Title{ title: "Spaces" }
                 div { id: "space-list",
                     for space in s.clone().data.unwrap_or_default().clone() {
                         div {

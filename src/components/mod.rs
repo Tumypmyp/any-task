@@ -10,9 +10,7 @@ mod actions;
 pub use actions::Actions;
 mod search;
 pub use search::Search;
-mod property;
-pub use property::PropertyValue;
-mod select_property;
-mod checkbox_property;
-mod date_property;
-mod text_property;
+mod title;
+pub use title::Title;
+pub mod property;
+
