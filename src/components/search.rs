@@ -17,15 +17,17 @@ pub fn Search(space_id: String) -> Element {
     let resp = use_resource(move || async move {
         API_CLIENT.read().get_tasks(&space_id.read()).await
     });
-    let keys: Signal<Vec<String>> = use_signal(|| vec!["done".to_string(), "status".to_string(), "created_date".to_string()]);
-    let mut ids: Signal<Vec<String>> = use_signal(|| vec!["".to_string(); 3]);
-    let mut default_values: Signal<Vec<Option<ApimodelPeriodPropertyWithValue>>> = use_signal(|| vec![None; 3]);
-    let mut options: Signal<Vec<Option<Vec<ApimodelPeriodTag>>>> = use_signal(|| vec![None; 3]);
+    let keys: Signal<Vec<String>> = use_signal(|| vec!["title".to_string(), "status".to_string(), "created_date".to_string(), "done".to_string()]);
+    let mut ids: Signal<Vec<String>> = use_signal(|| vec!["".to_string(); 4]);
+    let mut default_values: Signal<Vec<Option<ApimodelPeriodPropertyWithValue>>> = use_signal(|| vec![None; 4]);
+    let mut options: Signal<Vec<Option<Vec<ApimodelPeriodTag>>>> = use_signal(|| vec![None; 4]);
 
     use_effect(move || {
         spawn(
             async move {
                 for (i, key) in keys().clone().iter().enumerate() {
+                    
+                    // property ids
                     let space_id = space_id().clone();
                     let properties = API_CLIENT.read().list_properties(&space_id).await;
                     match properties {

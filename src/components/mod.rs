@@ -15,3 +15,4 @@ pub use property::PropertyValue;
 mod select_property;
 mod checkbox_property;
 mod date_property;
+mod text_property;

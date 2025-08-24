@@ -10,36 +10,49 @@ The client is currently in active development and supports only the desktop vers
 
 ## Features
 
-- [x] Auth with Bearer token
+- [x] Auth with API token
 - [x] Choose space
 - [x] View tasks
 - [x] Check/uncheck Done property
 - [x] Remember state of the app after closing
-- [ ] Auth with 4-digit code
 - [x] Change Tag property
+- [x] View Date/Time
+- [ ] Change Date/Time
+- [ ] Auth with 4-digit code
 - [ ] Choose query
-- [ ] Change Date/Time property
 - [ ] Timeline view
+- [ ] Build for Android
 
 
 ## Development
 
 The project includes `assets` folder and a `views` folder. API code is generated with `openapi-generator-cli` to `api`.
 
-### Install Dioxus
-```
-cargo binstall dioxus-cli -y --force --version 0.7.0-alpha.3
-```
 
-### Serve the App
+## Installing Dependencies
 
-Run the following command in the root of your project to start developing with the default platform:
+- [dioxus-cli](https://github.com/DioxusLabs/dioxus)
+
+### Windows, Linux
 
 ```bash
-dx serve --platform desktop
+cargo install --git https://github.com/DioxusLabs/dioxus dioxus-cli --locked
 ```
 
-To run for a different platform, use the `--platform platform` flag. E.g.
+### NixOS
+
 ```bash
-dx serve --platform android
+nix develop
+```
+
+## Building
+
+```bash
+dx serve
+```
+
+## Publishing
+
+```bash
+dx bundle
 ```

@@ -5,6 +5,7 @@ use dioxus_desktop;
 
 use dioxus_primitives::toast::ToastProvider;
 use std::env;
+use std::path::PathBuf;
 use views::*;
 mod views;
 use components::*;
@@ -26,22 +27,31 @@ enum Route {
     Login {},
 }
 fn main() {
-    if cfg!(target_os = "windows") {
         let window_config = WindowBuilder::new()
             .with_title("AnyTasks")
             .with_visible(true)
             .with_focused(true)
             .with_inner_size(PhysicalSize::new(900, 1300));
-            
+    let cfg = if cfg!(target_os = "windows") {
         let user_data_dir = env::var("LOCALAPPDATA")
             .expect("env var LOCALAPPDATA not found");
-        let cfg = dioxus_desktop::Config::new()
+        dioxus_desktop::Config::new()
             .with_data_directory(user_data_dir)
-            .with_window(window_config);
-        dioxus_desktop::launch::launch(App, vec![], vec![Box::new(cfg)]);
+            .with_window(window_config)
+    } else if cfg!(target_os = "linux") {
+        let user_data_dir = env::var("XDG_DATA_HOME")
+            .unwrap_or_else(|_| {
+                let home_dir = env::var("HOME").expect("env var HOME not found");
+                format!("{}/.local/share", home_dir)
+            });
+        Config::new()
+            .with_data_directory(PathBuf::from(user_data_dir).join("AnyTasks"))
+            .with_window(window_config)
     } else {
-        dioxus::launch(App);
-    }
+        Config::new().with_window(window_config)
+    };
+
+    dioxus_desktop::launch::launch(App, vec![], vec![Box::new(cfg)]);
 }
 #[component]
 fn App() -> Element {

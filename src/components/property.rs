@@ -3,6 +3,8 @@ use openapi::models::*;
 use crate::components::select_property::SelectPropertyValue;
 use crate::components::checkbox_property::CheckboxPropertyValue;
 use crate::components::date_property::DatePropertyValue;
+use crate::components::text_property::TextPropertyValue;
+
 #[component]
 pub fn PropertyValue(
     space_id: String,
@@ -11,6 +13,19 @@ pub fn PropertyValue(
     options: Option<Vec<ApimodelPeriodTag>>,
 ) -> Element {
     match data {
+        Some(
+            ApimodelPeriodPropertyWithValue::ApimodelPeriodTextPropertyValue(
+                text,
+            ),
+        ) => {
+            rsx! {
+                TextPropertyValue {
+                    space_id: &space_id,
+                    object_id: &object_id,
+                    prop: use_signal(|| *text),
+                }
+            }
+        }
         Some(
             ApimodelPeriodPropertyWithValue::ApimodelPeriodCheckboxPropertyValue(
                 checkbox,

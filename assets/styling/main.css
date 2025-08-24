@@ -13,93 +13,80 @@ html[data-theme="dark"] {
 }
 
 #space-list {
-	margin: 7%;
-	text-align: left;
-	font-size: x-large;
-	color: white;
+  margin: 7%;
+  text-align: left;
+  font-size: x-large;
+  color: white;
   justify-content: center;
   align-items: center;
-	display: flex;
-	flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 #object-list {
-	margin: 5;
-	align-items: center;
+  margin: 5;
+  align-items: center;
   display: flex;
   justify-content: center;
   flex-direction: column; 
 }
 
-a {
-	color: white;
-	text-decoration: none;
-	margin-top: 20px;
-	margin: 10px 0px;
-	border: white 1px solid;
-	border-radius: 5px;
-	padding: 10px;
-	display: flex;
-}
-
-a:hover {
-	background-color: #1f1f1f;
-	cursor: pointer;
-}
-
-
-a #done {
-	background-color: #3d1412;
-}
-
-
 #title-holder {
   align-items: center;
   display: flex;
   justify-content: center;
- 	/* width: 90%; */
+   /* width: 90%; */
   max-width: 95%;
   /* padding: 3px; */
   flex-direction: column;
   align-items: center;
   /* position: fixed; */
- 	display: flex;
-	flex-direction: row;
-	/* padding: 1vw 0vw 0vw 1vw; */
-	
-}
-.button-holder {
-  /* align-items: center; */
   display: flex;
-  /* justify-content: center; */
- 	/* width: 90%; */
+  flex-direction: row;
+  /* padding: 1vw 0vw 0vw 1vw; */
+  
+}
+
+
+#actions-holder {
+  position: fixed;
+  display: flex;
+  flex-direction: row;
+  padding-bottom: 0.5vw;
+  
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+}
+
+#login-holder {
+  padding-top: 40vh;
+  display: flex;
+  flex-direction: row;   
+  align-items: center; 
+
+}
+
+.properties-holder {
+  display: flex;
+  flex-direction: row;   
+  align-items: center; 
+}
+
+.button-holder {
+  display: flex;
   max-width: 95%;
   padding: 3px;
   flex-direction: column;
   align-items: center;
 }
 
-#actions-holder {
-  position: fixed;
- 	display: flex;
-	flex-direction: row;
-	padding: 1vw 0vw 0vw 1vw;
-	/* padding-bottom: 0.5vw; */
-	/* padding-left: 1.5vw; */
-
-	position: fixed;
-	bottom: 0;
-	left: 50%;
-	transform: translateX(-50%);
-  z-index: 1000;
-}
-
 .checkbox-holder {
-	min-width: 8vw;
-  /* padding-left: 5; */
-	/* margin-left: 5; */
-}
-
-#token-holder {
-	padding: 10px;
+  width: 6vw;  
+  display: flex;
+  padding: 3px;
+  flex-direction: column;
+  align-items: center;
 }

@@ -3,6 +3,8 @@ use crate::Route;
 use dioxus::prelude::*;
 #[component]
 pub fn Home() -> Element {
+    let nav = navigator();
+    
     _ = document::eval("document.documentElement.setAttribute('data-theme', 'dark');");
     let spaces = use_resource(|| async move { API_CLIENT.read().list_spaces().await });
     match &*spaces.read() {
@@ -10,13 +12,19 @@ pub fn Home() -> Element {
             rsx! {
                 div { id: "space-list",
                     for space in s.clone().data.unwrap().clone() {
-                        Link {
-                            class: "button",
-                            "data-style": "primary",
-                            to: Route::Space {
-                                id: space.clone().id.unwrap(),
-                            },
-                            "{space.clone().name.unwrap()}"
+                        div { class: "button-holder", key: "{space.clone().id.unwrap()}",
+                            button {
+                                class: "button",
+                                // "height": "10vh",
+                                // "width": "20vw",
+                                "data-style": "primary",
+                                onclick: move |_| {
+                                    nav.push(Route::Space {
+                                        id: space.clone().id.unwrap(),
+                                    });
+                                },
+                                "{space.clone().name.unwrap()}"
+                            }
                         }
                     }
                 }

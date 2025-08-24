@@ -12,21 +12,29 @@ pub struct ListEntryProps {
 #[component]
 pub fn ListEntry(props: ListEntryProps) -> Element {
     rsx! {
-        div { "class": "button-holder", id: props.object_id,
+        div { class: "button-holder", key: "{props.object_id}",
             button {
                 class: "button",
                 width: "90vw",
                 display: "flex",
                 "flex-direction": "row",
                 "data-style": "outline",
-                "{props.name}"
-                for (i , prop) in props.properties.iter().enumerate() {
-                    if let Some(p) = prop {
-                        PropertyValue {
-                            space_id: &props.space_id,
-                            object_id: &props.object_id,
-                            data: p.clone(),
-                            options: props.options[i].clone(),
+                div { class: "properties-holder",
+                    div { class: "button-holder",
+                        button {
+                            class: "button",
+                            "data-style": "outline",
+                            "{props.name}"
+                        }
+                    }
+                    for (i , prop) in props.properties.iter().enumerate() {
+                        if let Some(p) = prop {
+                            PropertyValue {
+                                space_id: &props.space_id,
+                                object_id: &props.object_id,
+                                data: p.clone(),
+                                options: props.options[i].clone(),
+                            }
                         }
                     }
                 }

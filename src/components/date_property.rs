@@ -15,7 +15,7 @@ pub fn DatePropertyValue(
     let date = d.format("%d/%m/%y");
     
     rsx! {
-        div { "class": "date-holder", key: "{object_id}",
+        div { "class": "button-holder", key: "{object_id}",
             button {
                 class: "button",
                 width: "20vw",

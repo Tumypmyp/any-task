@@ -3,6 +3,9 @@ use crate::Route;
 use crate::hooks::*;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
+
+pub const USER_SETTINGS_KEY: &str = "user_settings";
+
 #[derive(Debug, Serialize, Deserialize, PartialEq, Default)]
 pub struct AppSettings {
     pub token: String,
@@ -17,7 +20,7 @@ async fn check_and_save_token(
         Ok(_) => {
             let mut settings = settings_signal.write();
             settings.token = new_token;
-            match save_data("user_settings", &*settings) {
+            match save_data(USER_SETTINGS_KEY, &*settings) {
                 Ok(_) => tracing::debug!("Settings saved successfully!"),
                 Err(e) => tracing::error!("Error saving settings: {}", e),
             }
@@ -32,7 +35,7 @@ async fn check_and_save_token(
 #[component]
 pub fn Login() -> Element {
     let settings = use_signal(|| {
-        get_data::<AppSettings>("user_settings")
+        get_data::<AppSettings>(USER_SETTINGS_KEY)
             .unwrap_or_else(|e| {
                 tracing::error!("Error loading settings: {}", e);
                 AppSettings {
@@ -43,7 +46,7 @@ pub fn Login() -> Element {
     let mut token = use_signal(|| settings.read().token.to_string());
     spawn(check_and_save_token(token, settings));
     rsx! {
-        div { id: "token-holder",
+        div { id: "login-holder",
             input {
                 class: "input",
                 placeholder: "Paste your Anytype token",
@@ -53,13 +56,15 @@ pub fn Login() -> Element {
                     spawn(check_and_save_token(token, settings));
                 },
             }
-            button {
-                class: "button",
-                "data-style": "secondary",
-                onclick: move |_| {
-                    spawn(check_and_save_token(token, settings));
-                },
-                "Enter"
+            div { class: "button-holder",
+                button {
+                    class: "button",
+                    "data-style": "secondary",
+                    onclick: move |_| {
+                        spawn(check_and_save_token(token, settings));
+                    },
+                    "Enter"
+                }
             }
         }
     }
