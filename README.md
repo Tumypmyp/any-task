@@ -1,4 +1,4 @@
-# Any tasks
+# AnyTasks
 
 [Anytype](https://github.com/anyproto/) has great desktop, Android and iOS clients. This project focuses on cross-platform compatibility using Dioxus, a modern Rust framework.
 
@@ -44,12 +44,24 @@ nix develop
 
 ## Building
 
+### Desktop
+
 ```bash
-dx serve
+dx serve --platform desktop
+```
+
+### Android
+
+- `adb pair 192.168.x.x:port` - connect to device with wireless debugging
+- `adb devices` - get connected devices
+ 
+
+```bash
+dx serve --platform android --device
 ```
 
 ## Publishing
 
 ```bash
-dx bundle
+dx bundle --platform desktop
 ```

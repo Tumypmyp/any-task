@@ -48,7 +48,7 @@ fn main() {
             .with_data_directory(PathBuf::from(user_data_dir).join("AnyTasks"))
             .with_window(window_config)
     } else {
-        Config::new().with_window(window_config)
+        Config::new()
     };
     tracing::info!("config is ready");
     dioxus_desktop::launch::launch(App, vec![], vec![Box::new(cfg)]);

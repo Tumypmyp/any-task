@@ -1,8 +1,8 @@
 [application]
-name = "Any tasks"
+name = "AnyTasks"
 
 [web.app]
-title = "Any tasks"
+title = "AnyTasks"
 
 # include `assets` in web platform
 [web.resource]

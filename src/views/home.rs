@@ -9,10 +9,11 @@ pub fn Home() -> Element {
     let nav = navigator();
     _ = document::eval("document.documentElement.setAttribute('data-theme', 'dark');");
     let spaces = use_resource(|| async move { API_CLIENT.read().list_spaces().await });
+    tracing::info!("Opened home");
     match &*spaces.read() {
         Some(Ok(s)) => {
             rsx! {
-                Title{ title: "Spaces" }
+                Title { title: "Spaces" }
                 div { id: "space-list",
                     for space in s.clone().data.unwrap_or_default().clone() {
                         div {

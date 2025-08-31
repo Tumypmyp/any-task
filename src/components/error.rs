@@ -10,7 +10,7 @@ pub fn error(text: String) -> () {
         .error(
             text,
             ToastOptions::new()
-                .description("Some info you need")
+                // .description("Some info you need")
                 .duration(Duration::from_secs(5))
                 .permanent(false),
         );
@@ -21,7 +21,7 @@ pub fn info(text: String) -> () {
         .info(
             text,
             ToastOptions::new()
-                .description("Some info you need")
+                // .description("Some info you need")
                 .duration(Duration::from_secs(5))
                 .permanent(false),
         );

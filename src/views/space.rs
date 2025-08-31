@@ -5,6 +5,8 @@ use crate::Actions;
 use crate::Search;
 #[component]
 pub fn Space(id: String) -> Element {
+    tracing::info!("loading space {id}");
+    
     let id = use_signal(|| id.clone());
     rsx! {
         SpaceTitle { space_id: id }
@@ -25,6 +27,6 @@ pub fn SpaceTitle(space_id: Signal<String>) -> Element {
         _ => {}
     }
     rsx! {
-        Title {  title: "{name}"}
+        Title { title: "{name}" }
     }
 }

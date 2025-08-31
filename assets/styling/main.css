@@ -55,7 +55,7 @@ html[data-theme="dark"] {
 #login-holder {
   padding-top: 40vh;
   display: flex;
-  flex-direction: row;   
+  flex-direction: column;   
   align-items: center; 
 
 }

@@ -3,37 +3,41 @@ use crate::Route;
 use crate::hooks::*;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
+use crate::info;
 pub const USER_SETTINGS_KEY: &str = "user_settings";
 #[derive(Debug, Serialize, Deserialize, PartialEq, Default)]
 pub struct AppSettings {
     pub token: String,
+    pub server: String,
 }
-async fn check_and_save_token(
-    token_signal: Signal<String>,
-    mut settings_signal: Signal<AppSettings>,
-) {
-    tracing::info!("Validating API token");
-    let new_token = token_signal.read().trim().to_string();
-    API_CLIENT.write().set_token(new_token.clone());
-    match API_CLIENT.read().list_spaces().await {
-        Ok(_) => {
-            let mut settings = settings_signal.write();
-            settings.token = new_token;
-            match save_data(USER_SETTINGS_KEY, &*settings) {
-                Ok(_) => tracing::debug!("Settings saved successfully!"),
-                Err(e) => tracing::error!("Error saving settings: {}", e),
-            }
-            let nav = navigator();
-            nav.push(Route::Home {});
-        }
-        Err(e) => {
-            tracing::error!("Token check failed: {:#?}", e);
-        }
-    }
-}
+// async fn check_and_save_token(
+//     token_signal: Signal<String>,
+//     mut settings_signal: Signal<AppSettings>,
+// ) {
+//     tracing::info!("Validating API token");
+//     let new_token = token_signal.read().trim().to_string();
+//     API_CLIENT.write().set_token(new_token.clone());
+//     API_CLIENT.write().set_server(settings_signal.read().server.to_string());
+//     match API_CLIENT.read().list_spaces().await {
+//         Ok(_) => {
+//             let mut settings = settings_signal.write();
+//             settings.token = new_token;
+//             match save_data(USER_SETTINGS_KEY, &*settings) {
+//                 Ok(_) => tracing::debug!("Settings saved successfully!"),
+//                 Err(e) => tracing::error!("Error saving settings: {}", e),
+//             }
+//             let nav = navigator();
+//             nav.push(Route::Home {});
+//         }
+//         Err(e) => {
+//             tracing::error!("Token check failed: {:#?}", e);
+//         }
+//     }
+// }
 async fn remove_token() {
     let settings = AppSettings {
         token: "".to_string(),
+        server: "".to_string(),        
     };
     match save_data(USER_SETTINGS_KEY, &settings) {
         Ok(_) => tracing::debug!("Settings saved successfully!"),
@@ -62,34 +66,80 @@ pub fn Logout() -> Element {
 #[component]
 pub fn Login() -> Element {
     tracing::info!("login page");
-    let settings = use_signal(|| {
+    let mut settings = use_signal(|| {
         get_data::<AppSettings>(USER_SETTINGS_KEY)
             .unwrap_or_else(|e| {
                 tracing::error!("Error loading settings: {}", e);
                 AppSettings {
                     token: "".to_string(),
+                    server: "127.0.0.1:31009".to_string()
                 }
             })
     });
+
+    let _validate_settings = use_resource(move || {
+        let settings_clone = settings.clone();
+        async move {
+            tracing::info!("Validating API token");
+            let new_token = settings_clone.read().token.trim().to_string();
+            API_CLIENT.write().set_token(new_token.clone());
+            API_CLIENT.write().set_server(settings_clone.read().server.clone());
+            
+            match API_CLIENT.read().list_spaces().await {
+                Ok(_) => {
+                    tracing::debug!("Token valid, spaces listed successfully.");
+                    info("Login successful".to_string());
+                    match save_data(USER_SETTINGS_KEY, &*settings_clone.read()) {
+                        Ok(_) => tracing::debug!("Settings saved successfully!"),
+                        Err(e) => tracing::error!("Error saving settings: {}", e),
+                    }
+                    let nav = navigator();
+                    nav.push(Route::Home {});
+                }
+                Err(e) => {
+                    tracing::error!("Token check failed: {:#?}", e);
+                    info("Login unsuccessful".to_string());
+                }
+            }
+        }
+    });
+
     let mut token = use_signal(|| settings.read().token.to_string());
-    spawn(check_and_save_token(token, settings));
+    let mut server = use_signal(|| settings.read().server.to_string());
     rsx! {
         div { id: "login-holder",
-            input {
-                class: "input",
-                placeholder: "Paste your Anytype API token",
-                style: "width: 50vw",
-                value: "{token.read()}",
-                oninput: move |event| {
-                    *token.write() = event.value();
-                },
+            div { class: "button-holder",
+                input {
+                    class: "input",
+                    placeholder: "Anytype API server",
+                    style: "width: 30vw",
+                    value: "{server.read()}",
+                    oninput: move |event| {
+                        *server.write() = event.value();
+                    },
+                }
+            }
+            div { class: "button-holder",
+                input {
+                    class: "input",
+                    placeholder: "Paste your Anytype API token",
+                    style: "width: 50vw",
+                    value: "{token.read()}",
+                    oninput: move |event| {
+                        *token.write() = event.value();
+                    },
+                }
             }
             div { class: "button-holder",
                 button {
                     class: "button",
                     "data-style": "secondary",
                     onclick: move |_| {
-                        spawn(check_and_save_token(token, settings));
+                        settings
+                            .set(AppSettings {
+                                token: token(),
+                                server: server(),
+                            });
                     },
                     "Enter"
                 }

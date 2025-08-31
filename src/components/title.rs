@@ -4,10 +4,7 @@ use dioxus::prelude::*;
 pub fn Title(title: String) -> Element {
     rsx!{
         div { id: "title-holder",
-            button { class: "button", "data-style": "ghost", 
-                height: "6vh",
-                "{title}" 
-            }
+            button { class: "button", "data-style": "ghost", height: "6vh", "{title}" }
         }
     }
 }
