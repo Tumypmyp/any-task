@@ -4,7 +4,7 @@ use openapi::models::ApimodelPeriodDatePropertyValue;
 use chrono::{DateTime, FixedOffset, NaiveTime};
 use dioxus_primitives::{ContentAlign, ContentSide};
 use dioxus_primitives::popover::{PopoverContent, PopoverRoot, PopoverTrigger};
-use crate::components::API_CLIENT;
+use crate::API_CLIENT;
 #[component]
 pub fn DateTimePropertyValue(
     space_id: String,
@@ -63,7 +63,7 @@ pub fn TimePropertyValue(
     rsx! {
         PopoverRoot {
             class: "button-holder",
-            key: "{object_id}",
+            // key: "{object_id}",
             open: open(),
             on_open_change: move |v| {
                 if v == true {
@@ -72,7 +72,7 @@ pub fn TimePropertyValue(
                 open.set(v);
             },
             PopoverTrigger {
-                button {
+                div {
                     class: "button",
                     display: "flex",
                     "flex-direction": "row",
@@ -80,7 +80,7 @@ pub fn TimePropertyValue(
                     "{time}"
                 }
             }
-            PopoverContent { gap: "0.25rem", side: ContentSide::Left,
+            PopoverContent { gap: "0.25rem", side: ContentSide::Bottom,
                 h3 {
                     padding_top: "0.25rem",
                     padding_bottom: "0.25rem",
@@ -91,7 +91,6 @@ pub fn TimePropertyValue(
                 }
                 input {
                     class: "input",
-                    style: "width: 30vw",
                     value: "{time_set.read()}",
                     oninput: move |event| {
                         *time_set.write() = event.value();
@@ -101,18 +100,20 @@ pub fn TimePropertyValue(
                     class: "button",
                     "data-style": "outline",
                     onclick: move |_| {
-                        time.set(time_set());
-                        let new_dt = dt()
-                            .with_time(NaiveTime::from_str(&time_set.read()).unwrap())
-                            .unwrap();
-                        API_CLIENT
-                            .read()
-                            .update_date_property(
-                                space_id_clone(),
-                                object_id_clone(),
-                                property_key_clone(),
-                                new_dt,
-                            );
+                        if let Ok(t) = NaiveTime::from_str(&time_set.read()) {
+                            let new_dt = dt()
+                                .with_time(t)
+                                .unwrap();
+                            API_CLIENT
+                                .read()
+                                .update_date_property(
+                                    space_id_clone(),
+                                    object_id_clone(),
+                                    property_key_clone(),
+                                    new_dt,
+                                );    
+                            time.set(time_set());
+                        }
                         open.set(false);
                     },
                     "Confirm"

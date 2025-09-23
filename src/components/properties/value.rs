@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use openapi::models::*;
-use crate::property::*;
+use crate::properties::*;
 #[component]
 pub fn PropertyValue(
     space_id: String,

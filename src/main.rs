@@ -9,6 +9,9 @@ use views::*;
 mod views;
 use components::*;
 mod components;
+mod helpers;
+use helpers::*;
+
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/styling/main.css");
 const THEME_CSS: Asset = asset!("/assets/styling/theme.css");
