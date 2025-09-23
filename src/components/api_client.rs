@@ -3,6 +3,7 @@ use models::*;
 use openapi::apis::configuration::Configuration;
 use openapi::apis::*;
 use openapi::models;
+use chrono::{DateTime, FixedOffset, NaiveTime};
 const API_VERSION: &str = "2025-05-20";
 pub static API_CLIENT: GlobalSignal<Client> = Global::new(|| Client::new());
 pub struct Client {
@@ -121,6 +122,38 @@ impl Client {
             req.properties = Some(
                 vec![
                     ApimodelPeriodPropertyLinkWithValue::ApimodelPeriodCheckboxPropertyLinkValue(
+                        Box::new(prop),
+                    ),
+                ],
+            );
+            tracing::debug!("{:#?}", req);
+            let res = openapi::apis::objects_api::update_object(
+                    &config,
+                    API_VERSION,
+                    &space_id,
+                    &object_id,
+                    req,
+                )
+                .await;
+            tracing::debug!("{:#?}", res);
+        });
+    }
+    pub fn update_date_property(
+        &self,
+        space_id: String,
+        object_id: String,
+        property_key: String,
+        date: DateTime<FixedOffset>,
+    ) {
+        let config = self.config.clone();
+        spawn(async move {
+            let mut prop = ApimodelPeriodDatePropertyLinkValue::new();
+            prop.key = property_key.into();
+            prop.date = date.to_rfc3339().into();
+            let mut req = ApimodelPeriodUpdateObjectRequest::new();
+            req.properties = Some(
+                vec![
+                    ApimodelPeriodPropertyLinkWithValue::ApimodelPeriodDatePropertyLinkValue(
                         Box::new(prop),
                     ),
                 ],

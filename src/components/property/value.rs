@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 use openapi::models::*;
 use crate::property::*;
-
 #[component]
 pub fn PropertyValue(
     space_id: String,
@@ -46,7 +45,7 @@ pub fn PropertyValue(
         }
         Some(ApimodelPeriodPropertyWithValue::ApimodelPeriodDatePropertyValue(date)) => {
             rsx! {
-                DatePropertyValue {
+                DateTimePropertyValue {
                     space_id: &space_id,
                     object_id: &object_id,
                     prop: use_signal(|| *date),

@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 use openapi::models::*;
 use crate::property::PropertyValue;
-
 #[derive(Clone, Props, PartialEq)]
 pub struct ListEntryProps {
     pub name: String,

@@ -3,7 +3,6 @@ use crate::Route;
 use dioxus::prelude::*;
 use crate::Logout;
 use crate::Title;
-
 #[component]
 pub fn Home() -> Element {
     let nav = navigator();

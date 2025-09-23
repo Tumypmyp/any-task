@@ -6,7 +6,6 @@ use crate::Search;
 #[component]
 pub fn Space(id: String) -> Element {
     tracing::info!("loading space {id}");
-    
     let id = use_signal(|| id.clone());
     rsx! {
         SpaceTitle { space_id: id }

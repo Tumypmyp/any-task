@@ -1,30 +1,130 @@
+use std::str::FromStr;
 use dioxus::prelude::*;
 use openapi::models::ApimodelPeriodDatePropertyValue;
-use crate::components::info;
-use chrono::DateTime;
+use chrono::{DateTime, FixedOffset, NaiveTime};
+use dioxus_primitives::{ContentAlign, ContentSide};
+use dioxus_primitives::popover::{PopoverContent, PopoverRoot, PopoverTrigger};
+use crate::components::API_CLIENT;
 #[component]
-pub fn DatePropertyValue(
+pub fn DateTimePropertyValue(
     space_id: String,
     object_id: String,
     prop: Signal<ApimodelPeriodDatePropertyValue>,
 ) -> Element {
-    tracing::debug!("date is {prop:#?}");
+    let property_key = prop().key.unwrap();
     let date = prop().date.unwrap_or_default();
-    let d = DateTime::parse_from_rfc3339(&date).unwrap_or_default();
-    let date = d.format("%d/%m/%y");
+    let dt = use_signal(|| DateTime::parse_from_rfc3339(&date).unwrap_or_default());
+    rsx! {
+        DatePropertyValue {
+            space_id: space_id.clone(),
+            object_id: object_id.clone(),
+            dt,
+        }
+        TimePropertyValue {
+            space_id,
+            object_id,
+            property_key,
+            dt,
+        }
+    }
+}
+#[component]
+pub fn DatePropertyValue(
+    space_id: String,
+    object_id: String,
+    dt: Signal<DateTime<FixedOffset>>,
+) -> Element {
+    let date = dt().format("%d/%m/%y");
     rsx! {
         div { class: "button-holder", key: "{object_id}",
             button {
                 class: "button",
-                width: "20vw",
                 display: "flex",
-                "z-index": "1000",
                 "flex-direction": "row",
                 "data-style": "outline",
-                onclick: move |_| {
-                    info("hey".to_string());
-                },
                 "{date}"
+            }
+        }
+    }
+}
+#[component]
+pub fn TimePropertyValue(
+    space_id: String,
+    object_id: String,
+    property_key: String,
+    dt: Signal<DateTime<FixedOffset>>,
+) -> Element {
+    let mut time = use_signal(|| dt().format("%H:%M").to_string());
+    let mut time_set = use_signal(|| time());
+    let mut open = use_signal(|| false);
+    let space_id_clone = use_signal(|| space_id.clone());
+    let object_id_clone = use_signal(|| object_id.clone());
+    let property_key_clone = use_signal(|| property_key.clone());
+    rsx! {
+        PopoverRoot {
+            class: "button-holder",
+            key: "{object_id}",
+            open: open(),
+            on_open_change: move |v| {
+                if v == true {
+                    time_set.set(time());
+                }
+                open.set(v);
+            },
+            PopoverTrigger {
+                button {
+                    class: "button",
+                    display: "flex",
+                    "flex-direction": "row",
+                    "data-style": "outline",
+                    "{time}"
+                }
+            }
+            PopoverContent { gap: "0.25rem", side: ContentSide::Left,
+                h3 {
+                    padding_top: "0.25rem",
+                    padding_bottom: "0.25rem",
+                    width: "100%",
+                    text_align: "center",
+                    margin: 0,
+                    "Set Time"
+                }
+                input {
+                    class: "input",
+                    style: "width: 30vw",
+                    value: "{time_set.read()}",
+                    oninput: move |event| {
+                        *time_set.write() = event.value();
+                    },
+                }
+                button {
+                    class: "button",
+                    "data-style": "outline",
+                    onclick: move |_| {
+                        time.set(time_set());
+                        let new_dt = dt()
+                            .with_time(NaiveTime::from_str(&time_set.read()).unwrap())
+                            .unwrap();
+                        API_CLIENT
+                            .read()
+                            .update_date_property(
+                                space_id_clone(),
+                                object_id_clone(),
+                                property_key_clone(),
+                                new_dt,
+                            );
+                        open.set(false);
+                    },
+                    "Confirm"
+                }
+                button {
+                    class: "button",
+                    "data-style": "outline",
+                    onclick: move |_| {
+                        open.set(false);
+                    },
+                    "Cancel"
+                }
             }
         }
     }

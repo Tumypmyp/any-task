@@ -9,10 +9,7 @@ pub fn error(text: String) -> () {
     toast_api
         .error(
             text,
-            ToastOptions::new()
-                // .description("Some info you need")
-                .duration(Duration::from_secs(5))
-                .permanent(false),
+            ToastOptions::new().duration(Duration::from_secs(3)).permanent(false),
         );
 }
 pub fn info(text: String) -> () {
@@ -20,9 +17,6 @@ pub fn info(text: String) -> () {
     toast_api
         .info(
             text,
-            ToastOptions::new()
-                // .description("Some info you need")
-                .duration(Duration::from_secs(5))
-                .permanent(false),
+            ToastOptions::new().duration(Duration::from_secs(3)).permanent(false),
         );
 }
