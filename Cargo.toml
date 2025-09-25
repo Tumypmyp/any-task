@@ -20,10 +20,10 @@ dioxus-primitives = { git = "https://github.com/DioxusLabs/components", branch =
 gloo-storage = "0.3.0"
 dirs = "6.0.0"
 serde_json = "1.0.143"
-chrono = { version = "0.4.42" }
 jni = "0.21.1"
 anyhow = "1.0.99"
 once_cell = "1.21.3"
+time = { version = "0.3.44", features = ["local-offset"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 openssl = { version = "0.10", features = ["vendored"] }

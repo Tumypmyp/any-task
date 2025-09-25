@@ -15,7 +15,7 @@ pub fn SelectPropertyValue(
     let space_id_clone = use_signal(|| space_id.clone());
     let object_id_clone = use_signal(|| object_id.clone());
     rsx! {
-        div { class: "select-holder",
+        div { class: "button-holder",
             Select::<Option<String>> {
                 "class": "select",
                 placeholder: "{prop().select.unwrap_or_default().name.clone().unwrap_or_default()}",

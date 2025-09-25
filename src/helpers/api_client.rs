@@ -3,7 +3,9 @@ use models::*;
 use openapi::apis::configuration::Configuration;
 use openapi::apis::*;
 use openapi::models;
-use chrono::{DateTime, FixedOffset, NaiveTime};
+use time::UtcDateTime;
+use time::PrimitiveDateTime;
+use time::format_description::well_known::Rfc3339;
 const API_VERSION: &str = "2025-05-20";
 pub static API_CLIENT: GlobalSignal<Client> = Global::new(|| Client::new());
 pub struct Client {
@@ -138,18 +140,19 @@ impl Client {
             tracing::debug!("{:#?}", res);
         });
     }
-    pub fn update_date_property(
+    pub fn update_datetime_property(
         &self,
         space_id: String,
         object_id: String,
         property_key: String,
-        date: DateTime<FixedOffset>,
+        date: UtcDateTime,
     ) {
         let config = self.config.clone();
         spawn(async move {
             let mut prop = ApimodelPeriodDatePropertyLinkValue::new();
             prop.key = property_key.into();
-            prop.date = date.to_rfc3339().into();
+            tracing::debug!("debug {:#?}", date);
+            prop.date = date.format(&Rfc3339).unwrap().into();
             let mut req = ApimodelPeriodUpdateObjectRequest::new();
             req.properties = Some(
                 vec![
