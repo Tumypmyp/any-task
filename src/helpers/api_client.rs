@@ -4,7 +4,6 @@ use openapi::apis::configuration::Configuration;
 use openapi::apis::*;
 use openapi::models;
 use time::UtcDateTime;
-use time::PrimitiveDateTime;
 use time::format_description::well_known::Rfc3339;
 const API_VERSION: &str = "2025-05-20";
 pub static API_CLIENT: GlobalSignal<Client> = Global::new(|| Client::new());
@@ -64,15 +63,16 @@ impl Client {
             )
             .await
     }
-    pub async fn get_tasks(
+    pub async fn get_types(
         &self,
         space_id: &str,
+        types: Vec<String>,
     ) -> Result<
         PaginationPeriodPaginatedResponseApimodelObject,
         Error<openapi::apis::search_api::SearchSpaceError>,
     > {
         let mut req = openapi::models::ApimodelPeriodSearchRequest::new();
-        req.types = vec!["task".to_string()].into();
+        req.types = types.into();
         openapi::apis::search_api::search_space(
                 &self.config,
                 API_VERSION,
@@ -106,6 +106,43 @@ impl Client {
                 API_VERSION,
                 space_id,
                 &property_id.to_string(),
+            )
+            .await
+    }
+    pub async fn get_object(
+        &self,
+        space_id: Signal<String>,
+        object_id: Signal<String>,
+    ) -> Result<
+        models::ApimodelPeriodObjectResponse,
+        Error<openapi::apis::objects_api::GetObjectError>,
+    > {
+        openapi::apis::objects_api::get_object(
+                &self.config,
+                API_VERSION,
+                &space_id(),
+                &object_id(),
+                None,
+            )
+            .await
+    }
+    pub async fn get_list_objects(
+        &self,
+        space_id: Signal<String>,
+        list_id: Signal<String>,
+        view_id: Signal<String>,
+    ) -> Result<
+        models::PaginationPeriodPaginatedResponseApimodelObject,
+        Error<openapi::apis::lists_api::GetListObjectsError>,
+    > {
+        openapi::apis::lists_api::get_list_objects(
+                &self.config,
+                API_VERSION,
+                &space_id(),
+                &list_id(),
+                &view_id(),
+                None,
+                None,
             )
             .await
     }

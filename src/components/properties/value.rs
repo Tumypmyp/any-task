@@ -6,7 +6,7 @@ pub fn PropertyValue(
     space_id: String,
     object_id: String,
     data: Option<ApimodelPeriodPropertyWithValue>,
-    options: Option<Vec<ApimodelPeriodTag>>,
+    options: ReadSignal<Vec<ApimodelPeriodTag>>,
 ) -> Element {
     match data {
         Some(ApimodelPeriodPropertyWithValue::ApimodelPeriodTextPropertyValue(text)) => {
@@ -39,7 +39,7 @@ pub fn PropertyValue(
                     space_id: &space_id,
                     object_id: &object_id,
                     prop: use_signal(|| *select),
-                    options: options.unwrap_or_default(),
+                    options: options(),
                 }
             }
         }

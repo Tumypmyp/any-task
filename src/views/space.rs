@@ -4,12 +4,13 @@ use crate::API_CLIENT;
 use crate::Actions;
 use crate::Search;
 #[component]
-pub fn Space(id: String) -> Element {
-    tracing::info!("loading space {id}");
-    let id = use_signal(|| id.clone());
+pub fn Space(space_id: String) -> Element {
+    tracing::info!("loading space {space_id}");
+    let space_id = use_signal(|| space_id.clone());
     rsx! {
-        SpaceTitle { space_id: id }
-        Search { space_id: id() }
+        SpaceTitle { space_id }
+        Search { space_id, types: vec!["set".to_string()] }
+        Search { space_id, types: vec!["collection".to_string()] }
         Actions {}
     }
 }

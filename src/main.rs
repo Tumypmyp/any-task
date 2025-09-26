@@ -21,8 +21,10 @@ enum Route {
     #[route("/")]
     #[redirect("/:.._s", |_s:Vec<String>|Route::Login{})]
     Home {},
-    #[route("/space/:id")]
-    Space { id: String },
+    #[route("/spaces/:space_id")]
+    Space { space_id: String },
+    #[route("/spaces/:space_id/lists/:list_id")]
+    List { space_id: String, list_id: String },
     #[route("/login")]
     Login {},
 }

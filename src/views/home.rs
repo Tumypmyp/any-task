@@ -26,7 +26,7 @@ pub fn Home() -> Element {
                                 style: "font-size: 1.1rem;",
                                 onclick: move |_| {
                                     nav.push(Route::Space {
-                                        id: space.clone().id.unwrap_or_default(),
+                                        space_id: space.clone().id.unwrap_or_default(),
                                     });
                                 },
                                 "{space.clone().name.unwrap_or_default()}"
