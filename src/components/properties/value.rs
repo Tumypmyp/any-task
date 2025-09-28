@@ -5,10 +5,10 @@ use crate::properties::*;
 pub fn PropertyValue(
     space_id: String,
     object_id: String,
-    data: Option<ApimodelPeriodPropertyWithValue>,
+    data: ReadSignal<Option<ApimodelPeriodPropertyWithValue>>,
     options: ReadSignal<Vec<ApimodelPeriodTag>>,
 ) -> Element {
-    match data {
+    match data() {
         Some(ApimodelPeriodPropertyWithValue::ApimodelPeriodTextPropertyValue(text)) => {
             rsx! {
                 TextPropertyValue {

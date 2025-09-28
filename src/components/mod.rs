@@ -10,3 +10,4 @@ pub use search::Search;
 mod title;
 pub use title::Title;
 pub mod properties;
+pub mod buttons;

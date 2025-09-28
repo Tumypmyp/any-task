@@ -3,6 +3,7 @@ use openapi::models::*;
 use std::vec;
 use crate::API_CLIENT;
 use crate::ListEntry;
+use crate::views::PropertyID;
 use std::collections::HashMap;
 struct Object {
     name: String,
@@ -16,7 +17,7 @@ pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {
         async move { API_CLIENT.read().get_types(&space_id(), types).await }
     });
     let prop_ids_to_options_map = use_store(|| HashMap::<
-        String,
+        PropertyID,
         Vec<ApimodelPeriodTag>,
     >::new());
     let mut objects = Vec::<Object>::new();
@@ -36,6 +37,8 @@ pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {
         }
         _ => {}
     }
+    let prop_ids_to_show = use_store(|| HashMap::<PropertyID, bool>::new());
+    let properties_order: Store<Vec<PropertyID>> = use_store(|| vec![]);
     rsx! {
         div { id: "object-list",
             for obj in objects.iter() {
@@ -44,7 +47,8 @@ pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {
                     name: obj.name.clone(),
                     space_id,
                     object_id: obj.object_id.clone(),
-                    show_properties: false,
+                    properties_order,
+                    prop_ids_to_show,
                     prop_ids_to_options_map,
                     data: obj.data.clone(),
                 }

@@ -17,8 +17,9 @@ The client is currently in active development and supports only the desktop vers
 - [x] Save app state after closing
 - [x] Tag property
 - [x] Date/Time property
-- [ ] Choose query
+- [x] Choose query
 - [ ] Choose properties
+- [ ] Choose views
 - [ ] Auth with 4-digit code
 - [ ] Timeline view
 - [ ] Build for Android

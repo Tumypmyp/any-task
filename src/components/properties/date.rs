@@ -1,7 +1,6 @@
 use dioxus::prelude::*;
 use openapi::models::ApimodelPeriodDatePropertyValue;
-use dioxus_primitives::{ContentAlign, ContentSide};
-use dioxus_primitives::popover::{PopoverContent, PopoverRoot, PopoverTrigger};
+use crate::components::buttons::*;
 use dioxus_primitives::calendar::*;
 use time::{Date, UtcDateTime, Time, UtcOffset, OffsetDateTime};
 use time::format_description::well_known::Rfc3339;
@@ -61,7 +60,6 @@ pub fn DatePropertyValue(
     let mut view_date = use_signal(|| UtcDateTime::now().date());
     rsx! {
         PopoverRoot {
-            key: "{object_id}",
             open: open(),
             on_open_change: move |v| {
                 if v == true {
@@ -69,39 +67,29 @@ pub fn DatePropertyValue(
                 }
                 open.set(v);
             },
-            PopoverTrigger {
-                key: "{object_id}",
-                class: "button",
-                display: "flex",
-                "flex-direction": "row",
-                "data-style": "outline",
-                "{date}"
-            }
-            PopoverContent { gap: "0.25rem", side: ContentSide::Bottom,
+            PopoverTrigger { "{date}" }
+            PopoverContent {
                 PopoverHeader { text: "Set Date" }
-                div { class: "calendar-example", style: "padding: 20px;",
-                    Calendar {
-                        selected_date: selected_date(),
-                        on_date_change: move |date: Option<Date>| {
-                            selected_date.set(date);
-                        },
-                        view_date: view_date(),
-                        on_view_change: move |new_view: Date| {
-                            view_date.set(new_view);
-                        },
-                        CalendarHeader {
-                            CalendarNavigation {
-                                CalendarPreviousMonthButton {}
-                                CalendarMonthTitle {}
-                                CalendarNextMonthButton {}
-                            }
+                Calendar {
+                    selected_date: selected_date(),
+                    on_date_change: move |date: Option<Date>| {
+                        selected_date.set(date);
+                    },
+                    view_date: view_date(),
+                    on_view_change: move |new_view: Date| {
+                        view_date.set(new_view);
+                    },
+                    CalendarHeader {
+                        CalendarNavigation {
+                            CalendarPreviousMonthButton {}
+                            CalendarMonthTitle {}
+                            CalendarNextMonthButton {}
                         }
-                        CalendarGrid {}
                     }
+                    CalendarGrid {}
                 }
-                button {
-                    class: "button",
-                    "data-style": "outline",
+                Button {
+                    variant: ButtonVariant::Outline,
                     onclick: move |_| {
                         if let Some(d) = selected_date() {
                             dt.set(dt().replace_date(d));
@@ -139,7 +127,6 @@ pub fn TimePropertyValue(
     let mut open = use_signal(|| false);
     rsx! {
         PopoverRoot {
-            key: "{object_id}",
             open: open(),
             on_open_change: move |v| {
                 if v == true {
@@ -147,20 +134,12 @@ pub fn TimePropertyValue(
                 }
                 open.set(v);
             },
-            PopoverTrigger {
-                class: "button",
-                key: "{object_id}",
-                display: "flex",
-                "flex-direction": "row",
-                "data-style": "outline",
-                "{time}"
-            }
-            PopoverContent { gap: "0.25rem", side: ContentSide::Bottom,
+            PopoverTrigger { "{time}" }
+            PopoverContent {
                 PopoverHeader { text: "Set Time" }
                 Input { value: time_set }
-                button {
-                    class: "button",
-                    "data-style": "outline",
+                Button {
+                    variant: ButtonVariant::Outline,
                     onclick: move |_| {
                         if let Ok(t) = Time::parse(&time_set.read(), format) {
                             dt.set(dt().replace_time(t));
@@ -180,44 +159,6 @@ pub fn TimePropertyValue(
                 }
                 CancelPopoverButton { open }
             }
-        }
-    }
-}
-#[component]
-pub fn PopoverHeader(text: String) -> Element {
-    rsx! {
-        h3 {
-            padding_top: "0.25rem",
-            padding_bottom: "0.25rem",
-            width: "100%",
-            text_align: "center",
-            margin: 0,
-            "{text}"
-        }
-    }
-}
-#[component]
-pub fn Input(value: Signal<String>) -> Element {
-    rsx! {
-        input {
-            class: "input",
-            value: "{value.read()}",
-            oninput: move |event| {
-                *value.write() = event.value();
-            },
-        }
-    }
-}
-#[component]
-pub fn CancelPopoverButton(open: Signal<bool>) -> Element {
-    rsx! {
-        button {
-            class: "button",
-            "data-style": "outline",
-            onclick: move |_| {
-                open.set(false);
-            },
-            "Cancel"
         }
     }
 }

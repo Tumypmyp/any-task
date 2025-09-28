@@ -10,11 +10,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1758429246,
-        "narHash": "sha256-ifXHN8ERvtQ/ZtpzOIZyWPOaiUyX6qi5vKQKXuyIUp0=",
+        "lastModified": 1758890665,
+        "narHash": "sha256-G1afmlvQ4XEdXWebPJdesPkJbzgdZummqIWZ8xaxO7w=",
         "owner": "DioxusLabs",
         "repo": "dioxus",
-        "rev": "2e7e0696a320a2a98a07e405603f59c8296b0b42",
+        "rev": "10912f475069e0c4e1dbbedb32f4ee16201d4c81",
         "type": "github"
       },
       "original": {
