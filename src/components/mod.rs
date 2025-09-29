@@ -1,13 +1,13 @@
 mod list_entry;
 pub use list_entry::ListEntry;
-mod message;
-pub use message::error;
-pub use message::info;
 mod actions;
 pub use actions::Actions;
 mod search;
 pub use search::Search;
 mod title;
 pub use title::Title;
+pub use title::Header;
 pub mod properties;
-pub mod buttons;
+pub mod base;
+pub use base::*;
+pub mod view_properties;

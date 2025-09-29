@@ -45,7 +45,7 @@ pub fn PropertyValue(
         }
         Some(ApimodelPeriodPropertyWithValue::ApimodelPeriodDatePropertyValue(date)) => {
             rsx! {
-                DateTimePropertyValue {
+                DateTimePropertyValues {
                     space_id: &space_id,
                     object_id: &object_id,
                     prop: use_signal(|| *date),

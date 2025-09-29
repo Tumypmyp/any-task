@@ -2,8 +2,10 @@ use dioxus::prelude::*;
 use openapi::models::*;
 use crate::Route;
 use crate::properties::PropertyValue;
-use crate::views::PropertyID;
+use crate::helpers::models::PropertyID;
 use std::collections::HashMap;
+use crate::components::base::ButtonWithHolder;
+use crate::components::base::ButtonHolder;
 #[derive(Clone, Props, PartialEq)]
 pub struct ListEntryProps {
     pub name: String,
@@ -21,45 +23,46 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
         PropertyID,
         ApimodelPeriodPropertyWithValue,
     >::new());
-    for prop in props.data.properties.clone().unwrap().iter() {
-        let prop_id = get_object_property_id(prop.clone());
-        properties.write().insert(PropertyID(prop_id), prop.clone());
+    for property in props.data.properties.clone().unwrap().iter() {
+        let property_id = get_property_id(property.clone());
+        properties.write().insert(property_id, property.clone());
     }
     rsx! {
-        div { class: "button-holder", key: "{props.object_id}",
+        ButtonHolder {
             button {
                 class: "button",
                 width: "90vw",
                 display: "flex",
-                "flex-direction": "row",
                 "data-style": "outline",
+                "flex-direction": "row",
                 onclick: move |_| {
-                    tracing::debug!("object is {:#?}", props.data.clone());
-                    if let Some(t) = &props.data.r#type && t.key == Some("set".to_string()) {
+                    if let Some(t) = props.clone().data.r#type && t.key == Some("set".to_string()) {
                         nav.push(Route::List {
-                            space_id: props.space_id.clone(),
-                            list_id: props.object_id.clone(),
+                            space_id: props.clone().space_id.clone(),
+                            list_id: props.clone().object_id.clone(),
                         });
                     }
                 },
-                div { class: "properties-holder",
-                    div { class: "button-holder",
-                        button { class: "button", "data-style": "outline", "{props.name}" }
-                    }
-                    for prop_id in props.properties_order.read().clone() {
-                        if let Some(show) = props.prop_ids_to_show.get(prop_id.clone()) && show()
-                            && let Some(prop) = properties.get(prop_id.clone())
+                div { style: "
+                        display: flex;
+                        flex-direction: row;   
+                        align-items: center; 
+                    ",
+                    ButtonWithHolder { "{props.name.clone()}" }
+                    for property_id in props.properties_order.read().clone() {
+                        if let Some(show) = props.prop_ids_to_show.get(property_id.clone()) && show()
+                            && let Some(prop) = properties.get(property_id.clone())
                             && let options = props
                                 .prop_ids_to_options_map
                                 .read()
                                 .clone()
-                                .get(&prop_id)
+                                .get(&property_id)
                                 .unwrap_or(&vec![])
                                 .clone()
                         {
                             PropertyValue {
-                                space_id: &props.space_id,
-                                object_id: &props.object_id,
+                                space_id: props.space_id.clone(),
+                                object_id: props.object_id.clone(),
                                 data: prop.read().clone(),
                                 options,
                             }
@@ -70,40 +73,42 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
         }
     }
 }
-fn get_object_property_id(prop: ApimodelPeriodPropertyWithValue) -> String {
-    return match prop.clone() {
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodTextPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodNumberPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodSelectPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodMultiSelectPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodDatePropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodFilesPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodCheckboxPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodUrlPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodEmailPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodPhonePropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodObjectsPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-    };
+fn get_property_id(prop: ApimodelPeriodPropertyWithValue) -> PropertyID {
+    return PropertyID(
+        match prop.clone() {
+            ApimodelPeriodPropertyWithValue::ApimodelPeriodTextPropertyValue(p) => {
+                p.id.clone().unwrap()
+            }
+            ApimodelPeriodPropertyWithValue::ApimodelPeriodNumberPropertyValue(p) => {
+                p.id.clone().unwrap()
+            }
+            ApimodelPeriodPropertyWithValue::ApimodelPeriodSelectPropertyValue(p) => {
+                p.id.clone().unwrap()
+            }
+            ApimodelPeriodPropertyWithValue::ApimodelPeriodMultiSelectPropertyValue(
+                p,
+            ) => p.id.clone().unwrap(),
+            ApimodelPeriodPropertyWithValue::ApimodelPeriodDatePropertyValue(p) => {
+                p.id.clone().unwrap()
+            }
+            ApimodelPeriodPropertyWithValue::ApimodelPeriodFilesPropertyValue(p) => {
+                p.id.clone().unwrap()
+            }
+            ApimodelPeriodPropertyWithValue::ApimodelPeriodCheckboxPropertyValue(p) => {
+                p.id.clone().unwrap()
+            }
+            ApimodelPeriodPropertyWithValue::ApimodelPeriodUrlPropertyValue(p) => {
+                p.id.clone().unwrap()
+            }
+            ApimodelPeriodPropertyWithValue::ApimodelPeriodEmailPropertyValue(p) => {
+                p.id.clone().unwrap()
+            }
+            ApimodelPeriodPropertyWithValue::ApimodelPeriodPhonePropertyValue(p) => {
+                p.id.clone().unwrap()
+            }
+            ApimodelPeriodPropertyWithValue::ApimodelPeriodObjectsPropertyValue(p) => {
+                p.id.clone().unwrap()
+            }
+        },
+    );
 }

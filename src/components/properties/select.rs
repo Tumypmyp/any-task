@@ -3,6 +3,7 @@ use dioxus_primitives::select::{
     Select, SelectGroup, SelectItemIndicator, SelectList, SelectOption, SelectTrigger,
     SelectValue,
 };
+use crate::components::base::ButtonHolder;
 use openapi::models::*;
 use crate::API_CLIENT;
 #[component]
@@ -15,7 +16,7 @@ pub fn SelectPropertyValue(
     let space_id_clone = use_signal(|| space_id.clone());
     let object_id_clone = use_signal(|| object_id.clone());
     rsx! {
-        div { class: "button-holder",
+        ButtonHolder {
             Select::<Option<String>> {
                 "class": "select",
                 placeholder: "{prop().select.unwrap_or_default().name.clone().unwrap_or_default()}",

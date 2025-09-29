@@ -3,6 +3,8 @@ use crate::Route;
 use dioxus::prelude::*;
 use crate::Logout;
 use crate::Title;
+use crate::components::base::error;
+use crate::components::base::ButtonHolder;
 #[component]
 pub fn Home() -> Element {
     let nav = navigator();
@@ -15,9 +17,7 @@ pub fn Home() -> Element {
                 Title { title: "Spaces" }
                 div { id: "space-list",
                     for space in s.clone().data.unwrap_or_default().clone() {
-                        div {
-                            class: "button-holder",
-                            key: "{space.clone().id.unwrap_or_default()}",
+                        ButtonHolder { key: "{space.clone().id.unwrap_or_default()}",
                             button {
                                 class: "button",
                                 width: "90vw",
@@ -39,7 +39,7 @@ pub fn Home() -> Element {
         }
         Some(Err(e)) => {
             tracing::debug!("error: {:#?}", e);
-            crate::error(e.to_string());
+            error(e.to_string());
             rsx!()
         }
         _ => rsx!(),

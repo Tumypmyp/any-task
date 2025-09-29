@@ -3,7 +3,7 @@ use dioxus_primitives::{ContentAlign, ContentSide};
 use dioxus_primitives::popover::{
     self, PopoverContentProps, PopoverRootProps, PopoverTriggerProps,
 };
-use crate::components::buttons::*;
+use crate::components::base::*;
 #[component]
 pub fn PopoverHeader(text: String) -> Element {
     rsx! {
@@ -32,7 +32,7 @@ pub fn Input(value: Signal<String>) -> Element {
 #[component]
 pub fn CancelPopoverButton(open: Signal<bool>) -> Element {
     rsx! {
-        Button {
+        ButtonWithHolder {
             variant: ButtonVariant::Outline,
             onclick: move |_| {
                 open.set(false);

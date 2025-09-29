@@ -1,8 +1,7 @@
 use dioxus::prelude::*;
-use models::*;
+use openapi::models::*;
 use openapi::apis::configuration::Configuration;
 use openapi::apis::*;
-use openapi::models;
 use time::UtcDateTime;
 use time::format_description::well_known::Rfc3339;
 const API_VERSION: &str = "2025-05-20";
@@ -114,7 +113,7 @@ impl Client {
         space_id: Signal<String>,
         object_id: Signal<String>,
     ) -> Result<
-        models::ApimodelPeriodObjectResponse,
+        ApimodelPeriodObjectResponse,
         Error<openapi::apis::objects_api::GetObjectError>,
     > {
         openapi::apis::objects_api::get_object(
@@ -132,7 +131,7 @@ impl Client {
         list_id: Signal<String>,
         view_id: Signal<String>,
     ) -> Result<
-        models::PaginationPeriodPaginatedResponseApimodelObject,
+        PaginationPeriodPaginatedResponseApimodelObject,
         Error<openapi::apis::lists_api::GetListObjectsError>,
     > {
         openapi::apis::lists_api::get_list_objects(

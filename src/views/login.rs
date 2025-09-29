@@ -3,9 +3,11 @@ use crate::Route;
 use crate::hooks::*;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
-use crate::info;
-use crate::error;
+use crate::components::base::info;
+use crate::components::base::error;
+use crate::components::base::ButtonHolder;
 pub const USER_SETTINGS_KEY: &str = "user_settings";
+use crate::components::base::{ButtonWithHolder, ButtonVariant};
 #[derive(Debug, Serialize, Deserialize, PartialEq, Default)]
 pub struct AppSettings {
     pub token: String,
@@ -33,15 +35,11 @@ async fn remove_token() {
 pub fn Logout() -> Element {
     rsx! {
         div { id: "actions-holder",
-            div { class: "button-holder",
-                button {
-                    class: "button",
-                    "data-style": "outline",
-                    onclick: move |_| {
-                        spawn(remove_token());
-                    },
-                    "Logout"
-                }
+            ButtonWithHolder {
+                onclick: move |_| {
+                    spawn(remove_token());
+                },
+                "Logout"
             }
         }
     }
@@ -88,7 +86,7 @@ pub fn Login() -> Element {
     let mut server = use_signal(|| settings.read().server.to_string());
     rsx! {
         div { id: "login-holder",
-            div { class: "button-holder",
+            ButtonHolder {
                 input {
                     class: "input",
                     placeholder: "Anytype API server",
@@ -99,7 +97,7 @@ pub fn Login() -> Element {
                     },
                 }
             }
-            div { class: "button-holder",
+            ButtonHolder {
                 input {
                     class: "input",
                     placeholder: "Paste your Anytype API token",
@@ -110,19 +108,16 @@ pub fn Login() -> Element {
                     },
                 }
             }
-            div { class: "button-holder",
-                button {
-                    class: "button",
-                    "data-style": "secondary",
-                    onclick: move |_| {
-                        settings
-                            .set(AppSettings {
-                                token: token(),
-                                server: server(),
-                            });
-                    },
-                    "Enter"
-                }
+            ButtonWithHolder {
+                variant: ButtonVariant::Secondary,
+                onclick: move |_| {
+                    settings
+                        .set(AppSettings {
+                            token: token(),
+                            server: server(),
+                        });
+                },
+                "Enter"
             }
         }
     }

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use openapi::models::ApimodelPeriodTextPropertyValue;
-use crate::components::buttons::Button;
+use crate::components::base::ButtonWithHolder;
 #[component]
 pub fn TextPropertyValue(
     space_id: String,
@@ -9,6 +9,6 @@ pub fn TextPropertyValue(
 ) -> Element {
     let value = prop().text.unwrap();
     rsx! {
-        Button { "{value}" }
+        ButtonWithHolder { "{value}" }
     }
 }

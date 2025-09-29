@@ -56,3 +56,48 @@ pub fn Button(
         }
     }
 }
+#[component]
+pub fn ButtonHolder(
+    children: Element,
+    #[props(extends = GlobalAttributes)]
+    attributes: Vec<Attribute>,
+) -> Element {
+    rsx! {
+        div {
+            style: "
+                display: flex; 
+                max-width: 95%; 
+                padding: 3px; 
+                flex-direction: column; 
+                align-items: center;
+            ",
+            ..attributes,
+            {children}
+        }
+    }
+}
+#[component]
+pub fn ButtonWithHolder(
+    #[props(default)]
+    variant: ButtonVariant,
+    #[props(extends = GlobalAttributes)]
+    #[props(extends = button)]
+    attributes: Vec<Attribute>,
+    onclick: Option<EventHandler<MouseEvent>>,
+    onmousedown: Option<EventHandler<MouseEvent>>,
+    onmouseup: Option<EventHandler<MouseEvent>>,
+    children: Element,
+) -> Element {
+    rsx! {
+        ButtonHolder {
+            Button {
+                variant,
+                attributes,
+                onclick,
+                onmousedown,
+                onmouseup,
+                children,
+            }
+        }
+    }
+}

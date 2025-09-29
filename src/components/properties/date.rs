@@ -1,13 +1,13 @@
 use dioxus::prelude::*;
 use openapi::models::ApimodelPeriodDatePropertyValue;
-use crate::components::buttons::*;
+use crate::components::base::*;
 use dioxus_primitives::calendar::*;
 use time::{Date, UtcDateTime, Time, UtcOffset, OffsetDateTime};
 use time::format_description::well_known::Rfc3339;
 use time::macros::{format_description, offset};
 use crate::API_CLIENT;
 #[component]
-pub fn DateTimePropertyValue(
+pub fn DateTimePropertyValues(
     space_id: String,
     object_id: String,
     prop: Signal<ApimodelPeriodDatePropertyValue>,
@@ -27,21 +27,17 @@ pub fn DateTimePropertyValue(
         UtcDateTime::parse(&date, &Rfc3339).unwrap().to_offset(offset)
     });
     rsx! {
-        div { class: "button-holder",
-            DatePropertyValue {
-                space_id,
-                object_id,
-                property_key,
-                dt,
-            }
+        DatePropertyValue {
+            space_id,
+            object_id,
+            property_key,
+            dt,
         }
-        div { class: "button-holder",
-            TimePropertyValue {
-                space_id,
-                object_id,
-                property_key,
-                dt,
-            }
+        TimePropertyValue {
+            space_id,
+            object_id,
+            property_key,
+            dt,
         }
     }
 }
@@ -59,57 +55,59 @@ pub fn DatePropertyValue(
     let mut selected_date = use_signal(|| None::<Date>);
     let mut view_date = use_signal(|| UtcDateTime::now().date());
     rsx! {
-        PopoverRoot {
-            open: open(),
-            on_open_change: move |v| {
-                if v == true {
-                    date_set.set(date());
-                }
-                open.set(v);
-            },
-            PopoverTrigger { "{date}" }
-            PopoverContent {
-                PopoverHeader { text: "Set Date" }
-                Calendar {
-                    selected_date: selected_date(),
-                    on_date_change: move |date: Option<Date>| {
-                        selected_date.set(date);
-                    },
-                    view_date: view_date(),
-                    on_view_change: move |new_view: Date| {
-                        view_date.set(new_view);
-                    },
-                    CalendarHeader {
-                        CalendarNavigation {
-                            CalendarPreviousMonthButton {}
-                            CalendarMonthTitle {}
-                            CalendarNextMonthButton {}
-                        }
+        ButtonHolder {
+            PopoverRoot {
+                open: open(),
+                on_open_change: move |v| {
+                    if v == true {
+                        date_set.set(date());
                     }
-                    CalendarGrid {}
-                }
-                Button {
-                    variant: ButtonVariant::Outline,
-                    onclick: move |_| {
-                        if let Some(d) = selected_date() {
-                            dt.set(dt().replace_date(d));
-                            tracing::debug!("change date to: {:?}", dt);
-                            API_CLIENT
-                                .read()
-                                .update_datetime_property(
-                                    space_id(),
-                                    object_id(),
-                                    property_key(),
-                                    dt().to_utc(),
-                                );
-                            date_set.set(d.format(format).unwrap());
-                            date.set(date_set());
+                    open.set(v);
+                },
+                PopoverTrigger { "{date}" }
+                PopoverContent {
+                    PopoverHeader { text: "Set Date" }
+                    Calendar {
+                        selected_date: selected_date(),
+                        on_date_change: move |date: Option<Date>| {
+                            selected_date.set(date);
+                        },
+                        view_date: view_date(),
+                        on_view_change: move |new_view: Date| {
+                            view_date.set(new_view);
+                        },
+                        CalendarHeader {
+                            CalendarNavigation {
+                                CalendarPreviousMonthButton {}
+                                CalendarMonthTitle {}
+                                CalendarNextMonthButton {}
+                            }
                         }
-                        open.set(false);
-                    },
-                    "Confirm"
+                        CalendarGrid {}
+                    }
+                    ButtonWithHolder {
+                        variant: ButtonVariant::Outline,
+                        onclick: move |_| {
+                            if let Some(d) = selected_date() {
+                                dt.set(dt().replace_date(d));
+                                tracing::debug!("change date to: {:?}", dt);
+                                API_CLIENT
+                                    .read()
+                                    .update_datetime_property(
+                                        space_id(),
+                                        object_id(),
+                                        property_key(),
+                                        dt().to_utc(),
+                                    );
+                                date_set.set(d.format(format).unwrap());
+                                date.set(date_set());
+                            }
+                            open.set(false);
+                        },
+                        "Confirm"
+                    }
+                    CancelPopoverButton { open }
                 }
-                CancelPopoverButton { open }
             }
         }
     }
@@ -126,38 +124,40 @@ pub fn TimePropertyValue(
     let mut time_set = use_signal(|| time());
     let mut open = use_signal(|| false);
     rsx! {
-        PopoverRoot {
-            open: open(),
-            on_open_change: move |v| {
-                if v == true {
-                    time_set.set(time());
+        ButtonHolder {
+            PopoverRoot {
+                open: open(),
+                on_open_change: move |v| {
+                    if v == true {
+                        time_set.set(time());
+                    }
+                    open.set(v);
+                },
+                PopoverTrigger { "{time}" }
+                PopoverContent {
+                    PopoverHeader { text: "Set Time" }
+                    Input { value: time_set }
+                    ButtonWithHolder {
+                        variant: ButtonVariant::Outline,
+                        onclick: move |_| {
+                            if let Ok(t) = Time::parse(&time_set.read(), format) {
+                                dt.set(dt().replace_time(t));
+                                API_CLIENT
+                                    .read()
+                                    .update_datetime_property(
+                                        space_id(),
+                                        object_id(),
+                                        property_key(),
+                                        dt().to_utc(),
+                                    );
+                                time.set(time_set());
+                            }
+                            open.set(false);
+                        },
+                        "Confirm"
+                    }
+                    CancelPopoverButton { open }
                 }
-                open.set(v);
-            },
-            PopoverTrigger { "{time}" }
-            PopoverContent {
-                PopoverHeader { text: "Set Time" }
-                Input { value: time_set }
-                Button {
-                    variant: ButtonVariant::Outline,
-                    onclick: move |_| {
-                        if let Ok(t) = Time::parse(&time_set.read(), format) {
-                            dt.set(dt().replace_time(t));
-                            API_CLIENT
-                                .read()
-                                .update_datetime_property(
-                                    space_id(),
-                                    object_id(),
-                                    property_key(),
-                                    dt().to_utc(),
-                                );
-                            time.set(time_set());
-                        }
-                        open.set(false);
-                    },
-                    "Confirm"
-                }
-                CancelPopoverButton { open }
             }
         }
     }

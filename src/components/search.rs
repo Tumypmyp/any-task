@@ -3,7 +3,7 @@ use openapi::models::*;
 use std::vec;
 use crate::API_CLIENT;
 use crate::ListEntry;
-use crate::views::PropertyID;
+use crate::helpers::models::PropertyID;
 use std::collections::HashMap;
 struct Object {
     name: String,
