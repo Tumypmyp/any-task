@@ -9,7 +9,7 @@ pub fn CheckboxPropertyValue(
     prop: Signal<ApimodelPeriodCheckboxPropertyValue>,
 ) -> Element {
     rsx! {
-        div { class: "checkbox-holder",
+        div { class: "checkbox-holder", width: "15vw",
             Checkbox {
                 "class": "checkbox",
                 name: "tos-check",

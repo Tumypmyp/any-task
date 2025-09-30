@@ -12,11 +12,11 @@ pub fn DateTimePropertyValues(
     object_id: String,
     prop: Signal<ApimodelPeriodDatePropertyValue>,
 ) -> Element {
-    let property_key = prop().key.unwrap();
+    let property_name = use_signal(|| prop().name.unwrap());
+    let property_key = use_signal(|| prop().key.unwrap());
     let date = prop().date.unwrap_or_default();
     let space_id = use_signal(|| space_id.clone());
     let object_id = use_signal(|| object_id.clone());
-    let property_key = use_signal(|| property_key.clone());
     let offset = UtcOffset::current_local_offset()
         .unwrap_or(
             offset! {
@@ -31,12 +31,14 @@ pub fn DateTimePropertyValues(
             space_id,
             object_id,
             property_key,
+            property_name,
             dt,
         }
         TimePropertyValue {
             space_id,
             object_id,
             property_key,
+            property_name,
             dt,
         }
     }
@@ -46,6 +48,7 @@ pub fn DatePropertyValue(
     space_id: Signal<String>,
     object_id: Signal<String>,
     property_key: Signal<String>,
+    property_name: Signal<String>,
     dt: Signal<OffsetDateTime>,
 ) -> Element {
     let format = format_description!("[year]-[month]-[day]");
@@ -55,7 +58,7 @@ pub fn DatePropertyValue(
     let mut selected_date = use_signal(|| None::<Date>);
     let mut view_date = use_signal(|| UtcDateTime::now().date());
     rsx! {
-        ButtonHolder {
+        ButtonHolder { width: "15vw",
             PopoverRoot {
                 open: open(),
                 on_open_change: move |v| {
@@ -66,7 +69,7 @@ pub fn DatePropertyValue(
                 },
                 PopoverTrigger { "{date}" }
                 PopoverContent {
-                    PopoverHeader { text: "Set Date" }
+                    PopoverHeader { text: "{property_name}" }
                     Calendar {
                         selected_date: selected_date(),
                         on_date_change: move |date: Option<Date>| {
@@ -117,6 +120,7 @@ pub fn TimePropertyValue(
     space_id: Signal<String>,
     object_id: Signal<String>,
     property_key: Signal<String>,
+    property_name: Signal<String>,
     dt: Signal<OffsetDateTime>,
 ) -> Element {
     let format = format_description!("[hour]:[minute]");
@@ -124,7 +128,7 @@ pub fn TimePropertyValue(
     let mut time_set = use_signal(|| time());
     let mut open = use_signal(|| false);
     rsx! {
-        ButtonHolder {
+        ButtonHolder { width: "15vw",
             PopoverRoot {
                 open: open(),
                 on_open_change: move |v| {
@@ -135,7 +139,7 @@ pub fn TimePropertyValue(
                 },
                 PopoverTrigger { "{time}" }
                 PopoverContent {
-                    PopoverHeader { text: "Set Time" }
+                    PopoverHeader { text: "{property_name}" }
                     Input { value: time_set }
                     ButtonWithHolder {
                         variant: ButtonVariant::Outline,

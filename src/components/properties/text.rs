@@ -9,6 +9,6 @@ pub fn TextPropertyValue(
 ) -> Element {
     let value = prop().text.unwrap();
     rsx! {
-        ButtonWithHolder { "{value}" }
+        ButtonWithHolder { width: "15vw", "{value}" }
     }
 }

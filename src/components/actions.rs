@@ -12,6 +12,12 @@ pub fn Actions() -> Element {
                 },
                 "Home"
             }
+            ButtonWithHolder {
+                onclick: move |_| {
+                    nav.go_back();
+                },
+                "Back"
+            }
         }
     }
 }

@@ -2,19 +2,17 @@ use dioxus::prelude::*;
 use openapi::models::*;
 use crate::Route;
 use crate::properties::PropertyValue;
-use crate::helpers::models::PropertyID;
 use std::collections::HashMap;
 use crate::components::base::ButtonWithHolder;
 use crate::components::base::ButtonHolder;
+use crate::helpers::*;
 #[derive(Clone, Props, PartialEq)]
 pub struct ListEntryProps {
     pub name: String,
     pub space_id: String,
     pub object_id: String,
-    pub prop_ids_to_options_map: Store<HashMap<PropertyID, Vec<ApimodelPeriodTag>>>,
     pub data: ApimodelPeriodObject,
-    pub properties_order: Store<Vec<PropertyID>>,
-    pub prop_ids_to_show: Store<HashMap<PropertyID, bool>>,
+    pub properties_order: Store<Vec<PropertyViewInfo>>,
 }
 #[component]
 pub fn ListEntry(props: ListEntryProps) -> Element {
@@ -31,7 +29,7 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
         ButtonHolder {
             button {
                 class: "button",
-                width: "90vw",
+                width: "95vw",
                 display: "flex",
                 "data-style": "outline",
                 "flex-direction": "row",
@@ -43,28 +41,22 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
                         });
                     }
                 },
-                div { style: "
+                div {
+                    style: "
                         display: flex;
                         flex-direction: row;   
                         align-items: center; 
                     ",
-                    ButtonWithHolder { "{props.name.clone()}" }
-                    for property_id in props.properties_order.read().clone() {
-                        if let Some(show) = props.prop_ids_to_show.get(property_id.clone()) && show()
-                            && let Some(prop) = properties.get(property_id.clone())
-                            && let options = props
-                                .prop_ids_to_options_map
-                                .read()
-                                .clone()
-                                .get(&property_id)
-                                .unwrap_or(&vec![])
-                                .clone()
-                        {
+                    width: "95vw",
+                    ButtonWithHolder { width: "25vw", "{props.name.clone()}" }
+                    for property in props.properties_order.read().clone() {
+                        if property.show && let Some(prop) = properties.get(property.clone().id) {
                             PropertyValue {
+                                key: "{property.id.as_str()}",
                                 space_id: props.space_id.clone(),
                                 object_id: props.object_id.clone(),
                                 data: prop.read().clone(),
-                                options,
+                                options: property.options,
                             }
                         }
                     }

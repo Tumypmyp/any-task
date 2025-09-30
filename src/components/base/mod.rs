@@ -7,3 +7,5 @@ pub use scroll_area::ScrollArea;
 mod message;
 pub use message::error;
 pub use message::info;
+mod slider;
+pub use slider::*;

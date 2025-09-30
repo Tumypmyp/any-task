@@ -18,7 +18,7 @@ The client is currently in active development and supports only the desktop vers
 - [x] Tag property
 - [x] Date/Time property
 - [x] Choose query
-- [ ] Choose properties
+- [x] Choose properties
 - [ ] Choose views
 - [ ] Auth with 4-digit code
 - [ ] Timeline view

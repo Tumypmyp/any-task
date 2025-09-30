@@ -10,4 +10,5 @@ pub use title::Header;
 pub mod properties;
 pub mod base;
 pub use base::*;
-pub mod view_properties;
+pub mod add_properties;
+pub mod edit_properties;

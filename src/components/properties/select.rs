@@ -16,13 +16,14 @@ pub fn SelectPropertyValue(
     let space_id_clone = use_signal(|| space_id.clone());
     let object_id_clone = use_signal(|| object_id.clone());
     rsx! {
-        ButtonHolder {
+        ButtonHolder { width: "15vw",
             Select::<Option<String>> {
                 "class": "select",
                 placeholder: "{prop().select.unwrap_or_default().name.clone().unwrap_or_default()}",
                 default_value: prop().select.unwrap_or_default().name.clone(),
                 on_value_change: move |v: Option<Option<String>>| {
                     spawn(async move {
+                        tracing::debug!("chosen option: {:#?}", v);
                         API_CLIENT
                             .read()
                             .update_select_property(

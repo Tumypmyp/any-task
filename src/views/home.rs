@@ -2,7 +2,7 @@ use crate::API_CLIENT;
 use crate::Route;
 use dioxus::prelude::*;
 use crate::Logout;
-use crate::Title;
+use crate::components::Title;
 use crate::components::base::error;
 use crate::components::base::ButtonHolder;
 #[component]

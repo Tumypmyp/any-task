@@ -35,6 +35,12 @@ pub fn Button(
     rsx! {
         button {
             class: "button",
+            style: "
+                text-align: center;
+                white-space: nowrap; 
+                overflow: hidden; 
+                text-overflow: ellipsis; 
+            ",
             "data-style": variant.class(),
             onclick: move |event| {
                 if let Some(f) = &onclick {
@@ -69,7 +75,7 @@ pub fn ButtonHolder(
                 max-width: 95%; 
                 padding: 3px; 
                 flex-direction: column; 
-                align-items: center;
+                align-items: center; 
             ",
             ..attributes,
             {children}

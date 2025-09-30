@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 use openapi::models::*;
-use crate::properties::*;
+use crate::{components::ButtonWithHolder, properties::*};
 #[component]
 pub fn PropertyValue(
     space_id: String,
@@ -52,6 +52,10 @@ pub fn PropertyValue(
                 }
             }
         }
-        _ => rsx!(),
+        _ => {
+            rsx! {
+                ButtonWithHolder { width: "15vw", " " }
+            }
+        }
     }
 }
