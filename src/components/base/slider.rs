@@ -2,9 +2,7 @@ use dioxus::prelude::*;
 use dioxus_primitives::slider::{
     self, SliderProps, SliderRangeProps, SliderThumbProps, SliderTrackProps,
 };
-
 pub use dioxus_primitives::slider::SliderValue;
-
 #[component]
 pub fn Slider(props: SliderProps) -> Element {
     rsx! {

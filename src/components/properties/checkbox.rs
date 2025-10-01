@@ -2,14 +2,16 @@ use dioxus::prelude::*;
 use dioxus_primitives::checkbox::{Checkbox, CheckboxIndicator, CheckboxState};
 use openapi::models::ApimodelPeriodCheckboxPropertyValue;
 use crate::API_CLIENT;
+use crate::helpers::*;
 #[component]
 pub fn CheckboxPropertyValue(
     space_id: String,
     object_id: String,
     prop: Signal<ApimodelPeriodCheckboxPropertyValue>,
+    info: ReadSignal<PropertyViewInfo>,
 ) -> Element {
     rsx! {
-        div { class: "checkbox-holder", width: "15vw",
+        div { class: "checkbox-holder", width: "{info().width}vw",
             Checkbox {
                 "class": "checkbox",
                 name: "tos-check",

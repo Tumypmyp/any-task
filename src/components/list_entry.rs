@@ -3,9 +3,9 @@ use openapi::models::*;
 use crate::Route;
 use crate::properties::PropertyValue;
 use std::collections::HashMap;
-use crate::components::base::ButtonWithHolder;
 use crate::components::base::ButtonHolder;
 use crate::helpers::*;
+use crate::helpers::NAME_PROPERTY_ID_STR;
 #[derive(Clone, Props, PartialEq)]
 pub struct ListEntryProps {
     pub name: String,
@@ -17,14 +17,30 @@ pub struct ListEntryProps {
 #[component]
 pub fn ListEntry(props: ListEntryProps) -> Element {
     let nav = navigator();
-    let mut properties = use_store(|| HashMap::<
+    let mut object_properties = use_store(|| HashMap::<
         PropertyID,
         ApimodelPeriodPropertyWithValue,
     >::new());
     for property in props.data.properties.clone().unwrap().iter() {
         let property_id = get_property_id(property.clone());
-        properties.write().insert(property_id, property.clone());
+        object_properties.write().insert(property_id, property.clone());
     }
+    let text_property_value = ApimodelPeriodTextPropertyValue {
+        format: None,
+        text: props.data.name.clone(),
+        key: None,
+        name: None,
+        id: None,
+        object: None,
+    };
+    object_properties
+        .write()
+        .insert(
+            PropertyID(NAME_PROPERTY_ID_STR.to_string()),
+            ApimodelPeriodPropertyWithValue::ApimodelPeriodTextPropertyValue(
+                Box::new(text_property_value),
+            ),
+        );
     rsx! {
         ButtonHolder {
             button {
@@ -48,15 +64,14 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
                         align-items: center; 
                     ",
                     width: "95vw",
-                    ButtonWithHolder { width: "25vw", "{props.name.clone()}" }
                     for property in props.properties_order.read().clone() {
-                        if property.show && let Some(prop) = properties.get(property.clone().id) {
+                        if property.show && let Some(prop) = object_properties.get(property.clone().id) {
                             PropertyValue {
                                 key: "{property.id.as_str()}",
                                 space_id: props.space_id.clone(),
                                 object_id: props.object_id.clone(),
                                 data: prop.read().clone(),
-                                options: property.options,
+                                info: property,
                             }
                         }
                     }

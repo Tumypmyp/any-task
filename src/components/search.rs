@@ -4,7 +4,6 @@ use std::vec;
 use crate::API_CLIENT;
 use crate::ListEntry;
 use crate::helpers::*;
-use std::collections::HashMap;
 struct Object {
     name: String,
     object_id: String,
@@ -33,7 +32,17 @@ pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {
         }
         _ => {}
     }
-    let properties_order: Store<Vec<PropertyViewInfo>> = use_store(|| vec![]);
+    let properties_order: Store<Vec<PropertyViewInfo>> = use_store(|| {
+        vec![
+            PropertyViewInfo {
+                id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
+                name: "Name".to_string(),
+                show: true,
+                options: vec![],
+                width: 30.0,
+            },
+        ]
+    });
     rsx! {
         div { id: "object-list",
             for obj in objects.iter() {

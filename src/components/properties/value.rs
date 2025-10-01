@@ -1,12 +1,12 @@
 use dioxus::prelude::*;
 use openapi::models::*;
-use crate::{components::ButtonWithHolder, properties::*};
+use crate::{components::ButtonWithHolder, helpers::PropertyViewInfo, properties::*};
 #[component]
 pub fn PropertyValue(
     space_id: String,
     object_id: String,
     data: ReadSignal<Option<ApimodelPeriodPropertyWithValue>>,
-    options: ReadSignal<Vec<ApimodelPeriodTag>>,
+    info: ReadSignal<PropertyViewInfo>,
 ) -> Element {
     match data() {
         Some(ApimodelPeriodPropertyWithValue::ApimodelPeriodTextPropertyValue(text)) => {
@@ -15,6 +15,7 @@ pub fn PropertyValue(
                     space_id: &space_id,
                     object_id: &object_id,
                     prop: use_signal(|| *text),
+                    info,
                 }
             }
         }
@@ -28,6 +29,7 @@ pub fn PropertyValue(
                     space_id: &space_id,
                     object_id: &object_id,
                     prop: use_signal(|| *checkbox),
+                    info,
                 }
             }
         }
@@ -39,7 +41,7 @@ pub fn PropertyValue(
                     space_id: &space_id,
                     object_id: &object_id,
                     prop: use_signal(|| *select),
-                    options: options(),
+                    info,
                 }
             }
         }
@@ -49,12 +51,13 @@ pub fn PropertyValue(
                     space_id: &space_id,
                     object_id: &object_id,
                     prop: use_signal(|| *date),
+                    info,
                 }
             }
         }
         _ => {
             rsx! {
-                ButtonWithHolder { width: "15vw", " " }
+                ButtonWithHolder { width: "{info().width}vw", " " }
             }
         }
     }

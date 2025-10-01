@@ -14,7 +14,17 @@ pub fn List(space_id: String, list_id: String) -> Element {
     let space_id = use_signal(|| space_id);
     let list_id = use_signal(|| list_id);
     let view_id = use_signal(|| "".to_string());
-    let properties_order: Store<Vec<PropertyViewInfo>> = use_store(|| vec![]);
+    let properties_order: Store<Vec<PropertyViewInfo>> = use_store(|| {
+        vec![
+            PropertyViewInfo {
+                id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
+                name: "Name".to_string(),
+                show: true,
+                options: vec![],
+                width: 30.0,
+            },
+        ]
+    });
     rsx! {
         ListHeader {
             space_id,

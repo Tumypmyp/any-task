@@ -6,11 +6,13 @@ use time::{Date, UtcDateTime, Time, UtcOffset, OffsetDateTime};
 use time::format_description::well_known::Rfc3339;
 use time::macros::{format_description, offset};
 use crate::API_CLIENT;
+use crate::helpers::*;
 #[component]
 pub fn DateTimePropertyValues(
     space_id: String,
     object_id: String,
     prop: Signal<ApimodelPeriodDatePropertyValue>,
+    info: ReadSignal<PropertyViewInfo>,
 ) -> Element {
     let property_name = use_signal(|| prop().name.unwrap());
     let property_key = use_signal(|| prop().key.unwrap());
@@ -33,6 +35,7 @@ pub fn DateTimePropertyValues(
             property_key,
             property_name,
             dt,
+            info,
         }
         TimePropertyValue {
             space_id,
@@ -40,6 +43,7 @@ pub fn DateTimePropertyValues(
             property_key,
             property_name,
             dt,
+            info,
         }
     }
 }
@@ -50,6 +54,7 @@ pub fn DatePropertyValue(
     property_key: Signal<String>,
     property_name: Signal<String>,
     dt: Signal<OffsetDateTime>,
+    info: ReadSignal<PropertyViewInfo>,
 ) -> Element {
     let format = format_description!("[year]-[month]-[day]");
     let mut date = use_signal(|| dt().format(format).unwrap());
@@ -58,7 +63,7 @@ pub fn DatePropertyValue(
     let mut selected_date = use_signal(|| None::<Date>);
     let mut view_date = use_signal(|| UtcDateTime::now().date());
     rsx! {
-        ButtonHolder { width: "15vw",
+        ButtonHolder { width: "{info().width / 2.0}vw",
             PopoverRoot {
                 open: open(),
                 on_open_change: move |v| {
@@ -122,13 +127,14 @@ pub fn TimePropertyValue(
     property_key: Signal<String>,
     property_name: Signal<String>,
     dt: Signal<OffsetDateTime>,
+    info: ReadSignal<PropertyViewInfo>,
 ) -> Element {
     let format = format_description!("[hour]:[minute]");
     let mut time = use_signal(|| dt().format(format).unwrap());
     let mut time_set = use_signal(|| time());
     let mut open = use_signal(|| false);
     rsx! {
-        ButtonHolder { width: "15vw",
+        ButtonHolder { width: "{info().width / 2.0}vw",
             PopoverRoot {
                 open: open(),
                 on_open_change: move |v| {

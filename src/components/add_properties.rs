@@ -36,6 +36,7 @@ pub fn ShowPropertiesSetting(
                                 name: property_name,
                                 show: false,
                                 options,
+                                width: 15.0,
                             });
                     }
                 }

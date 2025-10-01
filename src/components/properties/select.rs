@@ -3,6 +3,7 @@ use dioxus_primitives::select::{
     Select, SelectGroup, SelectItemIndicator, SelectList, SelectOption, SelectTrigger,
     SelectValue,
 };
+use crate::helpers::*;
 use crate::components::base::ButtonHolder;
 use openapi::models::*;
 use crate::API_CLIENT;
@@ -11,12 +12,13 @@ pub fn SelectPropertyValue(
     space_id: String,
     object_id: String,
     prop: Signal<ApimodelPeriodSelectPropertyValue>,
-    options: Vec<ApimodelPeriodTag>,
+    info: ReadSignal<PropertyViewInfo>,
 ) -> Element {
+    let options = info().options;
     let space_id_clone = use_signal(|| space_id.clone());
     let object_id_clone = use_signal(|| object_id.clone());
     rsx! {
-        ButtonHolder { width: "15vw",
+        ButtonHolder { width: "{info().width}vw",
             Select::<Option<String>> {
                 "class": "select",
                 placeholder: "{prop().select.unwrap_or_default().name.clone().unwrap_or_default()}",
