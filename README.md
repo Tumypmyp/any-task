@@ -5,20 +5,22 @@
 The client is currently in active development and supports only the desktop version of Anytype. The Android version will become available after the release of Anytype API on Android.
 
 <div align="center">
-  <img src="./notes/ui.jpg" width="1000">
+  <img src="./notes/ui.png" width="1000">
 </div>
 
 ## Features
 
-- [x] Auth with API token
-- [x] Space view
-- [x] Tasks view
+- [x] Login with API token
+- [x] Save/Remove API token
+- [x] View Spaces
+- [x] View Objects
+- [x] View Queries
+- [x] Text property
 - [x] Done property
-- [x] Save app state after closing
 - [x] Tag property
 - [x] Date/Time property
-- [x] Choose query
-- [x] Choose properties
+- [x] Choose viewed properties
+- [x] Configure viewed properties
 - [ ] Choose views
 - [ ] Auth with 4-digit code
 - [ ] Timeline view
