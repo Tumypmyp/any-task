@@ -1,6 +1,6 @@
 # AnyTasks
 
-[Anytype](https://github.com/anyproto/) has great desktop, Android and iOS clients. This project focuses on cross-platform compatibility using Dioxus, a modern Rust framework.
+[Anytype](https://github.com/anyproto/) has great desktop, Android and iOS clients. This project focuses on cross-platform compatibility using [Dioxus](https://github.com/DioxusLabs/dioxus), a modern Rust framework.
 
 The client is currently in active development and supports only the desktop version of Anytype. The Android version will become available after the release of Anytype API on Android.
 

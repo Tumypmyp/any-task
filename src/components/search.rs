@@ -1,9 +1,10 @@
+use crate::API_CLIENT;
+use crate::ListEntry;
+use crate::helpers::models::DateTimeFormat;
+use crate::helpers::*;
 use dioxus::prelude::*;
 use openapi::models::*;
 use std::vec;
-use crate::API_CLIENT;
-use crate::ListEntry;
-use crate::helpers::*;
 struct Object {
     name: String,
     object_id: String,
@@ -32,16 +33,14 @@ pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {
         }
         _ => {}
     }
-    let properties_order: Store<Vec<PropertyViewInfo>> = use_store(|| {
-        vec![
-            PropertyViewInfo {
-                id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
-                name: "Name".to_string(),
-                show: true,
-                options: vec![],
-                width: 30.0,
-            },
-        ]
+    let show_properties: Store<Vec<PropertyViewInfo>> = use_store(|| {
+        vec![PropertyViewInfo {
+            id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
+            name: "Name".to_string(),
+            options: vec![],
+            date_format: DateTimeFormat::DateTime,
+            width: 30.0,
+        }]
     });
     rsx! {
         div { id: "object-list",
@@ -51,7 +50,7 @@ pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {
                     name: obj.name.clone(),
                     space_id,
                     object_id: obj.object_id.clone(),
-                    properties_order,
+                    show_properties,
                     data: obj.data.clone(),
                 }
             }

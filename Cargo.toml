@@ -8,9 +8,13 @@ license = "Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = { version = "0.7.0-rc.0", features = ["router"] }
-dioxus-liveview = { version = "0.7.0-rc.0" }
-dioxus-desktop = { version = "0.7.0-rc.0" }
+dioxus = { version = "0.7.0-rc.3", features = ["router"] }
+dioxus-liveview = { version = "0.7.0-rc.3" }
+dioxus-desktop = { version = "0.7.0-rc.3" }
+# dioxus = { path = "/Users/Timur/code/github/tumypmyp/dioxus/packages/dioxus", features = ["router"] }
+# dioxus-liveview = { path = "/Users/Timur/code/github/tumypmyp/dioxus/packages/liveview" }
+# dioxus-desktop = { path = "/Users/Timur/code/github/tumypmyp/dioxus/packages/desktop"}
+# Original line in your Cargo.toml
 
 reqwest = { version = "0.12.22", features = ["json"] }
 serde = { version = "1.0.219", features = ["derive"] }
@@ -24,6 +28,25 @@ jni = "0.21.1"
 anyhow = "1.0.99"
 once_cell = "1.21.3"
 time = { version = "0.3.44", features = ["local-offset"] }
+
+# [patch."https://github.com/DioxusLabs/components"]
+# dioxus-core = { path = "/Users/Timur/code/github/tumypmyp/dioxus/packages/core" }
+# dioxus-hooks = { path = "/Users/Timur/code/github/tumypmyp/dioxus/packages/hooks" }
+# dioxus-signals = { path = "/Users/Timur/code/github/tumypmyp/dioxus/packages/signals" }
+
+# [patch.crates-io]
+# dioxus = { path = "/Users/Timur/code/github/tumypmyp/dioxus/packages/dioxus" }
+# dioxus-core = { path = "/Users/Timur/code/github/tumypmyp/dioxus/packages/core" }
+# dioxus-devtools = { path = "/Users/Timur/code/github/tumypmyp/dioxus/packages/devtools" }
+# dioxus-stores = { path = "/Users/Timur/code/github/tumypmyp/dioxus/packages/stores" }
+# dioxus-document = { path = "/Users/Timur/code/github/tumypmyp/dioxus/packages/document" }
+# dioxus-hooks = { path = "/Users/Timur/code/github/tumypmyp/dioxus/packages/hooks" }
+# dioxus-router = { path = "/Users/Timur/code/github/tumypmyp/dioxus/packages/router" }
+# generational-box = { path = "/Users/Timur/code/github/tumypmyp/dioxus/packages/generational-box" }
+# dioxus-signals = { path = "/Users/Timur/code/github/tumypmyp/dioxus/packages/signals" }
+#web-sys = { path = "/Users/Timur/code/github/wasm-bindgen/wasm-bindgen/crates/web-sys", default-features = false }
+#wasm-bindgen = { path = "/Users/Timur/code/github/wasm-bindgen/wasm-bindgen" }
+#wasm-bindgen-shared = { path = "/Users/Timur/code/github/wasm-bindgen/wasm-bindgen/crates/shared" }
 
 [target.'cfg(target_os = "android")'.dependencies]
 openssl = { version = "0.10", features = ["vendored"] }

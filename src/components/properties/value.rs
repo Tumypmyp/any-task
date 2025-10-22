@@ -1,6 +1,9 @@
 use dioxus::prelude::*;
 use openapi::models::*;
-use crate::{components::ButtonWithHolder, helpers::PropertyViewInfo, properties::*};
+use crate::{
+    components::{ButtonHolder, ButtonWithHolder},
+    helpers::PropertyViewInfo, properties::*,
+};
 #[component]
 pub fn PropertyValue(
     space_id: String,
@@ -47,11 +50,13 @@ pub fn PropertyValue(
         }
         Some(ApimodelPeriodPropertyWithValue::ApimodelPeriodDatePropertyValue(date)) => {
             rsx! {
-                DateTimePropertyValues {
-                    space_id: &space_id,
-                    object_id: &object_id,
-                    prop: use_signal(|| *date),
-                    info,
+                ButtonHolder {
+                    DateTimePropertyValues {
+                        space_id: &space_id,
+                        object_id: &object_id,
+                        prop: use_signal(|| *date),
+                        info,
+                    }
                 }
             }
         }

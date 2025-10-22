@@ -4,6 +4,7 @@ use crate::components::base::*;
 use dioxus_primitives::calendar::*;
 use time::{Date, UtcDateTime, Time, UtcOffset, OffsetDateTime};
 use time::format_description::well_known::Rfc3339;
+use crate::helpers::models::DateTimeFormat;
 use time::macros::{format_description, offset};
 use crate::API_CLIENT;
 use crate::helpers::*;
@@ -29,21 +30,29 @@ pub fn DateTimePropertyValues(
         UtcDateTime::parse(&date, &Rfc3339).unwrap().to_offset(offset)
     });
     rsx! {
-        DatePropertyValue {
-            space_id,
-            object_id,
-            property_key,
-            property_name,
-            dt,
-            info,
+        if info().date_format == DateTimeFormat::DateTime
+            || info().date_format == DateTimeFormat::Date
+        {
+            DatePropertyValue {
+                space_id,
+                object_id,
+                property_key,
+                property_name,
+                dt,
+                info,
+            }
         }
-        TimePropertyValue {
-            space_id,
-            object_id,
-            property_key,
-            property_name,
-            dt,
-            info,
+        if info().date_format == DateTimeFormat::DateTime
+            || info().date_format == DateTimeFormat::Time
+        {
+            TimePropertyValue {
+                space_id,
+                object_id,
+                property_key,
+                property_name,
+                dt,
+                info,
+            }
         }
     }
 }
