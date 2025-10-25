@@ -1,8 +1,8 @@
 [application]
-name = "AnyTasks"
+name = "AnyTask"
 
 [web.app]
-title = "AnyTasks"
+title = "AnyTask"
 
 # include `assets` in web platform
 [web.resource]
@@ -20,7 +20,7 @@ script = []
 script = []
 
 [bundle]
-identifier = "com.Tumypmyp"
+identifier = "com.Tumypmyp.AnyTask"
 publisher = "Tumypmyp"
 icon = ["assets/favicon.ico"]
 category = "Productivity"

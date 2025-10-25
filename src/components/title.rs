@@ -12,7 +12,7 @@ pub fn Header(children: Element) -> Element {
         div {
             display: "flex",
             style: "
-                flex-direction: row;            
+                flex-direction: row;
                 display: flex;
                 align-items: center;
                 gap: 10vw;

@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
-use dioxus_desktop::{Config, WindowBuilder};
-use dioxus_desktop::wry::dpi::PhysicalSize;
 use dioxus_desktop;
+use dioxus_desktop::wry::dpi::PhysicalSize;
+use dioxus_desktop::{Config, WindowBuilder};
 use dioxus_primitives::toast::ToastProvider;
 use std::env;
 use std::path::PathBuf;
@@ -37,26 +37,33 @@ fn main() {
         .with_focused(true)
         .with_inner_size(PhysicalSize::new(900, 1300));
     let cfg = if cfg!(target_os = "windows") {
-        let user_data_dir = env::var("LOCALAPPDATA")
-            .expect("env var LOCALAPPDATA not found");
+        let user_data_dir = env::var("LOCALAPPDATA").expect("env var LOCALAPPDATA not found");
+        tracing::debug!("user path is {:#?}", user_data_dir);
+        dioxus_sdk::storage::set_dir!();
         dioxus_desktop::Config::new()
             .with_data_directory(user_data_dir)
             .with_window(window_config)
     } else if cfg!(target_os = "linux") {
-        let user_data_dir = env::var("XDG_DATA_HOME")
-            .unwrap_or_else(|_| {
-                let home_dir = env::var("HOME").expect("env var HOME not found");
-                format!("{}/.local/share", home_dir)
-            });
+        let user_data_dir = env::var("XDG_DATA_HOME").unwrap_or_else(|_| {
+            let home_dir = env::var("HOME").expect("env var HOME not found");
+            format!("{}/.local/share", home_dir)
+        });
+        dioxus_sdk::storage::set_dir!();
         Config::new()
             .with_data_directory(PathBuf::from(user_data_dir).join("AnyTasks"))
             .with_window(window_config)
+    } else if cfg!(target_os = "android") {
+        let app_files_dir = PathBuf::from("/data/user/0/com.Tumypmyp.AnyTask/files");
+        let _ = std::fs::create_dir_all(&app_files_dir);
+        dioxus_sdk::storage::set_directory(app_files_dir);
+        Config::new()
     } else {
         Config::new()
     };
     tracing::info!("config is ready");
     dioxus_desktop::launch::launch(App, vec![], vec![Box::new(cfg)]);
 }
+
 #[component]
 fn App() -> Element {
     _ = document::eval("document.documentElement.setAttribute('data-theme', 'dark');");

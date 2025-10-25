@@ -71,14 +71,12 @@ pub fn PropertyHolder(
                                     p1.name.cmp(&p2.name)
                                 };
                                 v.sort_by(cmp);
-
                             });
 
                         show_properties
                             .with_mut(|v| {
                                 v.retain(|p| p.id != id);
                             });
-
                     },
                     "Hide property"
                 }
