@@ -1,14 +1,14 @@
 use crate::API_CLIENT;
-use crate::Route;
-use dioxus::prelude::*;
 use crate::Logout;
+use crate::Route;
 use crate::components::Title;
-use crate::components::base::error;
 use crate::components::base::ButtonHolder;
+use crate::components::base::message;
+use dioxus::prelude::*;
 #[component]
 pub fn Home() -> Element {
     let nav = navigator();
-    _ = document::eval("document.documentElement.setAttribute('data-theme', 'dark');");
+    // _ = document::eval("document.documentElement.setAttribute('data-theme', 'dark');");
     let spaces = use_resource(|| async move { API_CLIENT.read().list_spaces().await });
     tracing::info!("Opened home");
     match &*spaces.read() {
@@ -37,11 +37,12 @@ pub fn Home() -> Element {
                 Logout {}
             }
         }
-        Some(Err(e)) => {
-            tracing::debug!("error: {:#?}", e);
-            error(e.to_string());
+        Some(Err(err)) => {
+            tracing::debug!("error: {:#?}", err);
+            message::error("Failed to load spaces", err.to_string());
+            nav.push(Route::Login {});
             rsx!()
         }
-        _ => rsx!(),
+        None => rsx!(),
     }
 }

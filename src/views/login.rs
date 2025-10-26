@@ -1,7 +1,7 @@
 use crate::API_CLIENT;
 use crate::Route;
 use crate::components::base::ButtonHolder;
-use crate::components::base::info;
+use crate::components::base::message;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 pub const USER_SETTINGS_KEY: &str = "settings";
@@ -62,14 +62,14 @@ pub fn Login() -> Element {
         match API_CLIENT.read().list_spaces().await {
             Ok(_) => {
                 tracing::debug!("Token valid, spaces listed successfully.");
-                info("Login successful".to_string());
+                message::info("Login successful".to_string());
                 tracing::debug!("settings saved as {:#?}", settings.read());
                 let nav = navigator();
                 nav.push(Route::Home {});
             }
             Err(e) => {
                 tracing::error!("Token check failed: {:#?}", e);
-                info("Login unsuccessful".to_string());
+                message::info("Login unsuccessful".to_string());
             }
         }
     });

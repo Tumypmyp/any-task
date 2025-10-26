@@ -4,6 +4,7 @@ use crate::ListEntry;
 use crate::components::Header;
 use crate::components::Title;
 use crate::components::add_properties::ShowPropertiesSetting;
+use crate::components::base::message;
 use crate::components::edit_properties::PropertiesOrder;
 use crate::helpers::models::DateTimeFormat;
 use crate::helpers::*;
@@ -80,8 +81,10 @@ pub fn Objects(
             .get_list_objects(space_id, list_id, view_id)
             .await
     });
+
     match &*resp.read() {
         Some(Ok(p)) => {
+            tracing::debug!("objects: {:#?}", p.clone().data);
             rsx! {
                 for obj in p.clone().data.unwrap() {
                     ListEntry {
@@ -95,6 +98,12 @@ pub fn Objects(
                 }
             }
         }
-        _ => rsx!(),
+        Some(Err(err)) => {
+            message::error("Failed to fetch objects", err.to_string());
+            rsx! {}
+        }
+        None => rsx! {
+            "Loading..."
+        },
     }
 }

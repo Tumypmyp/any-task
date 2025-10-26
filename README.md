@@ -45,7 +45,7 @@ cargo install --git https://github.com/DioxusLabs/dioxus dioxus-cli --locked
 nix develop
 ```
 
-## Building
+## Running
 
 ### Desktop
 
@@ -65,7 +65,7 @@ dx serve --platform desktop
     - `adb pair ip:port` - connect to device with wireless debugging
     - `code` - verify with code
     - `adb devices` - check connected devices
-  - Run the app
+  - Run the app on the connected device
       ```bash
       dx serve --platform android --device
       ```
@@ -73,7 +73,7 @@ dx serve --platform desktop
     - `adb shell run-as com.Tumypmyp.AnyTask` - login to Android shell
     - `ls files` - check app files directory
 
-## Publishing
+## Building installer
 
 ### Desktop
 ```bash
