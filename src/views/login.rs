@@ -6,9 +6,8 @@ use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 pub const USER_SETTINGS_KEY: &str = "settings";
 use crate::components::base::{ButtonVariant, ButtonWithHolder};
-use dioxus_sdk::storage::LocalStorage;
-use dioxus_sdk::storage::use_synced_storage;
-use dioxus_sdk::storage::*;
+use dioxus_sdk_storage::LocalStorage;
+use dioxus_sdk_storage::use_synced_storage;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Default)]
 pub struct AppSettings {

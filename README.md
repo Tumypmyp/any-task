@@ -84,3 +84,8 @@ dx bundle --desktop
 ```bash
 dx bundle --android
 ```
+
+## Running 
+### Android
+To use android app you should first setup a reverse proxy on device with desktop Anytype installed.
+The example config is in `sozu.toml`.

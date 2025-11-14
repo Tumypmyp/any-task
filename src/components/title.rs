@@ -1,9 +1,9 @@
-use dioxus::prelude::*;
 use crate::components::base::{ButtonVariant, ButtonWithHolder};
+use dioxus::prelude::*;
 #[component]
 pub fn Title(title: String) -> Element {
     rsx! {
-        ButtonWithHolder { width: "20vw", variant: ButtonVariant::Ghost, "{title}" }
+        ButtonWithHolder { width: "50vw", variant: ButtonVariant::Ghost, "{title}" }
     }
 }
 #[component]

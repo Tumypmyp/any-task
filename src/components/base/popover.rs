@@ -1,9 +1,9 @@
+use crate::components::base::*;
 use dioxus::prelude::*;
-use dioxus_primitives::{ContentAlign, ContentSide};
 use dioxus_primitives::popover::{
     self, PopoverContentProps, PopoverRootProps, PopoverTriggerProps,
 };
-use crate::components::base::*;
+use dioxus_primitives::{ContentAlign, ContentSide};
 #[component]
 pub fn PopoverHeader(text: String) -> Element {
     rsx! {
@@ -75,7 +75,7 @@ pub fn PopoverContent(props: PopoverContentProps) -> Element {
             class: "popover-content",
             gap: "0.25rem",
             side: ContentSide::Bottom,
-            align: ContentAlign::Center,
+            align: ContentAlign::End,
             id: props.id,
             attributes: props.attributes,
             {props.children}
