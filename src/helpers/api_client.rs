@@ -29,6 +29,24 @@ impl Client {
     > {
         openapi::apis::spaces_api::list_spaces(&self.config, API_VERSION, None, None).await
     }
+    pub async fn get_views(
+        &self,
+        space_id: &str,
+        list_id: &str,
+    ) -> Result<
+        PaginationPeriodPaginatedResponseApimodelView,
+        Error<openapi::apis::lists_api::GetListViewsError>,
+    > {
+        openapi::apis::lists_api::get_list_views(
+            &self.config,
+            API_VERSION,
+            space_id,
+            list_id,
+            None,
+            None,
+        )
+        .await
+    }
     pub async fn list_properties(
         &self,
         space_id: &str,
@@ -116,7 +134,7 @@ impl Client {
         &self,
         space_id: Signal<String>,
         list_id: Signal<String>,
-        view_id: Signal<String>,
+        view_id: Store<String>,
     ) -> Result<
         PaginationPeriodPaginatedResponseApimodelObject,
         Error<openapi::apis::lists_api::GetListObjectsError>,

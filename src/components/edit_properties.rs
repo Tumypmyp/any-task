@@ -4,8 +4,8 @@ use dioxus::prelude::*;
 use std::vec;
 #[component]
 pub fn PropertiesOrder(
-    show_properties: Store<Vec<PropertyViewInfo>>,
-    other_properties: Store<Vec<PropertyViewInfo>>,
+    show_properties: Store<Vec<PropertyInfo>>,
+    other_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     rsx! {
         div { width: "95vw", display: "flex", "flex-direction": "row",
@@ -26,8 +26,9 @@ pub fn PropertiesOrder(
 pub fn PropertyHolder(
     index: usize,
     id: PropertyID,
-    show_properties: Store<Vec<PropertyViewInfo>>,
-    other_properties: Store<Vec<PropertyViewInfo>>,
+    show_properties: Store<Vec<PropertyInfo>>,
+    // other_proerties might change if deselect the shown
+    other_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     let property = show_properties.get(index).unwrap();
     let mut open = use_signal(|| false);
@@ -67,7 +68,7 @@ pub fn PropertyHolder(
                         other_properties
                             .with_mut(|v| {
                                 v.push((show_properties.get(index).unwrap())());
-                                let cmp = |p1: &PropertyViewInfo, p2: &PropertyViewInfo| {
+                                let cmp = |p1: &PropertyInfo, p2: &PropertyInfo| {
                                     p1.name.cmp(&p2.name)
                                 };
                                 v.sort_by(cmp);

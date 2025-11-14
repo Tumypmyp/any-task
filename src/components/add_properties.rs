@@ -8,8 +8,8 @@ use std::vec;
 #[component]
 pub fn ShowPropertiesSetting(
     space_id: Signal<String>,
-    show_properties: Store<Vec<PropertyViewInfo>>,
-    other_properties: Store<Vec<PropertyViewInfo>>,
+    show_properties: Store<Vec<PropertyInfo>>,
+    other_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     use_effect(move || {
         spawn(async move {
@@ -28,7 +28,7 @@ pub fn ShowPropertiesSetting(
                             Ok(o) => o.data.unwrap(),
                             _ => vec![],
                         };
-                        other_properties.write().push(PropertyViewInfo {
+                        other_properties.write().push(PropertyInfo {
                             id: property_id.clone(),
                             name: property_name,
                             options,
@@ -145,8 +145,8 @@ pub fn ShowPropertiesSetting(
 pub fn ShowProperty2(
     index: usize,
     id: PropertyID,
-    show_properties: Store<Vec<PropertyViewInfo>>,
-    other_properties: Store<Vec<PropertyViewInfo>>,
+    show_properties: Store<Vec<PropertyInfo>>,
+    other_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     let name = (show_properties.get(index).unwrap())().name.clone();
 
@@ -161,7 +161,7 @@ pub fn ShowProperty2(
                 show_properties
                     .with_mut(|v| {
                         v.retain(|p| p.id != id);
-                        let cmp = |p1: &PropertyViewInfo, p2: &PropertyViewInfo| {
+                        let cmp = |p1: &PropertyInfo, p2: &PropertyInfo| {
                             p1.name.cmp(&p2.name)
                         };
                         v.sort_by(cmp);
@@ -176,8 +176,8 @@ pub fn ShowProperty2(
 pub fn ShowProperty3(
     index: usize,
     id: PropertyID,
-    show_properties: Store<Vec<PropertyViewInfo>>,
-    other_properties: Store<Vec<PropertyViewInfo>>,
+    show_properties: Store<Vec<PropertyInfo>>,
+    other_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     let name = (other_properties.get(index).unwrap())().name.clone();
 

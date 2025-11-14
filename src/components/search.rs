@@ -33,8 +33,8 @@ pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {
         }
         _ => {}
     }
-    let show_properties: Store<Vec<PropertyViewInfo>> = use_store(|| {
-        vec![PropertyViewInfo {
+    let show_properties: Store<Vec<PropertyInfo>> = use_store(|| {
+        vec![PropertyInfo {
             id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
             name: "Name".to_string(),
             options: vec![],

@@ -12,7 +12,7 @@ pub struct ListEntryProps {
     pub space_id: String,
     pub object_id: String,
     pub data: ApimodelPeriodObject,
-    pub show_properties: Store<Vec<PropertyViewInfo>>,
+    pub show_properties: Store<Vec<PropertyInfo>>,
 }
 #[component]
 pub fn ListEntry(props: ListEntryProps) -> Element {
@@ -45,7 +45,7 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
                 class: "button",
                 width: "95vw",
                 display: "flex",
-                "data-style": "outline",
+                "data-style": "ghost",
                 "flex-direction": "row",
                 onclick: move |_| {
                 if let Some(t) = props.clone().data.r#type &&

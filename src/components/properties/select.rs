@@ -1,18 +1,17 @@
+use crate::API_CLIENT;
+use crate::components::base::ButtonHolder;
+use crate::helpers::*;
 use dioxus::prelude::*;
 use dioxus_primitives::select::{
-    Select, SelectGroup, SelectItemIndicator, SelectList, SelectOption, SelectTrigger,
-    SelectValue,
+    Select, SelectGroup, SelectItemIndicator, SelectList, SelectOption, SelectTrigger, SelectValue,
 };
-use crate::helpers::*;
-use crate::components::base::ButtonHolder;
 use openapi::models::*;
-use crate::API_CLIENT;
 #[component]
 pub fn SelectPropertyValue(
     space_id: String,
     object_id: String,
     prop: Signal<ApimodelPeriodSelectPropertyValue>,
-    info: ReadSignal<PropertyViewInfo>,
+    info: ReadSignal<PropertyInfo>,
 ) -> Element {
     let options = info().options;
     let space_id_clone = use_signal(|| space_id.clone());

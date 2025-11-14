@@ -21,7 +21,7 @@ The client is currently in active development and supports building for desktop 
 - [x] Date/Time property
 - [x] Choose viewed properties
 - [x] Configure viewed properties
-- [ ] Choose views
+- [x] Choose views
 - [ ] Auth with 4-digit code
 - [ ] Timeline view
 - [x] Build for Android

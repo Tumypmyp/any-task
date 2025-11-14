@@ -5,6 +5,7 @@ use crate::components::Header;
 use crate::components::Title;
 use crate::components::add_properties::ShowPropertiesSetting;
 use crate::components::base::message;
+use crate::components::choose_view::ChooseView;
 use crate::components::edit_properties::PropertiesOrder;
 use crate::helpers::models::DateTimeFormat;
 use crate::helpers::*;
@@ -15,9 +16,10 @@ pub fn List(space_id: String, list_id: String) -> Element {
     tracing::info!("loading space {space_id}, list {list_id}");
     let space_id = use_signal(|| space_id);
     let list_id = use_signal(|| list_id);
-    let view_id = use_signal(|| "".to_string());
-    let show_properties: Store<Vec<PropertyViewInfo>> = use_store(|| {
-        vec![PropertyViewInfo {
+    let view_id = use_store(|| "".to_string());
+
+    let show_properties: Store<Vec<PropertyInfo>> = use_store(|| {
+        vec![PropertyInfo {
             id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
             name: "Name".to_string(),
             date_format: DateTimeFormat::DateTime,
@@ -25,14 +27,12 @@ pub fn List(space_id: String, list_id: String) -> Element {
             width: 30.0,
         }]
     });
-    let other_properties: Store<Vec<PropertyViewInfo>> = use_store(|| vec![]);
     rsx! {
         ListHeader {
             space_id,
             list_id,
             view_id,
             show_properties,
-            other_properties,
         }
         Objects {
             space_id,
@@ -47,9 +47,8 @@ pub fn List(space_id: String, list_id: String) -> Element {
 pub fn ListHeader(
     space_id: Signal<String>,
     list_id: Signal<String>,
-    view_id: Signal<String>,
-    show_properties: Store<Vec<PropertyViewInfo>>,
-    other_properties: Store<Vec<PropertyViewInfo>>,
+    view_id: Store<String>,
+    show_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     let mut name = use_signal(|| "".to_string());
     let resp =
@@ -60,10 +59,13 @@ pub fn ListHeader(
         }
         _ => {}
     }
+    let other_properties: Store<Vec<PropertyInfo>> = use_store(|| vec![]);
+    let all_views: Store<Vec<ViewInfo>> = use_store(|| vec![]);
     rsx! {
         Header {
             Title { title: "{name}" }
             ShowPropertiesSetting { space_id, show_properties, other_properties }
+            ChooseView { space_id, list_id, view_id, all_views }
         }
         PropertiesOrder { show_properties, other_properties }
     }
@@ -72,8 +74,8 @@ pub fn ListHeader(
 pub fn Objects(
     space_id: Signal<String>,
     list_id: Signal<String>,
-    view_id: Signal<String>,
-    show_properties: Store<Vec<PropertyViewInfo>>,
+    view_id: Store<String>,
+    show_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     let resp = use_resource(move || async move {
         API_CLIENT

@@ -1,15 +1,16 @@
-use dioxus::prelude::*;
-use openapi::models::*;
 use crate::{
     components::{ButtonHolder, ButtonWithHolder},
-    helpers::PropertyViewInfo, properties::*,
+    helpers::PropertyInfo,
+    properties::*,
 };
+use dioxus::prelude::*;
+use openapi::models::*;
 #[component]
 pub fn PropertyValue(
     space_id: String,
     object_id: String,
     data: ReadSignal<Option<ApimodelPeriodPropertyWithValue>>,
-    info: ReadSignal<PropertyViewInfo>,
+    info: ReadSignal<PropertyInfo>,
 ) -> Element {
     match data() {
         Some(ApimodelPeriodPropertyWithValue::ApimodelPeriodTextPropertyValue(text)) => {
@@ -22,11 +23,7 @@ pub fn PropertyValue(
                 }
             }
         }
-        Some(
-            ApimodelPeriodPropertyWithValue::ApimodelPeriodCheckboxPropertyValue(
-                checkbox,
-            ),
-        ) => {
+        Some(ApimodelPeriodPropertyWithValue::ApimodelPeriodCheckboxPropertyValue(checkbox)) => {
             rsx! {
                 CheckboxPropertyValue {
                     space_id: &space_id,
@@ -36,9 +33,7 @@ pub fn PropertyValue(
                 }
             }
         }
-        Some(
-            ApimodelPeriodPropertyWithValue::ApimodelPeriodSelectPropertyValue(select),
-        ) => {
+        Some(ApimodelPeriodPropertyWithValue::ApimodelPeriodSelectPropertyValue(select)) => {
             rsx! {
                 SelectPropertyValue {
                     space_id: &space_id,
