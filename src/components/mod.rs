@@ -16,3 +16,5 @@ pub mod edit_properties;
 
 pub mod choose_view;
 pub use choose_view::ChooseView;
+pub mod separator;
+pub mod slider;

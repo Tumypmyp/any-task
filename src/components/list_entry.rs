@@ -3,6 +3,7 @@ use crate::components::base::ButtonHolder;
 use crate::helpers::NAME_PROPERTY_ID_STR;
 use crate::helpers::*;
 use crate::properties::PropertyValue;
+use crate::separator::Separator;
 use dioxus::prelude::*;
 use openapi::models::*;
 use std::collections::HashMap;
@@ -40,6 +41,11 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
         )),
     );
     rsx! {
+        Separator {
+            style: "margin: 2px 0; width: 90%;",
+            horizontal: true,
+            decorative: true,
+        }
         ButtonHolder {
             button {
                 class: "button",

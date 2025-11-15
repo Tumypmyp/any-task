@@ -1,11 +1,12 @@
 use dioxus::prelude::*;
-use dioxus_primitives::slider::{
-    self, SliderProps, SliderRangeProps, SliderThumbProps, SliderTrackProps,
+pub use dioxus_primitives::slider::{
+    self, SliderProps, SliderRangeProps, SliderThumbProps, SliderTrackProps, SliderValue,
 };
-pub use dioxus_primitives::slider::SliderValue;
+
 #[component]
 pub fn Slider(props: SliderProps) -> Element {
     rsx! {
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
         slider::Slider {
             class: "slider",
             value: props.value,
@@ -23,18 +24,21 @@ pub fn Slider(props: SliderProps) -> Element {
         }
     }
 }
+
 #[component]
 pub fn SliderTrack(props: SliderTrackProps) -> Element {
     rsx! {
         slider::SliderTrack { class: "slider-track", attributes: props.attributes, {props.children} }
     }
 }
+
 #[component]
 pub fn SliderRange(props: SliderRangeProps) -> Element {
     rsx! {
         slider::SliderRange { class: "slider-range", attributes: props.attributes, {props.children} }
     }
 }
+
 #[component]
 pub fn SliderThumb(props: SliderThumbProps) -> Element {
     rsx! {
