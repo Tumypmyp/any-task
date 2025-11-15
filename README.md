@@ -10,7 +10,6 @@ The client is currently in active development and supports building for desktop 
 
 ## Features
 
-
 - [x] Login with API token
 - [x] Save/Remove API token
 - [x] View Spaces

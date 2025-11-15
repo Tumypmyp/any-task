@@ -65,14 +65,14 @@ pub fn LoginWithToken() -> Element {
         match API_CLIENT.read().list_spaces().await {
             Ok(_) => {
                 tracing::debug!("Token valid, spaces listed successfully.");
-                message::info("Login successful".to_string());
+                // message::info("Login successful".to_string());
                 tracing::debug!("settings saved as {:#?}", settings.read());
                 let nav = navigator();
                 nav.push(Route::Home {});
             }
             Err(e) => {
                 tracing::error!("Token check failed: {:#?}", e);
-                message::info("Login unsuccessful".to_string());
+                message::error_with_description("Login failed", "Please try again");
             }
         }
     });
@@ -165,7 +165,7 @@ pub fn LoginWithCode() -> Element {
                                 challenge_id.set(r.challenge_id.unwrap());
                             }
                             Err(e) => {
-                                message::error("request failed", e.to_string());
+                                message::error("Challenge request failed", &e);
                             }
                         };
                     });
@@ -182,7 +182,7 @@ pub fn LoginWithCode() -> Element {
                                 token.set(r.api_key.unwrap());
                             }
                             Err(e) => {
-                                message::error("create api key request failed", e.to_string());
+                                message::error("Challenge failed", &e);
                             }
                         };
                     });
@@ -198,15 +198,15 @@ pub fn LoginWithCode() -> Element {
                     spawn(async move {
                         match API_CLIENT.read().list_spaces().await {
                             Ok(_) => {
-                                tracing::debug!("Token valid, spaces listed successfully.");
-                                message::info("Login successful".to_string());
-                                tracing::debug!("settings saved as {:#?}", settings.read());
+                                // tracing::debug!("Token valid, spaces listed successfully.");
+                                // message::info("Login successful".to_string());
+                                // tracing::debug!("settings saved as {:#?}", settings.read());
                                 let nav = navigator();
                                 nav.push(Route::Home {});
                             }
                             Err(e) => {
                                 tracing::error!("Token check failed: {:#?}", e);
-                                message::info("Login unsuccessful".to_string());
+                                message::error_with_description("Login failed", "Please try again");
                             }
                         }
                     });

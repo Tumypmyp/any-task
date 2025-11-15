@@ -106,7 +106,7 @@ pub fn Objects(
             }
         }
         Some(Err(err)) => {
-            message::error("Failed to fetch objects", err.to_string());
+            message::error("Failed to fetch objects", err);
             rsx! {}
         }
         None => rsx! { "Loading..." },

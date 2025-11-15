@@ -39,7 +39,7 @@ pub fn Home() -> Element {
         }
         Some(Err(err)) => {
             tracing::debug!("error: {:#?}", err);
-            message::error("Failed to load spaces", err.to_string());
+            message::error("Failed to load spaces", err);
             nav.push(Route::Login {});
             rsx!()
         }
