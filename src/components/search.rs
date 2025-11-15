@@ -43,7 +43,12 @@ pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {
         }]
     });
     rsx! {
-        div { id: "object-list",
+        div { style: "
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            ",
             for obj in objects.iter() {
                 ListEntry {
                     key: "{obj.object_id}",

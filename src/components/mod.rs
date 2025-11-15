@@ -1,6 +1,7 @@
 mod list_entry;
 pub use list_entry::ListEntry;
-mod actions;
+pub mod actions;
+pub use actions::ActionHolder;
 pub use actions::Actions;
 mod search;
 pub use search::Search;

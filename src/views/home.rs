@@ -15,7 +15,12 @@ pub fn Home() -> Element {
         Some(Ok(s)) => {
             rsx! {
                 Title { title: "Spaces" }
-                div { id: "space-list",
+                div { style: "
+                    align-items: center;
+                    display: flex;
+                    justify-content: center;
+                    flex-direction: column;
+                    ",
                     for space in s.clone().data.unwrap_or_default().clone() {
                         ButtonHolder { key: "{space.clone().id.unwrap_or_default()}",
                             button {

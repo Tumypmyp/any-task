@@ -1,4 +1,5 @@
 use crate::API_CLIENT;
+use crate::ActionHolder;
 use crate::Actions;
 use crate::ListEntry;
 use crate::components::Header;
@@ -40,7 +41,7 @@ pub fn List(space_id: String, list_id: String) -> Element {
             view_id,
             show_properties,
         }
-        Actions {}
+        ActionHolder { Actions {} }
     }
 }
 #[component]

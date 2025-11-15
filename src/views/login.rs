@@ -1,5 +1,6 @@
 use crate::API_CLIENT;
 use crate::Route;
+use crate::actions::*;
 use crate::components::base::ButtonHolder;
 use crate::components::base::message;
 use dioxus::prelude::*;
@@ -23,7 +24,7 @@ pub fn Logout() -> Element {
             server: "127.0.0.1:31019".to_string(),
         });
     rsx! {
-        div { id: "actions-holder",
+        ActionHolder { position: Position::Left,
             ButtonWithHolder {
                 onclick: move |_| {
                     tracing::debug!("settings were {:#?}", settings);
@@ -79,7 +80,12 @@ pub fn LoginWithToken() -> Element {
     let mut token = use_signal(|| settings.read().token.to_string());
     let mut server = use_signal(|| settings.read().server.to_string());
     rsx! {
-        div { id: "login-holder",
+        div { style: "
+                padding-top: 40vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            ",
             ButtonHolder {
                 input {
                     class: "input",
@@ -132,7 +138,11 @@ pub fn LoginWithCode() -> Element {
     let mut server = use_signal(|| settings.read().server.to_string());
     let mut challenge_id = use_signal(|| "".to_string());
     rsx! {
-        div { id: "login-holder",
+        div { style: "padding-top: 40vh;
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+              ",
             ButtonHolder {
                 input {
                     class: "input",
