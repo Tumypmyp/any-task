@@ -65,7 +65,12 @@ pub fn ListHeader(
         Header {
             Title { title: "{name}" }
             ShowPropertiesSetting { space_id, show_properties, other_properties }
-            ChooseView { space_id, list_id, view_id, all_views }
+            ChooseView {
+                space_id,
+                list_id,
+                view_id,
+                all_views,
+            }
         }
         PropertiesOrder { show_properties, other_properties }
     }
@@ -104,8 +109,6 @@ pub fn Objects(
             message::error("Failed to fetch objects", err.to_string());
             rsx! {}
         }
-        None => rsx! {
-            "Loading..."
-        },
+        None => rsx! { "Loading..." },
     }
 }

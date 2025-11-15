@@ -10,6 +10,7 @@ The client is currently in active development and supports building for desktop 
 
 ## Features
 
+
 - [x] Login with API token
 - [x] Save/Remove API token
 - [x] View Spaces
@@ -22,7 +23,7 @@ The client is currently in active development and supports building for desktop 
 - [x] Choose viewed properties
 - [x] Configure viewed properties
 - [x] Choose views
-- [ ] Auth with 4-digit code
+- [x] Auth with 4-digit code
 - [ ] Timeline view
 - [x] Build for Android
 

@@ -48,8 +48,10 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
                 "data-style": "ghost",
                 "flex-direction": "row",
                 onclick: move |_| {
-                if let Some(t) = props.clone().data.r#type &&
-                    (t.key == Some("set".to_string()) || t.key == Some("collecion".to_string())) {
+                    if let Some(t) = props.clone().data.r#type
+                        && (t.key == Some("set".to_string())
+                            || t.key == Some("collecion".to_string()))
+                    {
                         nav.push(Route::List {
                             space_id: props.clone().space_id.clone(),
                             list_id: props.clone().object_id.clone(),

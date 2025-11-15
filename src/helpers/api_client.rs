@@ -21,6 +21,37 @@ impl Client {
     pub fn set_server(&mut self, server: String) {
         self.config.base_path = format!("http://{server}");
     }
+    pub async fn create_auth_challenge(
+        &self,
+    ) -> Result<
+        ApimodelPeriodCreateChallengeResponse,
+        Error<openapi::apis::auth_api::CreateAuthChallengeError>,
+    > {
+        openapi::apis::auth_api::create_auth_challenge(
+            &self.config,
+            API_VERSION,
+            openapi::models::ApimodelPeriodCreateChallengeRequest {
+                app_name: Some("AnyTask".to_string()),
+            },
+        )
+        .await
+    }
+    pub async fn create_api_key(
+        &self,
+        challenge_id: String,
+        code: String,
+    ) -> Result<ApimodelPeriodCreateApiKeyResponse, Error<openapi::apis::auth_api::CreateApiKeyError>>
+    {
+        openapi::apis::auth_api::create_api_key(
+            &self.config,
+            API_VERSION,
+            openapi::models::ApimodelPeriodCreateApiKeyRequest {
+                challenge_id: Some(challenge_id.to_string()),
+                code: Some(code.to_string()),
+            },
+        )
+        .await
+    }
     pub async fn list_spaces(
         &self,
     ) -> Result<

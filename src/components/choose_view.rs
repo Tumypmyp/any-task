@@ -50,11 +50,7 @@ pub fn ChooseView(
                         direction: ScrollDirection::Vertical,
                         tabindex: "0",
                         for (i , view) in all_views.read().clone().iter().enumerate() {
-                            ViewButton {
-                                index: i,
-                                view_id: view_id,
-                                view: view.clone(),
-                            }
+                            ViewButton { index: i, view_id, view: view.clone() }
                         }
                     }
                 }
@@ -70,9 +66,10 @@ pub fn ViewButton(index: usize, view_id: Store<String>, view: ViewInfo) -> Eleme
         ButtonWithHolder {
             variant: ButtonVariant::Ghost,
             onclick: move |_| {
-                view_id.with_mut(|v| {
-                    *v = value.clone();
-                });
+                view_id
+                    .with_mut(|v| {
+                        *v = value.clone();
+                    });
             },
             "{view.name}"
         }
