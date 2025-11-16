@@ -1,7 +1,5 @@
-use crate::components::base::{
-    ButtonHolder, ButtonWithHolder, PopoverContent, PopoverHeader, PopoverHeaderPropsBuilder,
-    PopoverRoot, PopoverTrigger,
-};
+use crate::components::button::{ButtonHolder, ButtonWithHolder};
+use crate::components::popover::*;
 use crate::components::slider::*;
 use crate::helpers::*;
 use dioxus::prelude::*;

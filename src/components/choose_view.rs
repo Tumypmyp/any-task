@@ -1,5 +1,7 @@
 use crate::API_CLIENT;
-use crate::components::base::*;
+use crate::components::button::*;
+use crate::components::popover::*;
+use crate::components::scroll_area::ScrollArea;
 use crate::helpers::*;
 use dioxus::prelude::*;
 use dioxus_primitives::scroll_area::ScrollDirection;

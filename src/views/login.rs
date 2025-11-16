@@ -1,12 +1,13 @@
 use crate::API_CLIENT;
 use crate::Route;
 use crate::actions::*;
-use crate::components::base::ButtonHolder;
 use crate::components::base::message;
+use crate::components::button::ButtonHolder;
+use crate::components::input::Input;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 pub const USER_SETTINGS_KEY: &str = "settings";
-use crate::components::base::{ButtonVariant, ButtonWithHolder};
+use crate::components::button::{ButtonVariant, ButtonWithHolder};
 use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
 
@@ -87,23 +88,21 @@ pub fn LoginWithToken() -> Element {
                 align-items: center;
             ",
             ButtonHolder {
-                input {
-                    class: "input",
+                Input {
                     placeholder: "Anytype API server",
                     style: "width: 30vw",
                     value: "{server.read()}",
-                    oninput: move |event| {
+                    oninput: move |event: FormEvent| {
                         *server.write() = event.value();
                     },
                 }
             }
             ButtonHolder {
-                input {
-                    class: "input",
+                Input {
                     placeholder: "Paste your Anytype API token",
                     style: "width: 50vw",
                     value: "{token.read()}",
-                    oninput: move |event| {
+                    oninput: move |event: FormEvent| {
                         *token.write() = event.value();
                     },
                 }
@@ -144,23 +143,22 @@ pub fn LoginWithCode() -> Element {
                       align-items: center;
               ",
             ButtonHolder {
-                input {
-                    class: "input",
+                Input {
                     placeholder: "Anytype API server",
                     style: "width: 30vw",
                     value: "{server.read()}",
-                    oninput: move |event| {
+                    oninput: move |event: FormEvent| {
                         *server.write() = event.value();
                     },
                 }
             }
             ButtonHolder {
-                input {
-                    class: "input",
+                Input {
+
                     placeholder: "Code from Anytype app",
                     style: "width: 50vw",
                     value: "{code.read()}",
-                    oninput: move |event| {
+                    oninput: move |event: FormEvent| {
                         *code.write() = event.value();
                     },
                 }

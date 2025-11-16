@@ -1,4 +1,4 @@
-use crate::components::base::button::*;
+use crate::button::*;
 use dioxus::prelude::*;
 use dioxus_primitives::popover::{
     self, PopoverContentProps, PopoverRootProps, PopoverTriggerProps,

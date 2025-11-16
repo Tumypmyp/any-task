@@ -1,4 +1,4 @@
-use crate::components::base::ButtonWithHolder;
+use crate::components::button::ButtonWithHolder;
 use crate::helpers::*;
 use dioxus::prelude::*;
 use openapi::models::ApimodelPeriodTextPropertyValue;

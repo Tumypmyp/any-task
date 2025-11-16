@@ -1,8 +1,8 @@
+use crate::components::toast::ToastProvider;
 use dioxus::prelude::*;
 use dioxus_desktop;
 use dioxus_desktop::wry::dpi::PhysicalSize;
 use dioxus_desktop::{Config, WindowBuilder};
-use dioxus_primitives::toast::ToastProvider;
 use std::env;
 use std::path::PathBuf;
 use views::*;

@@ -1,4 +1,4 @@
-use crate::components::base::{ButtonVariant, ButtonWithHolder};
+use crate::components::button::{ButtonVariant, ButtonWithHolder};
 use dioxus::prelude::*;
 #[component]
 pub fn Title(title: String) -> Element {

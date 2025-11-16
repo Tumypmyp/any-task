@@ -1,7 +1,7 @@
 use crate::API_CLIENT;
-use crate::components::base::ScrollArea;
-use crate::components::base::button::*;
+use crate::components::button::*;
 use crate::components::popover::*;
+use crate::components::scroll_area::ScrollArea;
 use crate::helpers::models::DateTimeFormat;
 use crate::helpers::*;
 use dioxus::prelude::*;

@@ -1,5 +1,5 @@
 use crate::Route;
-use crate::components::base::ButtonWithHolder;
+use crate::components::button::ButtonWithHolder;
 use dioxus::prelude::*;
 #[derive(Copy, Clone, PartialEq, Default)]
 #[non_exhaustive]

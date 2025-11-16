@@ -1,5 +1,5 @@
 use crate::Route;
-use crate::components::base::ButtonHolder;
+use crate::components::button::ButtonHolder;
 use crate::helpers::NAME_PROPERTY_ID_STR;
 use crate::helpers::*;
 use crate::properties::PropertyValue;

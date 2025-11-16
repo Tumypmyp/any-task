@@ -2,8 +2,8 @@ use crate::API_CLIENT;
 use crate::Logout;
 use crate::Route;
 use crate::components::Title;
-use crate::components::base::ButtonHolder;
 use crate::components::base::message;
+use crate::components::button::ButtonHolder;
 use dioxus::prelude::*;
 #[component]
 pub fn Home() -> Element {

@@ -1,5 +1,5 @@
 use crate::{
-    components::{ButtonHolder, ButtonWithHolder},
+    components::button::{ButtonHolder, ButtonWithHolder},
     helpers::PropertyInfo,
     properties::*,
 };
