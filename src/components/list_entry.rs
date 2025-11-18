@@ -1,5 +1,5 @@
 use crate::Route;
-use crate::components::button::ButtonHolder;
+use crate::components::row::*;
 use crate::helpers::NAME_PROPERTY_ID_STR;
 use crate::helpers::*;
 use crate::properties::PropertyValue;
@@ -40,56 +40,42 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
             text_property_value,
         )),
     );
+    let p = props.clone();
+    let p2 = props.clone();
     rsx! {
         Separator {
             style: "margin: 2px 0; width: 90%;",
             horizontal: true,
             decorative: true,
         }
-        ButtonHolder {
-            button {
-                class: "button",
-                width: "95vw",
-                display: "flex",
-                "data-style": "ghost",
-                "flex-direction": "row",
-                onclick: move |_| {
-                    if let Some(t) = props.clone().data.r#type
-                        && (t.key == Some("set".to_string())
-                            || t.key == Some("collecion".to_string()))
-                    {
-                        nav.push(Route::List {
-                            space_id: props.clone().space_id.clone(),
-                            list_id: props.clone().object_id.clone(),
-                        });
+        Row {
+            onclick: move |_| {
+                if let Some(t) = p.clone().data.r#type
+                    && (t.key == Some("set".to_string())
+                        || t.key == Some("collecion".to_string()))
+                {
+                    nav.push(Route::List {
+                        space_id: p.clone().space_id.clone(),
+                        list_id: p.clone().object_id.clone(),
+                    });
+                }
+            },
+            for property in p2.clone().show_properties.read().clone() {
+                if let Some(prop) = object_properties.get(property.clone().id) {
+                    PropertyValue {
+                        key: "{property.id.as_str()}",
+                        space_id: props.space_id.clone(),
+                        object_id: props.object_id.clone(),
+                        data: prop.read().clone(),
+                        info: property,
                     }
-                },
-                div {
-                    style: "
-                        display: flex;
-                        flex-direction: row;
-                        align-items: center;
-                    ",
-                    width: "95vw",
-                    for property in props.show_properties.read().clone() {
-                        // if property.show {
-                        if let Some(prop) = object_properties.get(property.clone().id) {
-                            PropertyValue {
-                                key: "{property.id.as_str()}",
-                                space_id: props.space_id.clone(),
-                                object_id: props.object_id.clone(),
-                                data: prop.read().clone(),
-                                info: property,
-                            }
-                        } else {
-                            PropertyValue {
-                                key: "{property.id.as_str()}",
-                                space_id: props.space_id.clone(),
-                                object_id: props.object_id.clone(),
-                                data: None,
-                                info: property,
-                            }
-                        }
+                } else {
+                    PropertyValue {
+                        key: "{property.id.as_str()}",
+                        space_id: props.space_id.clone(),
+                        object_id: props.object_id.clone(),
+                        data: None,
+                        info: property,
                     }
                 }
             }

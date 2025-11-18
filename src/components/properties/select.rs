@@ -33,9 +33,7 @@ pub fn SelectPropertyValue(
                             .await;
                     });
                 },
-                SelectTrigger {
-                    SelectValue {}
-                }
+                SelectTrigger { SelectValue {} }
                 SelectPropertySelectList { options }
             }
         }
@@ -52,7 +50,7 @@ pub fn SelectPropertySelectList(options: Vec<ApimodelPeriodTag>) -> Element {
                             index: i,
                             value: option.id.clone().unwrap(),
                             text_value: name.clone(),
-                           "{name}"
+                            "{name}"
                         }
                     }
                 }

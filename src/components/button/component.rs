@@ -6,17 +6,7 @@ pub fn ButtonHolder(
     #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
     rsx! {
-        div {
-            style: "
-                display: flex;
-                max-width: 95%;
-                padding: 3px;
-                flex-direction: column;
-                align-items: center;
-            ",
-            ..attributes,
-            {children}
-        }
+        div { ..attributes,{children} }
     }
 }
 #[component]

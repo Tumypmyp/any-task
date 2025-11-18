@@ -1,10 +1,10 @@
 use crate::API_CLIENT;
 use crate::components::button::*;
+use crate::components::calendar::*;
 use crate::components::popover::*;
 use crate::helpers::models::DateTimeFormat;
 use crate::helpers::*;
 use dioxus::prelude::*;
-use dioxus_primitives::calendar::*;
 use openapi::models::ApimodelPeriodDatePropertyValue;
 use time::format_description::well_known::Rfc3339;
 use time::macros::{format_description, offset};

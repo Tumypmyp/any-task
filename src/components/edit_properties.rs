@@ -1,5 +1,6 @@
 use crate::components::button::{ButtonHolder, ButtonWithHolder};
 use crate::components::popover::*;
+use crate::components::row::*;
 use crate::components::slider::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
@@ -10,9 +11,8 @@ pub fn PropertiesOrder(
     other_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     rsx! {
-        div { width: "95vw", display: "flex", "flex-direction": "row",
+        Row {
             for (index , property) in show_properties.read().clone().iter().enumerate() {
-                // if property.show {
                 PropertyHolder {
                     key: "{property.id.as_str()}",
                     index,

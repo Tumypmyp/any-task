@@ -10,11 +10,3 @@ html[data-theme="dark"] {
     --dark: initial;
     --light: ;
 }
-
-.checkbox-holder {
-    width: 6vw;
-    display: flex;
-    padding: 3px;
-    flex-direction: column;
-    align-items: center;
-}

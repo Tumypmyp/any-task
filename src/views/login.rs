@@ -86,6 +86,7 @@ pub fn LoginWithToken() -> Element {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+                gap: 5px;
             ",
             ButtonHolder {
                 Input {
@@ -141,6 +142,7 @@ pub fn LoginWithCode() -> Element {
                       display: flex;
                       flex-direction: column;
                       align-items: center;
+                      gap: 5px;
               ",
             ButtonHolder {
                 Input {

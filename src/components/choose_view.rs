@@ -35,28 +35,21 @@ pub fn ChooseView(
     });
     let mut open = use_signal(|| false);
     rsx! {
-        ButtonHolder { "flex-shrink": "0", width: "20vw",
-            PopoverRoot {
-                open: open(),
-                on_open_change: move |v| {
-                    open.set(v);
-                },
-                PopoverTrigger { "Views" }
-                PopoverContent {
-                    ScrollArea {
-                        width: "13em",
-                        height: "15em",
-                        border: "1px solid var(--primary-color-6)",
-                        border_radius: "0.5em",
-                        padding: "0 1em 1em 1em",
-                        direction: ScrollDirection::Vertical,
-                        tabindex: "0",
-                        for (i , view) in all_views.read().clone().iter().enumerate() {
-                            ViewButton { index: i, view_id, view: view.clone() }
-                        }
+        // ButtonHolder { "flex-shrink": "0", width: "20vw",
+        PopoverRoot {
+            open: open(),
+            on_open_change: move |v| {
+                open.set(v);
+            },
+            PopoverTrigger { "Views" }
+            PopoverContent {
+                ScrollArea { style: "max-height: 40vh;",
+                    for (i , view) in all_views.read().clone().iter().enumerate() {
+                        ViewButton { index: i, view_id, view: view.clone() }
                     }
                 }
             }
+                // }
         }
     }
 }

@@ -4,11 +4,11 @@ use crate::Route;
 use crate::components::Title;
 use crate::components::base::message;
 use crate::components::button::ButtonHolder;
+use crate::components::button::*;
 use dioxus::prelude::*;
 #[component]
 pub fn Home() -> Element {
     let nav = navigator();
-    // _ = document::eval("document.documentElement.setAttribute('data-theme', 'dark');");
     let spaces = use_resource(|| async move { API_CLIENT.read().list_spaces().await });
     tracing::info!("Opened home");
     match &*spaces.read() {
@@ -20,6 +20,7 @@ pub fn Home() -> Element {
                     display: flex;
                     justify-content: center;
                     flex-direction: column;
+                    gap: 5px;
                     ",
                     for space in s.clone().data.unwrap_or_default().clone() {
                         ButtonHolder { key: "{space.clone().id.unwrap_or_default()}",

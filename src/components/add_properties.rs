@@ -47,66 +47,59 @@ pub fn ShowPropertiesSetting(
     });
     let mut open = use_signal(|| false);
     rsx! {
-        ButtonHolder { "flex-shrink": "0", width: "20vw",
-            PopoverRoot {
-                open: open(),
-                on_open_change: move |v| {
-                    open.set(v);
-                },
-                PopoverTrigger { "Properties" }
-                PopoverContent {
-                    ScrollArea {
-                        width: "13em",
-                        height: "15em",
-                        border: "1px solid var(--primary-color-6)",
-                        border_radius: "0.5em",
-                        padding: "0 1em 1em 1em",
-                        direction: ScrollDirection::Vertical,
-                        tabindex: "0",
-                        for (i , property) in show_properties.read().clone().iter().enumerate() {
-                            ShowProperty2 {
-                                key: "{property.id.as_str()}-chosen",
-                                index: i,
-                                id: property.id.clone(),
-                                show_properties,
-                                other_properties,
-                            }
+        // ButtonHolder { "flex-shrink": "0", width: "20vw",
+        PopoverRoot {
+            open: open(),
+            on_open_change: move |v| {
+                open.set(v);
+            },
+            PopoverTrigger { "Properties" }
+            PopoverContent {
+                ScrollArea { style: "max-height: 40vh;",
+                    for (i , property) in show_properties.read().clone().iter().enumerate() {
+                        ShowProperty2 {
+                            key: "{property.id.as_str()}-chosen",
+                            index: i,
+                            id: property.id.clone(),
+                            show_properties,
+                            other_properties,
                         }
-                        for (i , property) in other_properties.read().clone().iter().enumerate() {
-                            ShowProperty3 {
-                                key: "{property.id.as_str()}-chosen",
-                                index: i,
-                                id: property.id.clone(),
-                                show_properties,
-                                other_properties,
-                            }
-                        }
-                                        // for (i , property) in all_properties.read().clone().iter().enumerate() {
-                    //     if property.show {
-                    //         ShowProperty {
-                    //             key: "{property.id.as_str()}-chosen",
-                    //             index: i,
-                    //             id: property.id.clone(),
-                    //             show_properties,
-                    //             all_properties,
-                    //         }
-                    //     }
-                    // }
-                    // for (i , property) in all_properties.read().clone().iter().enumerate() {
-                    //     if !property.show {
-                    //         ShowProperty {
-                    //             key: "{property.id.as_str()}",
-                    //             index: i,
-                    //             id: property.id.clone(),
-                    //             show_properties,
-                    //             all_properties,
-                    //         }
-                    //     }
-                    // }
                     }
+                    for (i , property) in other_properties.read().clone().iter().enumerate() {
+                        ShowProperty3 {
+                            key: "{property.id.as_str()}-chosen",
+                            index: i,
+                            id: property.id.clone(),
+                            show_properties,
+                            other_properties,
+                        }
+                    }
+                                // for (i , property) in all_properties.read().clone().iter().enumerate() {
+                //     if property.show {
+                //         ShowProperty {
+                //             key: "{property.id.as_str()}-chosen",
+                //             index: i,
+                //             id: property.id.clone(),
+                //             show_properties,
+                //             all_properties,
+                //         }
+                //     }
+                // }
+                // for (i , property) in all_properties.read().clone().iter().enumerate() {
+                //     if !property.show {
+                //         ShowProperty {
+                //             key: "{property.id.as_str()}",
+                //             index: i,
+                //             id: property.id.clone(),
+                //             show_properties,
+                //             all_properties,
+                //         }
+                //     }
+                // }
                 }
             }
         }
+        // }
     }
 }
 // #[component]

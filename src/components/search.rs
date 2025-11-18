@@ -48,6 +48,7 @@ pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {
             display: flex;
             justify-content: center;
             flex-direction: column;
+            gap: 5px;
             ",
             for obj in objects.iter() {
                 ListEntry {
