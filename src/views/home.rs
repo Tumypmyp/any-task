@@ -5,6 +5,7 @@ use crate::components::Title;
 use crate::components::base::message;
 use crate::components::button::ButtonHolder;
 use crate::components::button::*;
+use crate::components::list::List;
 use dioxus::prelude::*;
 #[component]
 pub fn Home() -> Element {
@@ -15,13 +16,7 @@ pub fn Home() -> Element {
         Some(Ok(s)) => {
             rsx! {
                 Title { title: "Spaces" }
-                div { style: "
-                    align-items: center;
-                    display: flex;
-                    justify-content: center;
-                    flex-direction: column;
-                    gap: 5px;
-                    ",
+                List {
                     for space in s.clone().data.unwrap_or_default().clone() {
                         ButtonHolder { key: "{space.clone().id.unwrap_or_default()}",
                             button {

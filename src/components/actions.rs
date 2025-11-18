@@ -1,5 +1,6 @@
 use crate::Route;
-use crate::components::button::ButtonWithHolder;
+use crate::components::button::Button;
+use crate::row::Row;
 use dioxus::prelude::*;
 #[derive(Copy, Clone, PartialEq, Default)]
 #[non_exhaustive]
@@ -34,6 +35,7 @@ pub fn ActionHolder(#[props(default)] position: Position, children: Element) -> 
          left: {};
          transform: {};
          padding: 0.5vw 2vw;
+         gap: 5px;
          z-index: 1000;",
         position.left_pos(),
         position.transform_value(),
@@ -47,13 +49,13 @@ pub fn ActionHolder(#[props(default)] position: Position, children: Element) -> 
 pub fn Actions() -> Element {
     let nav = navigator();
     rsx! {
-        ButtonWithHolder {
+        Button {
             onclick: move |_| {
                 nav.push(Route::Home {});
             },
             "Home"
         }
-        ButtonWithHolder {
+        Button {
             onclick: move |_| {
                 nav.go_back();
             },

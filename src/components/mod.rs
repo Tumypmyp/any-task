@@ -17,6 +17,7 @@ pub mod choose_view;
 pub mod date_picker;
 pub mod edit_properties;
 pub mod input;
+pub mod list;
 pub mod popover;
 pub mod properties;
 pub mod row;

@@ -4,6 +4,7 @@ use crate::actions::*;
 use crate::components::base::message;
 use crate::components::button::ButtonHolder;
 use crate::components::input::Input;
+use crate::components::list::List;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 pub const USER_SETTINGS_KEY: &str = "settings";
@@ -81,13 +82,7 @@ pub fn LoginWithToken() -> Element {
     let mut token = use_signal(|| settings.read().token.to_string());
     let mut server = use_signal(|| settings.read().server.to_string());
     rsx! {
-        div { style: "
-                padding-top: 40vh;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 5px;
-            ",
+        List {
             ButtonHolder {
                 Input {
                     placeholder: "Anytype API server",
@@ -138,12 +133,8 @@ pub fn LoginWithCode() -> Element {
     let mut server = use_signal(|| settings.read().server.to_string());
     let mut challenge_id = use_signal(|| "".to_string());
     rsx! {
-        div { style: "padding-top: 40vh;
-                      display: flex;
-                      flex-direction: column;
-                      align-items: center;
-                      gap: 5px;
-              ",
+        List {
+            style: "padding-top: 40vh;",
             ButtonHolder {
                 Input {
                     placeholder: "Anytype API server",

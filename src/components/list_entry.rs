@@ -44,7 +44,7 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
     let p2 = props.clone();
     rsx! {
         Separator {
-            style: "margin: 2px 0; width: 90%;",
+            style: "margin: 2px 0; width: 95vw;",
             horizontal: true,
             decorative: true,
         }
