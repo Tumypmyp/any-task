@@ -1,6 +1,6 @@
 # --- Main Configuration Section ---
 [global]
-log_level = "info"
+log_level = "debug"
 
 # --- HTTP Listener (The Incoming Port) ---
 [[listeners]]
