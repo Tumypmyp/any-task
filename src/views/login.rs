@@ -92,6 +92,7 @@ pub fn LoginWithCode() -> Element {
         List { style: "padding-top: 40vh;",
             ButtonHolder {
                 Input {
+                    r#type: "url",
                     placeholder: "Anytype API server",
                     style: "width: 50vw",
                     value: "{server.read()}",
@@ -102,6 +103,7 @@ pub fn LoginWithCode() -> Element {
             }
             ButtonHolder {
                 Input {
+                    r#type: "number",
                     placeholder: "Anytype code",
                     style: "width: 30vw",
                     value: "{code.read()}",
