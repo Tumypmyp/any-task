@@ -39,7 +39,7 @@ let
         darwin.apple_sdk.frameworks.CoreServices
       ];
   };
-  appName = "any-task";
+  appName = "AnyTask";
   outputDir = "dist/android";
   # aabOutputPath = "target/dx/any-task/release/android/app/app/build/outputs/bundle/release/AnyTask-x86_64-linux-android.aab";
   aabOutputPath = "target/dx/any-task/release/android/app/app/build/outputs/bundle/release/AnyTask-aarch64-linux-android.aab";
@@ -63,9 +63,6 @@ in
   };
   # https://devenv.sh/packages/
   packages = [
-    pkgs.git
-    pkgs.fish
-
     # dx
     dioxus-cli
     pkgs.glib
@@ -107,9 +104,6 @@ in
 
   # https://devenv.sh/basics/
   enterShell = ''
-    hello         # Run scripts directly
-    git --version # Use packages
-
   '';
 
   # https://devenv.sh/tasks/
@@ -126,12 +120,16 @@ in
   # env.ABB_OUTPUR = "/mnt/c/Users/Timur/Code/github/tumypmyp/any/target/dx/any-task/release/android/app/app/build/outputs/bundle/release/AnyTask-x86_64-linux-android.aab";
   # env.OUTPUT_APKS = "${env.PROJECT_ROOT}/${env.OUTPUT_DIR}/${env.APP_NAME}-dev.apks";
   # env.OUTPUT_APK = "$PROJECT_ROOT/$OUTPUT_DIR/$APP_NAME-univeral.apk";
+
+  #
+  # dx bundle --android --release --target  aarch64-linux-android
   scripts.bundle-android-apk = {
     packages = [
       pkgs.bundletool
       pkgs.unzip
     ];
     exec = ''
+      dx bundle --android --release --target  aarch64-linux-android || { echo "Failed to bundle AAB with dioxuss"; exit 1; }
       # dx build android
       export APKS_PATH="''${DEVENV_ROOT}/$OUTPUT_APKS"
       # Remove the output APKS file if it exists

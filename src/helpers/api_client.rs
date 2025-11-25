@@ -6,6 +6,8 @@ use time::UtcDateTime;
 use time::format_description::well_known::Rfc3339;
 const API_VERSION: &str = "2025-05-20";
 pub static API_CLIENT: GlobalSignal<Client> = Global::new(|| Client::new());
+
+#[derive(Clone, Debug)]
 pub struct Client {
     config: Configuration,
 }

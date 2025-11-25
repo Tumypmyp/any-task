@@ -8,10 +8,6 @@ pub fn List(
 ) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
-        div {
-            class: "list",
-           ..attributes,
-            {children}
-        }
+        div { class: "list", ..attributes, {children} }
     }
 }

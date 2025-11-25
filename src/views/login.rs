@@ -23,23 +23,24 @@ pub fn Logout() -> Element {
     let mut settings =
         use_synced_storage::<LocalStorage, _>(USER_SETTINGS_KEY.into(), || AppSettings {
             token: "".to_string(),
-            server: "127.0.0.1:31019".to_string(),
+            server: "127.0.0.1:31009".to_string(),
         });
     rsx! {
         ActionHolder { position: Position::Left,
             ButtonWithHolder {
                 onclick: move |_| {
                     tracing::debug!("settings were {:#?}", settings);
-                    settings
-                        // let nav = navigator();
-                        // nav.push(Route::Login{});
-                        .set(AppSettings {
-                            token: "removed token".to_string(),
-                            server: "127.0.0.1:31019".to_string(),
-                        });
+                    settings.write().token = "removed token".to_string();
+                        // .set(AppSettings {
+                        //     server: "127.0.0.1:31009".to_string(),
+                        //     token: "removed token".to_string(),
+                        // });
+                    API_CLIENT.write().set_server(settings.read().server.to_string());
+                    API_CLIENT.write().set_token(settings.read().token.to_string());
+
                     tracing::info!("removed the token");
                     tracing::debug!("settings are {:#?}", settings);
-                },
+               },
                 "Logout"
             }
         }
@@ -49,73 +50,6 @@ pub fn Logout() -> Element {
 #[component]
 pub fn Login() -> Element {
     LoginWithCode()
-}
-#[component]
-pub fn LoginWithToken() -> Element {
-    tracing::info!("login page");
-    let mut settings =
-        use_synced_storage::<LocalStorage, _>(USER_SETTINGS_KEY.into(), || AppSettings {
-            token: "".to_string(),
-            server: "127.0.0.1:31019".to_string(),
-        });
-    tracing::debug!("settings loaded as {:#?}", settings.read());
-
-    let _validate_settings = use_resource(move || async move {
-        tracing::info!("Validating API token");
-        let new_token = settings().token.trim().to_string();
-        API_CLIENT.write().set_token(new_token);
-        API_CLIENT.write().set_server(settings().server);
-        match API_CLIENT.read().list_spaces().await {
-            Ok(_) => {
-                tracing::debug!("Token valid, spaces listed successfully.");
-                // message::info("Login successful".to_string());
-                tracing::debug!("settings saved as {:#?}", settings.read());
-                let nav = navigator();
-                nav.push(Route::Home {});
-            }
-            Err(e) => {
-                tracing::error!("Token check failed: {:#?}", e);
-                message::error_with_description("Login failed", "Please try again");
-            }
-        }
-    });
-    let mut token = use_signal(|| settings.read().token.to_string());
-    let mut server = use_signal(|| settings.read().server.to_string());
-    rsx! {
-        List {
-            ButtonHolder {
-                Input {
-                    placeholder: "Anytype API server",
-                    style: "width: 30vw",
-                    value: "{server.read()}",
-                    oninput: move |event: FormEvent| {
-                        *server.write() = event.value();
-                    },
-                }
-            }
-            ButtonHolder {
-                Input {
-                    placeholder: "Paste your Anytype API token",
-                    style: "width: 50vw",
-                    value: "{token.read()}",
-                    oninput: move |event: FormEvent| {
-                        *token.write() = event.value();
-                    },
-                }
-            }
-            ButtonWithHolder {
-                variant: ButtonVariant::Secondary,
-                onclick: move |_| {
-                    settings
-                        .set(AppSettings {
-                            token: token(),
-                            server: server(),
-                        });
-                },
-                "Enter"
-            }
-        }
-    }
 }
 
 #[component]
@@ -128,17 +62,38 @@ pub fn LoginWithCode() -> Element {
         });
     tracing::debug!("settings loaded as {:#?}", settings.read());
 
-    let mut token = use_signal(|| settings.read().token.to_string());
-    let mut code = use_signal(|| "".to_string());
     let mut server = use_signal(|| settings.read().server.to_string());
     let mut challenge_id = use_signal(|| "".to_string());
+    let mut code = use_signal(|| "".to_string());
+    let mut token = use_signal(|| settings.read().token.to_string());
+
+    let _validate_settings = use_resource(move || async move {
+        API_CLIENT.write().set_server(server());
+        API_CLIENT.write().set_token(token());
+        settings.set(AppSettings {
+            token: token(),
+            server: server(),
+        });
+        tracing::debug!("settings saved as {:#?}", settings.read());
+        match API_CLIENT.cloned().list_spaces().await {
+            Ok(_) => {
+                tracing::debug!("Token valid, spaces listed successfully.");
+                let nav = navigator();
+                nav.push(Route::Home {});
+            }
+            Err(e) => {
+                tracing::error!("Auto-Token check failed: {:#?}", e);
+                message::info("Auto-Login failed".to_string(), "".to_string());
+            }
+        }
+    });
+
     rsx! {
-        List {
-            style: "padding-top: 40vh;",
+        List { style: "padding-top: 40vh;",
             ButtonHolder {
                 Input {
                     placeholder: "Anytype API server",
-                    style: "width: 30vw",
+                    style: "width: 50vw",
                     value: "{server.read()}",
                     oninput: move |event: FormEvent| {
                         *server.write() = event.value();
@@ -147,9 +102,8 @@ pub fn LoginWithCode() -> Element {
             }
             ButtonHolder {
                 Input {
-
-                    placeholder: "Code from Anytype app",
-                    style: "width: 50vw",
+                    placeholder: "Anytype code",
+                    style: "width: 30vw",
                     value: "{code.read()}",
                     oninput: move |event: FormEvent| {
                         *code.write() = event.value();
@@ -159,11 +113,20 @@ pub fn LoginWithCode() -> Element {
             ButtonWithHolder {
                 variant: ButtonVariant::Secondary,
                 onclick: move |_| {
-                    API_CLIENT.write().set_server(server());
+                    let mut client = API_CLIENT.cloned();
+                    client.set_server(server());
                     spawn(async move {
-                        match API_CLIENT.read().create_auth_challenge().await {
+                        match client.create_auth_challenge().await {
                             Ok(r) => {
-                                challenge_id.set(r.challenge_id.unwrap());
+                                match r.challenge_id {
+                                    Some(id) => challenge_id.set(id),
+                                    _ => {
+                                        message::info(
+                                            "got empty challange_id".to_string(),
+                                            "maybe wrong server/port?".to_string(),
+                                        )
+                                    }
+                                }
                             }
                             Err(e) => {
                                 message::error("Challenge request failed", &e);
@@ -176,40 +139,26 @@ pub fn LoginWithCode() -> Element {
             ButtonWithHolder {
                 variant: ButtonVariant::Secondary,
                 onclick: move |_| {
-                    API_CLIENT.write().set_server(server());
+                    let mut client = API_CLIENT.cloned();
+                    client.set_server(server());
+                    let client_create_key = client.clone();
                     spawn(async move {
-                        match API_CLIENT.read().create_api_key(challenge_id(), code()).await {
+                        match client_create_key.create_api_key(challenge_id(), code()).await {
                             Ok(r) => {
-                                token.set(r.api_key.unwrap());
+                                match r.api_key {
+                                    Some(key) => token.set(key),
+                                    _ => {
+                                        message::info(
+                                            "got empty key".to_string(),
+                                            "maybe wrong server/port?".to_string(),
+                                        )
+                                    }
+                                }
                             }
                             Err(e) => {
                                 message::error("Challenge failed", &e);
                             }
                         };
-                    });
-                    settings
-                        .set(AppSettings {
-                            token: token(),
-                            server: server(),
-                        });
-                    tracing::info!("Validating API token");
-                    let new_token = settings().token.trim().to_string();
-                    API_CLIENT.write().set_token(new_token);
-                    API_CLIENT.write().set_server(settings().server);
-                    spawn(async move {
-                        match API_CLIENT.read().list_spaces().await {
-                            Ok(_) => {
-                                // tracing::debug!("Token valid, spaces listed successfully.");
-                                // message::info("Login successful".to_string());
-                                // tracing::debug!("settings saved as {:#?}", settings.read());
-                                let nav = navigator();
-                                nav.push(Route::Home {});
-                            }
-                            Err(e) => {
-                                tracing::error!("Token check failed: {:#?}", e);
-                                message::error_with_description("Login failed", "Please try again");
-                            }
-                        }
                     });
                 },
                 "Enter"

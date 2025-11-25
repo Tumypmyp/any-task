@@ -10,50 +10,56 @@ The client is currently in active development and supports building for desktop 
 
 ## Features
 
-- [x] Login with API token
-- [x] Save/Remove API token
-- [x] View Spaces
-- [x] View Objects
-- [x] View Queries
-- [x] Text property
-- [x] Done property
-- [x] Tag property
-- [x] Date/Time property
+- [x] Login/Logout 4-digit code
+- [x] Views: Spaces, Queries, Objects
+- [x] Properties: Text, Checkbox, Select, Date
 - [x] Choose viewed properties
 - [x] Configure viewed properties
-- [x] Choose views
-- [x] Auth with 4-digit code
-- [ ] Timeline view
+- [x] Choose query views
 - [x] Build for Android
+- [ ] Timeline view
 
 
+## Running 
+### Android
+To use android app you should first setup a reverse proxy on a device with desktop Anytype installed.
+The example config is in `sozu.toml`.
+```bash
+sozu start -c sozu.toml
+```
+Then connect to the same network and write ip:port of your server to the Android app (example: 10.0.0.45:31029).
+- Request 4-digit code
+- Enter the code in the app
 
-## Installing Dependencies
+
+## Developing
+
+### Installing Dependencies
 
 - API code is generated with `openapi-generator-cli`.
 - [dioxus-cli](https://github.com/DioxusLabs/dioxus)
 
-### Windows, Linux
+#### Windows, Linux
 
 ```bash
 cargo install --git https://github.com/DioxusLabs/dioxus dioxus-cli --locked
 ```
 
-### NixOS
+#### NixOS
 
 ```bash
-nix develop
+devenv shell
 ```
 
-## Running
+### Running
 
-### Desktop
+#### Desktop
 
 ```bash
 dx serve --platform desktop
 ```
 
-### Android
+#### Android
 
 - Android
   - Settings
@@ -73,22 +79,18 @@ dx serve --platform desktop
     - `adb shell run-as com.Tumypmyp.AnyTask` - login to Android shell
     - `ls files` - check app files directory
 
-## Building installer
+### Building installer
 
-### Desktop
+#### Desktop
 ```bash
 dx bundle --desktop
 ```
 
-### Android
+#### Android
 ```bash
 dx bundle --android
 ```
-
-## Running 
-### Android
-To use android app you should first setup a reverse proxy on device with desktop Anytype installed.
-The example config is in `sozu.toml`.
+or
 ```bash
-sozu start -c sozu.toml
-``
+(devenv) bundle-android-apk
+```
