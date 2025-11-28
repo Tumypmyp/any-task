@@ -1,6 +1,7 @@
 {
   pkgs,
   lib,
+  config,
   ...
 }:
 
@@ -39,68 +40,74 @@ let
         darwin.apple_sdk.frameworks.CoreServices
       ];
   };
-  appName = "AnyTask";
-  outputDir = "dist/android";
   # aabOutputPath = "target/dx/any-task/release/android/app/app/build/outputs/bundle/release/AnyTask-x86_64-linux-android.aab";
   aabOutputPath = "target/dx/any-task/release/android/app/app/build/outputs/bundle/release/AnyTask-aarch64-linux-android.aab";
-  # aabOutputPath = "target/dx/${appName}/release/android/app/app/build/outputs/bundle/release/${appName}-release.aab";
-  outputApksPath = "${outputDir}/${appName}-dev.apks";
-  outputApkPath = "${outputDir}/${appName}-universal.apk";
 in
 {
-  # --- 3. Expose the variables to the Shell Environment (env) ---
-  env.APP_NAME = appName;
-  env.AAB_OUTPUT = aabOutputPath;
-  env.OUTPUT_APKS = outputApksPath;
-  env.OUTPUT_APK = outputApkPath;
-  env.OUTPUT_DIR = outputDir; # Needed if you still want to use it in scripts
-  env.TEMP_DIR = ".tmp";
-  env.GREET = "devenv";
-
-  android = {
+   android = {
     enable = true;
     platforms.version = [ "33" ];
   };
-  # https://devenv.sh/packages/
-  packages = [
-    # dx
-    dioxus-cli
-    pkgs.glib
-    pkgs.gdk-pixbuf
-    pkgs.xdotool
-
-    # scripts
-    pkgs.bundletool
-    pkgs.unzip
-
-    pkgs.sozu
-  ];
-  # https://wiki.nixos.org/wiki/Tauri
 
   languages.rust = {
     enable = true;
     channel = "stable";
     targets = [
-      "wasm32-unknown-unknown" # WebAssembly (for Dioxus web, etc.)
-      "aarch64-linux-android" # 64-bit Android ARM
-      "aarch64-apple-darwin" # Apple Silicon (M1/M2)
-      "armv7-linux-androideabi" # 32-bit Android ARM (compatibility)
-      "i686-linux-android" # Android x86
-      "x86_64-linux-android" # Android x86_64
-      "x86_64-unknown-linux-gnu" # Standard Linux (already likely included, but good to ensure)
+      "wasm32-unknown-unknown"
+      "aarch64-linux-android"
+      "aarch64-apple-darwin"
+      "armv7-linux-androideabi"
+      "i686-linux-android"
+      "i686-pc-windows-msvc"
+      "x86_64-linux-android"
+      "x86_64-unknown-linux-gnu"
       "x86_64-apple-darwin"
+      "x86_64-pc-windows-msvc"
     ];
   };
-  # https://devenv.sh/processes/
+
+  packages = [
+    # dx
+    dioxus-cli
+    pkgs.glib
+    pkgs.gdk-pixbuf
+    pkgs.gtk3
+    pkgs.xdotool
+    pkgs.openssl
+    pkgs.libsoup_3
+
+    pkgs.webkitgtk_4_1
+
+    # bundle windows
+    # pkgs.pkgsCross.mingwW64.stdenv.cc
+    # pkgs.pkgsCross.mingwW64.stdenv
+    # pkgs.pkgsCross.mingwW64.pkgsStatic.stdenv.targetPlatform.config
+    # pkgs.pkgsCross.mingwW64.stdenv.targetPlatform.config
+    # pkgs.pkgsCross.mingwW64
+
+    # This is the correct way to reference the 64-bit compiler package
+        # pkgs.mingwW64.x86_64-w64-mingw32-gcc
+
+        # This is the correct way to reference the 32-bit compiler package (if you need it)
+        # pkgs.mingwW64.i686-w64-mingw32-gcc
+
+        # For any C dependencies (like OpenSSL or similar), you might also need this:
+        # pkgs.mingwW64.pkg-config
+
+
+          # pkgs.pkgsCross.mingwW64.stdenv
+          # pkgs.pkgsCross.mingwW64.windows.pthreads
+          # pkgs.pkgsCross.mingwW64.libxcrypt
+    # androi script
+    pkgs.bundletool
+    pkgs.unzip
+  ];
+  # https://wiki.nixos.org/wiki/Tauri
+# https://devenv.sh/processes/
   # processes.dev.exec = "${lib.getExe pkgs.watchexec} -n -- ls -la";
 
   # https://devenv.sh/services/
   # services.postgres.enable = true;
-
-  # https://devenv.sh/scripts/
-  scripts.hello.exec = ''
-    echo hello from $GREET
-  '';
 
   # https://devenv.sh/basics/
   enterShell = ''
@@ -115,13 +122,22 @@ in
   # https://devenv.sh/git-hooks/
   # git-hooks.hooks.shellcheck.enable = true;
 
-  # See full reference at https://devenv.sh/reference/options/
-  # env.APP_NAME = "AnyTask";
-  # env.ABB_OUTPUR = "/mnt/c/Users/Timur/Code/github/tumypmyp/any/target/dx/any-task/release/android/app/app/build/outputs/bundle/release/AnyTask-x86_64-linux-android.aab";
-  # env.OUTPUT_APKS = "${env.PROJECT_ROOT}/${env.OUTPUT_DIR}/${env.APP_NAME}-dev.apks";
-  # env.OUTPUT_APK = "$PROJECT_ROOT/$OUTPUT_DIR/$APP_NAME-univeral.apk";
+  scripts.bundle-windows = {
+    exec = ''
+       dx bundle --windows --target x86_64-pc-windows-msvc
+    '';
+  };
 
-  #
+
+  env.TEMP_DIR = ".tmp";
+  env.AAB_OUTPUT = aabOutputPath;
+    env = {
+      APP_NAME = "AnyTask";
+      OUTPUT_DIR = "${config.env.DEVENV_ROOT}/dist/android";
+      OUTPUT_APKS = "${config.env.OUTPUT_DIR}/${config.env.APP_NAME}-dev.apks";
+      OUTPUT_APK = "${config.env.OUTPUT_DIR}/${config.env.APP_NAME}-universal.apk";
+   };
+
   # dx bundle --android --release --target  aarch64-linux-android
   scripts.bundle-android-apk = {
     packages = [
@@ -129,10 +145,9 @@ in
       pkgs.unzip
     ];
     exec = ''
-      dx bundle --android --release --target  aarch64-linux-android || { echo "Failed to bundle AAB with dioxuss"; exit 1; }
-      # dx build android
       export APKS_PATH="''${DEVENV_ROOT}/$OUTPUT_APKS"
-      # Remove the output APKS file if it exists
+
+      dx bundle --android --release --target  aarch64-linux-android || { echo "Failed to bundle AAB with dioxuss"; exit 1; }
       if [ -f "$APKS_PATH" ]; then
           echo "Removing existing APKS file: $APKS_PATH"
           rm "$APKS_PATH"

@@ -11,6 +11,8 @@ use components::*;
 mod components;
 mod helpers;
 use helpers::*;
+mod proxy;
+use proxy::*;
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/main.css");
 const THEME_CSS: Asset = asset!("/assets/dx-components-theme.css");
@@ -67,6 +69,15 @@ fn main() {
 fn App() -> Element {
     _ = document::eval("document.documentElement.setAttribute('data-theme', 'dark');");
     tracing::info!("app is running");
+    // This hook runs only once when the component is mounted.
+    use_effect(|| {
+        tokio::task::spawn(async move {
+            if let Err(e) = run_proxy_server().await {
+                eprintln!("Proxy server failed: {}", e);
+            }
+        });
+        println!("Background proxy task started.");
+    });
     rsx! {
         ToastProvider {
             document::Link { rel: "icon", href: FAVICON }

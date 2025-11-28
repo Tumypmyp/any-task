@@ -20,17 +20,19 @@ The client is currently in active development and supports building for desktop 
 - [ ] Timeline view
 
 
-## Running 
+## How to use
+
 ### Android
-To use android app you should first setup a reverse proxy on a device with desktop Anytype installed.
-The example config is in `sozu.toml`.
-```bash
-sozu start -c sozu.toml
-```
-Then connect to the same network and write ip:port of your server to the Android app (example: 10.0.0.45:31029).
+
+To use Android app you should first install AnyTask on device with a desktop Anytype installed.
+Then connect to the same Private network (Wi-Fi) and enter the desktop ip in the app (example: 10.0.0.45:31029).
 - Request 4-digit code
 - Enter the code in the app
 
+### Desktop
+
+
+#### Windows
 
 ## Developing
 

@@ -4,7 +4,6 @@ use crate::Route;
 use crate::components::Title;
 use crate::components::base::message;
 use crate::components::button::ButtonHolder;
-use crate::components::button::*;
 use crate::components::list::List;
 use dioxus::prelude::*;
 #[component]
@@ -42,8 +41,16 @@ pub fn Home() -> Element {
             tracing::debug!("error: {:#?}", err);
             message::error("Failed to load spaces", err);
             nav.push(Route::Login {});
-            rsx!()
+            rsx! {
+                Logout {}
+            }
         }
-        None => rsx!(),
+        None => {
+            message::error_with_description("Failed to load spaces", "Server did not reply");
+            nav.push(Route::Login {});
+            rsx! {
+                Logout {}
+            }
+        }
     }
 }

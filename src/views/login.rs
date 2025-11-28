@@ -31,10 +31,6 @@ pub fn Logout() -> Element {
                 onclick: move |_| {
                     tracing::debug!("settings were {:#?}", settings);
                     settings.write().token = "removed token".to_string();
-                        // .set(AppSettings {
-                        //     server: "127.0.0.1:31009".to_string(),
-                        //     token: "removed token".to_string(),
-                        // });
                     API_CLIENT.write().set_server(settings.read().server.to_string());
                     API_CLIENT.write().set_token(settings.read().token.to_string());
 
