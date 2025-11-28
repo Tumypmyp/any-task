@@ -61,6 +61,7 @@ fn main() {
     } else {
         Config::new()
     };
+    let cfg = cfg.with_background_color((0, 0, 0, 0));
     tracing::info!("config is ready");
     dioxus_desktop::launch::launch(App, vec![], vec![Box::new(cfg)]);
 }

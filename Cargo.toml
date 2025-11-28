@@ -38,6 +38,10 @@ hyper-util = { version = "0.1.18", features = ["tokio"] }
 [target.'cfg(target_os = "android")'.dependencies]
 openssl = { version = "0.10", features = ["vendored"] }
 
+[target.x86_64-pc-windows-gnu]
+linker = "x86_64-w64-mingw32-gcc"
+
+
 [features]
 default = ["desktop"]
 desktop = ["dioxus/desktop"]

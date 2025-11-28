@@ -36,7 +36,7 @@ pub fn Logout() -> Element {
 
                     tracing::info!("removed the token");
                     tracing::debug!("settings are {:#?}", settings);
-               },
+                },
                 "Logout"
             }
         }

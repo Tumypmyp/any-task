@@ -79,11 +79,12 @@ in
     pkgs.webkitgtk_4_1
 
     # bundle windows
+    # https://github.com/euphemism/dirtywave-updater-releases-mirror/blob/main/devenv.nix
     # pkgs.pkgsCross.mingwW64.stdenv.cc
     # pkgs.pkgsCross.mingwW64.stdenv
     # pkgs.pkgsCross.mingwW64.pkgsStatic.stdenv.targetPlatform.config
     # pkgs.pkgsCross.mingwW64.stdenv.targetPlatform.config
-    # pkgs.pkgsCross.mingwW64
+    # pkgs.pkgsCross.mingwW64.gcc
 
     # This is the correct way to reference the 64-bit compiler package
         # pkgs.mingwW64.x86_64-w64-mingw32-gcc
@@ -98,9 +99,6 @@ in
           # pkgs.pkgsCross.mingwW64.stdenv
           # pkgs.pkgsCross.mingwW64.windows.pthreads
           # pkgs.pkgsCross.mingwW64.libxcrypt
-    # androi script
-    pkgs.bundletool
-    pkgs.unzip
   ];
   # https://wiki.nixos.org/wiki/Tauri
 # https://devenv.sh/processes/
@@ -123,8 +121,7 @@ in
   # git-hooks.hooks.shellcheck.enable = true;
 
   env.API_DIR = "${config.env.DEVENV_ROOT}/apis/2025-05-20";
- # Define a custom script that runs the command directly.
-   scripts.client-api-generate = {
+  scripts.client-api-generate = {
     packages = [
       pkgs.openapi-generator-cli
     ];
@@ -144,7 +141,7 @@ in
   };
 
 
-  env.TEMP_DIR = ".tmp";
+  env.TEMP_DIR = "${config.env.DEVENV_ROOT}/.tmp";
   env.AAB_OUTPUT = aabOutputPath;
     env = {
       APP_NAME = "AnyTask";
@@ -160,18 +157,17 @@ in
       pkgs.unzip
     ];
     exec = ''
-      export APKS_PATH="''${DEVENV_ROOT}/$OUTPUT_APKS"
-
       dx bundle --android --release --target  aarch64-linux-android || { echo "Failed to bundle AAB with dioxuss"; exit 1; }
-      if [ -f "$APKS_PATH" ]; then
-          echo "Removing existing APKS file: $APKS_PATH"
-          rm "$APKS_PATH"
+      if [ -d "$OUTPUT_DIR" ]; then
+          echo "Removing existing Android files: $OUTPUT_DIR"
+          rm -rf "$OUTPUT_DIR"
       fi
-      bundletool build-apks --bundle="''${DEVENV_ROOT}/$AAB_OUTPUT" --output="''${DEVENV_ROOT}/$OUTPUT_APKS" --mode=universal || { echo "Failed to build APKS."; exit 1; }
+
+      bundletool build-apks --bundle="''${DEVENV_ROOT}/$AAB_OUTPUT" --output="$OUTPUT_APKS" --mode=universal || { echo "Failed to build APKS."; exit 1; }
       mkdir -p "''${DEVENV_ROOT}/TEMP_DIR"
-      unzip "''${DEVENV_ROOT}/$OUTPUT_APKS" -d "''${DEVENV_ROOT}/$TEMP_DIR"
-      mv "''${DEVENV_ROOT}/$TEMP_DIR/universal.apk" "''${DEVENV_ROOT}/$OUTPUT_APK" || { echo "Failed to find universal.apk in APKS."; rm -rf "''${DEVENV_ROOT}/$TEMP_DIR"; exit 1; }
-      rm -rf "''${DEVENV_ROOT}/$TEMP_DIR"
+      unzip "$OUTPUT_APKS" -d "$TEMP_DIR"
+      mv "$TEMP_DIR/universal.apk" "$OUTPUT_APK" || { echo "Failed to find universal.apk in APKS."; rm -rf "$TEMP_DIR"; exit 1; }
+      rm -rf "$TEMP_DIR"
       echo "Universal APK extracted to $OUTPUT_APK"
     '';
   };

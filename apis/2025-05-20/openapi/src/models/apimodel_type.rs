@@ -73,12 +73,10 @@ pub enum Layout {
     ObjectLayoutBookmark,
     #[serde(rename = "set")]
     ObjectLayoutSet,
-    #[serde(rename = "set")]
-    ObjectLayoutCollection,
     #[serde(rename = "collection")]
-    ObjectLayoutParticipant,
+    ObjectLayoutCollection,
     #[serde(rename = "participant")]
-    Participant,
+    ObjectLayoutParticipant,
 }
 
 impl Default for Layout {

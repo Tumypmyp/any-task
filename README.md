@@ -10,13 +10,11 @@ The client is currently in active development and supports building for desktop 
 
 ## Features
 
-- [x] Login/Logout 4-digit code
+- [x] Login/Logout with 4-digit code
 - [x] Views: Spaces, Queries, Objects
 - [x] Properties: Text, Checkbox, Select, Date
-- [x] Choose viewed properties
-- [x] Configure viewed properties
+- [x] Add/edit viewed properties
 - [x] Choose query views
-- [x] Build for Android
 - [ ] Timeline view
 
 
@@ -32,11 +30,13 @@ Then connect to the same Private network (Wi-Fi) and enter the desktop ip in the
 
 ### Windows
 
+
+
 ## Developing
 
-### Installing Dependencies
+### Dependencies
 
-- API code is generated with `openapi-generator-cli`.
+- Client API code is generated with [openapi-generator](https://github.com/OpenAPITools/openapi-generator)
 - [dioxus-cli](https://github.com/DioxusLabs/dioxus)
 
 #### Windows, Linux
@@ -48,7 +48,7 @@ cargo install --git https://github.com/DioxusLabs/dioxus dioxus-cli --locked
 #### NixOS
 
 ```bash
-devenv shell
+devenv shell -v
 ```
 
 ### Running
@@ -95,14 +95,15 @@ or
 (devenv) bundle-android-apk
 ```
 
-### Generate API
+### Client API generation
 
 - copy `openapi.yaml` to `apis/`
 
-#### 2025-05-05 Patches
-- change version to "0.0.0"
-- remove view type enums
+#### 2025-05-20 Patches
+- change version to `0.0.0` (version format is not supported in Rust)
+- remove view type enums (can return types outside the enum set)
+- remove extra `set` (typo on `line 1866`)
 
-```
+```bash
 (devenv) client-api-generate
 ```
