@@ -8,7 +8,7 @@ use openapi::models::*;
 pub fn SelectPropertyValue(
     space_id: String,
     object_id: String,
-    prop: Signal<ApimodelPeriodSelectPropertyValue>,
+    prop: Signal<ApimodelSelectPropertyValue>,
     info: ReadSignal<PropertyInfo>,
 ) -> Element {
     let options = info().options;
@@ -40,7 +40,7 @@ pub fn SelectPropertyValue(
     }
 }
 #[component]
-pub fn SelectPropertySelectList(options: Vec<ApimodelPeriodTag>) -> Element {
+pub fn SelectPropertySelectList(options: Vec<ApimodelTag>) -> Element {
     rsx! {
         SelectList {
             SelectGroup {

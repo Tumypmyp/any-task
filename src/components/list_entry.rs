@@ -12,21 +12,21 @@ pub struct ListEntryProps {
     pub name: String,
     pub space_id: String,
     pub object_id: String,
-    pub data: ApimodelPeriodObject,
+    pub data: ApimodelObject,
     pub show_properties: Store<Vec<PropertyInfo>>,
 }
 #[component]
 pub fn ListEntry(props: ListEntryProps) -> Element {
     let nav = navigator();
     let mut object_properties =
-        use_store(|| HashMap::<PropertyID, ApimodelPeriodPropertyWithValue>::new());
+        use_store(|| HashMap::<PropertyID, ApimodelPropertyWithValue>::new());
     for property in props.data.properties.clone().unwrap().iter() {
         let property_id = get_property_id(property.clone());
         object_properties
             .write()
             .insert(property_id, property.clone());
     }
-    let text_property_value = ApimodelPeriodTextPropertyValue {
+    let text_property_value = ApimodelTextPropertyValue {
         format: None,
         text: props.data.name.clone(),
         key: None,
@@ -36,9 +36,7 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
     };
     object_properties.write().insert(
         PropertyID(NAME_PROPERTY_ID_STR.to_string()),
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodTextPropertyValue(Box::new(
-            text_property_value,
-        )),
+        ApimodelPropertyWithValue::ApimodelTextPropertyValue(Box::new(text_property_value)),
     );
     let p = props.clone();
     let p2 = props.clone();
@@ -82,38 +80,18 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
         }
     }
 }
-fn get_property_id(prop: ApimodelPeriodPropertyWithValue) -> PropertyID {
+fn get_property_id(prop: ApimodelPropertyWithValue) -> PropertyID {
     return PropertyID(match prop.clone() {
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodTextPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodNumberPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodSelectPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodMultiSelectPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodDatePropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodFilesPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodCheckboxPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodUrlPropertyValue(p) => p.id.clone().unwrap(),
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodEmailPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodPhonePropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
-        ApimodelPeriodPropertyWithValue::ApimodelPeriodObjectsPropertyValue(p) => {
-            p.id.clone().unwrap()
-        }
+        ApimodelPropertyWithValue::ApimodelTextPropertyValue(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::ApimodelNumberPropertyValue(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::ApimodelSelectPropertyValue(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::ApimodelMultiSelectPropertyValue(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::ApimodelDatePropertyValue(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::ApimodelFilesPropertyValue(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::ApimodelCheckboxPropertyValue(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::ApimodelUrlPropertyValue(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::ApimodelEmailPropertyValue(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::ApimodelPhonePropertyValue(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::ApimodelObjectsPropertyValue(p) => p.id.clone().unwrap(),
     });
 }

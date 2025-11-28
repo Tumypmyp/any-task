@@ -5,7 +5,7 @@ use crate::components::popover::*;
 use crate::helpers::models::DateTimeFormat;
 use crate::helpers::*;
 use dioxus::prelude::*;
-use openapi::models::ApimodelPeriodDatePropertyValue;
+use openapi::models::ApimodelDatePropertyValue;
 use time::format_description::well_known::Rfc3339;
 use time::macros::{format_description, offset};
 use time::{Date, OffsetDateTime, Time, UtcDateTime, UtcOffset};
@@ -13,7 +13,7 @@ use time::{Date, OffsetDateTime, Time, UtcDateTime, UtcOffset};
 pub fn DateTimePropertyValues(
     space_id: String,
     object_id: String,
-    prop: Signal<ApimodelPeriodDatePropertyValue>,
+    prop: Signal<ApimodelDatePropertyValue>,
     info: ReadSignal<PropertyInfo>,
 ) -> Element {
     let property_name = use_signal(|| prop().name.unwrap());

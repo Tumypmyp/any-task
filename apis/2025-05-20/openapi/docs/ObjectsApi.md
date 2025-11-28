@@ -14,7 +14,7 @@ Method | HTTP request | Description
 
 ## create_object
 
-> models::ApimodelPeriodObjectResponse create_object(anytype_version, space_id, apimodel_period_create_object_request)
+> models::ApimodelObjectResponse create_object(anytype_version, space_id, apimodel_create_object_request)
 Create object
 
 Creates a new object in the specified space using a JSON payload. The creation process is subject to rate limiting. The payload must include key details such as the object name, icon, description, body content (which may support Markdown), source URL (required for bookmark objects), template identifier, and the type_key (which is the non-unique identifier of the type of object to create). Post-creation, additional operations (like setting featured properties or fetching bookmark metadata) may occur. The endpoint then returns the full object data, ready for further interactions.
@@ -26,11 +26,11 @@ Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **anytype_version** | **String** | The version of the API to use | [required] |[default to 2025-05-20]
 **space_id** | **String** | The ID of the space in which to create the object; must be retrieved from ListSpaces endpoint | [required] |
-**apimodel_period_create_object_request** | [**ApimodelPeriodCreateObjectRequest**](ApimodelPeriodCreateObjectRequest.md) | The object to create | [required] |
+**apimodel_create_object_request** | [**ApimodelCreateObjectRequest**](ApimodelCreateObjectRequest.md) | The object to create | [required] |
 
 ### Return type
 
-[**models::ApimodelPeriodObjectResponse**](apimodel.ObjectResponse.md)
+[**models::ApimodelObjectResponse**](apimodel.ObjectResponse.md)
 
 ### Authorization
 
@@ -46,7 +46,7 @@ Name | Type | Description  | Required | Notes
 
 ## delete_object
 
-> models::ApimodelPeriodObjectResponse delete_object(anytype_version, space_id, object_id)
+> models::ApimodelObjectResponse delete_object(anytype_version, space_id, object_id)
 Delete object
 
 This endpoint “deletes” an object by marking it as archived. The deletion process is performed safely and is subject to rate limiting. It returns the object’s details after it has been archived. Proper error handling is in place for situations such as when the object isn’t found or the deletion cannot be performed because of permission issues.
@@ -62,7 +62,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::ApimodelPeriodObjectResponse**](apimodel.ObjectResponse.md)
+[**models::ApimodelObjectResponse**](apimodel.ObjectResponse.md)
 
 ### Authorization
 
@@ -78,7 +78,7 @@ Name | Type | Description  | Required | Notes
 
 ## get_object
 
-> models::ApimodelPeriodObjectResponse get_object(anytype_version, space_id, object_id, format)
+> models::ApimodelObjectResponse get_object(anytype_version, space_id, object_id, format)
 Get object
 
 Fetches the full details of a single object identified by the object ID within the specified space. The response includes not only basic metadata (ID, name, icon, type) but also the complete set of blocks (which may include text, files, properties and dataviews) and extra details (such as timestamps and linked member information). This endpoint is essential when a client needs to render or edit the full object view.
@@ -95,7 +95,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::ApimodelPeriodObjectResponse**](apimodel.ObjectResponse.md)
+[**models::ApimodelObjectResponse**](apimodel.ObjectResponse.md)
 
 ### Authorization
 
@@ -111,7 +111,7 @@ Name | Type | Description  | Required | Notes
 
 ## list_objects
 
-> models::PaginationPeriodPaginatedResponseApimodelObject list_objects(anytype_version, space_id, offset, limit)
+> models::PaginationPaginatedResponseApimodelObject list_objects(anytype_version, space_id, offset, limit)
 List objects
 
 Retrieves a paginated list of objects in the given space. The endpoint takes query parameters for pagination (offset and limit) and returns detailed data about each object including its ID, name, icon, type information, a snippet of the content (if applicable), layout, space ID, blocks and details. It is intended for building views where users can see all objects in a space at a glance.
@@ -128,7 +128,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::PaginationPeriodPaginatedResponseApimodelObject**](pagination.PaginatedResponse-apimodel_Object.md)
+[**models::PaginationPaginatedResponseApimodelObject**](pagination.PaginatedResponse-apimodel_Object.md)
 
 ### Authorization
 
@@ -144,7 +144,7 @@ Name | Type | Description  | Required | Notes
 
 ## update_object
 
-> models::ApimodelPeriodObjectResponse update_object(anytype_version, space_id, object_id, apimodel_period_update_object_request)
+> models::ApimodelObjectResponse update_object(anytype_version, space_id, object_id, apimodel_update_object_request)
 Update object
 
 This endpoint updates an existing object in the specified space using a JSON payload. The update process is subject to rate limiting. The payload must include the details to be updated. The endpoint then returns the full object data, ready for further interactions.
@@ -157,11 +157,11 @@ Name | Type | Description  | Required | Notes
 **anytype_version** | **String** | The version of the API to use | [required] |[default to 2025-05-20]
 **space_id** | **String** | The ID of the space in which the object exists; must be retrieved from ListSpaces endpoint | [required] |
 **object_id** | **String** | The ID of the object to update; must be retrieved from ListObjects, SearchSpace or GlobalSearch endpoints or obtained from response context | [required] |
-**apimodel_period_update_object_request** | [**ApimodelPeriodUpdateObjectRequest**](ApimodelPeriodUpdateObjectRequest.md) | The details of the object to update | [required] |
+**apimodel_update_object_request** | [**ApimodelUpdateObjectRequest**](ApimodelUpdateObjectRequest.md) | The details of the object to update | [required] |
 
 ### Return type
 
-[**models::ApimodelPeriodObjectResponse**](apimodel.ObjectResponse.md)
+[**models::ApimodelObjectResponse**](apimodel.ObjectResponse.md)
 
 ### Authorization
 

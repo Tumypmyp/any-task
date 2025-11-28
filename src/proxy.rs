@@ -15,7 +15,7 @@ use hyper::service::service_fn;
 use hyper_util::rt::tokio::TokioIo;
 
 pub async fn run_proxy_server() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = SocketAddr::from(([0, 0, 0, 0], 31011));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 31010));
 
     let listener = TcpListener::bind(addr).await?;
     println!("Listening on http://{}", addr);

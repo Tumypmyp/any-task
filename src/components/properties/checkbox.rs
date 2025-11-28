@@ -3,12 +3,12 @@ use crate::components::checkbox::Checkbox;
 use crate::helpers::*;
 use dioxus::prelude::*;
 use dioxus_primitives::checkbox::CheckboxState;
-use openapi::models::ApimodelPeriodCheckboxPropertyValue;
+use openapi::models::ApimodelCheckboxPropertyValue;
 #[component]
 pub fn CheckboxPropertyValue(
     space_id: String,
     object_id: String,
-    prop: Signal<ApimodelPeriodCheckboxPropertyValue>,
+    prop: Signal<ApimodelCheckboxPropertyValue>,
     info: ReadSignal<PropertyInfo>,
 ) -> Element {
     rsx! {

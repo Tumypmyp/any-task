@@ -1,4 +1,4 @@
-use openapi::models::ApimodelPeriodTag;
+use openapi::models::ApimodelTag;
 #[derive(Eq, Hash, PartialEq, Clone, Debug)]
 pub struct PropertyID(pub String);
 impl PropertyID {
@@ -17,7 +17,7 @@ pub const NAME_PROPERTY_ID_STR: &str = "name_property_id";
 pub struct PropertyInfo {
     pub id: PropertyID,
     pub name: String,
-    pub options: Vec<ApimodelPeriodTag>,
+    pub options: Vec<ApimodelTag>,
     pub date_format: DateTimeFormat,
     pub width: f64,
 }

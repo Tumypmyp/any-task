@@ -84,6 +84,7 @@ pub fn Objects(
     show_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     let resp = use_resource(move || async move {
+        tracing::debug!("requesting list view {:#?}", view_id());
         API_CLIENT
             .read()
             .get_list_objects(space_id, list_id, view_id)
@@ -92,11 +93,10 @@ pub fn Objects(
 
     match &*resp.read() {
         Some(Ok(p)) => {
-            tracing::debug!("objects: {:#?}", p.clone().data);
+            // tracing::debug!("objects: {:#?}", p.clone().data.unwrap());
             rsx! {
                 for obj in p.clone().data.unwrap() {
                     ListEntry {
-                        key: "{obj.clone().id.unwrap()}",
                         name: obj.clone().name.unwrap(),
                         space_id,
                         object_id: obj.clone().id.unwrap(),

@@ -1,0 +1,11 @@
+# ApimodelTemplateResponse
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**template** | Option<[**models::ApimodelObjectWithBody**](apimodel.ObjectWithBody.md)> |  | [optional]
+
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+

@@ -14,7 +14,7 @@ Method | HTTP request | Description
 
 ## create_property
 
-> models::ApimodelPeriodPropertyResponse create_property(anytype_version, space_id, apimodel_period_create_property_request)
+> models::ApimodelPropertyResponse create_property(anytype_version, space_id, apimodel_create_property_request)
 Create property
 
 ⚠ Warning: Properties are experimental and may change in the next update. ⚠ Creates a new property in the specified space using a JSON payload. The creation process is subject to rate limiting. The payload must include property details such as the name and format. The endpoint then returns the full property data, ready for further interactions.
@@ -26,11 +26,11 @@ Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **anytype_version** | **String** | The version of the API to use | [required] |[default to 2025-05-20]
 **space_id** | **String** | The ID of the space to create the property in; must be retrieved from ListSpaces endpoint | [required] |
-**apimodel_period_create_property_request** | [**ApimodelPeriodCreatePropertyRequest**](ApimodelPeriodCreatePropertyRequest.md) | The property to create | [required] |
+**apimodel_create_property_request** | [**ApimodelCreatePropertyRequest**](ApimodelCreatePropertyRequest.md) | The property to create | [required] |
 
 ### Return type
 
-[**models::ApimodelPeriodPropertyResponse**](apimodel.PropertyResponse.md)
+[**models::ApimodelPropertyResponse**](apimodel.PropertyResponse.md)
 
 ### Authorization
 
@@ -46,7 +46,7 @@ Name | Type | Description  | Required | Notes
 
 ## delete_property
 
-> models::ApimodelPeriodPropertyResponse delete_property(anytype_version, space_id, property_id)
+> models::ApimodelPropertyResponse delete_property(anytype_version, space_id, property_id)
 Delete property
 
 ⚠ Warning: Properties are experimental and may change in the next update. ⚠ This endpoint “deletes” a property by marking it as archived. The deletion process is performed safely and is subject to rate limiting. It returns the property’s details after it has been archived. Proper error handling is in place for situations such as when the property isn’t found or the deletion cannot be performed because of permission issues.
@@ -62,7 +62,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::ApimodelPeriodPropertyResponse**](apimodel.PropertyResponse.md)
+[**models::ApimodelPropertyResponse**](apimodel.PropertyResponse.md)
 
 ### Authorization
 
@@ -78,7 +78,7 @@ Name | Type | Description  | Required | Notes
 
 ## get_property
 
-> models::ApimodelPeriodPropertyResponse get_property(anytype_version, space_id, property_id)
+> models::ApimodelPropertyResponse get_property(anytype_version, space_id, property_id)
 Get property
 
 ⚠ Warning: Properties are experimental and may change in the next update. ⚠ Fetches detailed information about one specific property by its ID. This includes the property’s unique identifier, name and format. This detailed view assists clients in showing property options to users and in guiding the user interface (such as displaying appropriate input fields or selection options).
@@ -94,7 +94,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::ApimodelPeriodPropertyResponse**](apimodel.PropertyResponse.md)
+[**models::ApimodelPropertyResponse**](apimodel.PropertyResponse.md)
 
 ### Authorization
 
@@ -110,7 +110,7 @@ Name | Type | Description  | Required | Notes
 
 ## list_properties
 
-> models::PaginationPeriodPaginatedResponseApimodelProperty list_properties(anytype_version, space_id, offset, limit)
+> models::PaginationPaginatedResponseApimodelProperty list_properties(anytype_version, space_id, offset, limit)
 List properties
 
 ⚠ Warning: Properties are experimental and may change in the next update. ⚠ Retrieves a paginated list of properties available within a specific space. Each property record includes its unique identifier, name and format. This information is essential for clients to understand the available properties for filtering or creating objects.
@@ -127,7 +127,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::PaginationPeriodPaginatedResponseApimodelProperty**](pagination.PaginatedResponse-apimodel_Property.md)
+[**models::PaginationPaginatedResponseApimodelProperty**](pagination.PaginatedResponse-apimodel_Property.md)
 
 ### Authorization
 
@@ -143,7 +143,7 @@ Name | Type | Description  | Required | Notes
 
 ## update_property
 
-> models::ApimodelPeriodPropertyResponse update_property(anytype_version, space_id, property_id, apimodel_period_update_property_request)
+> models::ApimodelPropertyResponse update_property(anytype_version, space_id, property_id, apimodel_update_property_request)
 Update property
 
 ⚠ Warning: Properties are experimental and may change in the next update. ⚠ This endpoint updates an existing property in the specified space using a JSON payload. The update process is subject to rate limiting. The payload must include the name to be updated. The endpoint then returns the full property data, ready for further interactions.
@@ -156,11 +156,11 @@ Name | Type | Description  | Required | Notes
 **anytype_version** | **String** | The version of the API to use | [required] |[default to 2025-05-20]
 **space_id** | **String** | The ID of the space to which the property belongs; must be retrieved from ListSpaces endpoint | [required] |
 **property_id** | **String** | The ID of the property to update; must be retrieved from ListProperties endpoint or obtained from response context | [required] |
-**apimodel_period_update_property_request** | [**ApimodelPeriodUpdatePropertyRequest**](ApimodelPeriodUpdatePropertyRequest.md) | The property to update | [required] |
+**apimodel_update_property_request** | [**ApimodelUpdatePropertyRequest**](ApimodelUpdatePropertyRequest.md) | The property to update | [required] |
 
 ### Return type
 
-[**models::ApimodelPeriodPropertyResponse**](apimodel.PropertyResponse.md)
+[**models::ApimodelPropertyResponse**](apimodel.PropertyResponse.md)
 
 ### Authorization
 

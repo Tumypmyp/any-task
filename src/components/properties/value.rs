@@ -9,11 +9,11 @@ use openapi::models::*;
 pub fn PropertyValue(
     space_id: String,
     object_id: String,
-    data: ReadSignal<Option<ApimodelPeriodPropertyWithValue>>,
+    data: ReadSignal<Option<ApimodelPropertyWithValue>>,
     info: ReadSignal<PropertyInfo>,
 ) -> Element {
     match data() {
-        Some(ApimodelPeriodPropertyWithValue::ApimodelPeriodTextPropertyValue(text)) => {
+        Some(ApimodelPropertyWithValue::ApimodelTextPropertyValue(text)) => {
             rsx! {
                 TextPropertyValue {
                     space_id: &space_id,
@@ -23,7 +23,7 @@ pub fn PropertyValue(
                 }
             }
         }
-        Some(ApimodelPeriodPropertyWithValue::ApimodelPeriodCheckboxPropertyValue(checkbox)) => {
+        Some(ApimodelPropertyWithValue::ApimodelCheckboxPropertyValue(checkbox)) => {
             rsx! {
                 CheckboxPropertyValue {
                     space_id: &space_id,
@@ -33,7 +33,7 @@ pub fn PropertyValue(
                 }
             }
         }
-        Some(ApimodelPeriodPropertyWithValue::ApimodelPeriodSelectPropertyValue(select)) => {
+        Some(ApimodelPropertyWithValue::ApimodelSelectPropertyValue(select)) => {
             rsx! {
                 SelectPropertyValue {
                     space_id: &space_id,
@@ -43,7 +43,7 @@ pub fn PropertyValue(
                 }
             }
         }
-        Some(ApimodelPeriodPropertyWithValue::ApimodelPeriodDatePropertyValue(date)) => {
+        Some(ApimodelPropertyWithValue::ApimodelDatePropertyValue(date)) => {
             rsx! {
                 ButtonHolder {
                     DateTimePropertyValues {

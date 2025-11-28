@@ -122,7 +122,22 @@ in
   # https://devenv.sh/git-hooks/
   # git-hooks.hooks.shellcheck.enable = true;
 
-  scripts.bundle-windows = {
+  env.API_DIR = "${config.env.DEVENV_ROOT}/apis/2025-05-20";
+ # Define a custom script that runs the command directly.
+   scripts.client-api-generate = {
+    packages = [
+      pkgs.openapi-generator-cli
+    ];
+    exec = ''
+      openapi-generator-cli generate \
+        -i "''${API_DIR}/openapi.yaml" \
+        -g rust \
+        -o "''${API_DIR}/openapi" \
+        --skip-validate-spec
+    '';
+   };
+
+   scripts.bundle-windows = {
     exec = ''
        dx bundle --windows --target x86_64-pc-windows-msvc
     '';

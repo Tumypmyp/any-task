@@ -20,6 +20,7 @@ pub fn ChooseView(
             let views = API_CLIENT.read().get_views(&space_id, &list_id).await;
             match views {
                 Ok(view) => {
+                    tracing::debug!("got views: {:#?}", view);
                     for v in view.data.unwrap() {
                         all_views.write().push(ViewInfo {
                             id: v.id.unwrap(),
@@ -35,7 +36,6 @@ pub fn ChooseView(
     });
     let mut open = use_signal(|| false);
     rsx! {
-        // ButtonHolder { "flex-shrink": "0", width: "20vw",
         PopoverRoot {
             open: open(),
             on_open_change: move |v| {
@@ -49,7 +49,6 @@ pub fn ChooseView(
                     }
                 }
             }
-                // }
         }
     }
 }

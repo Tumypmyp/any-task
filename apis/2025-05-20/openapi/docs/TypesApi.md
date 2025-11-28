@@ -14,7 +14,7 @@ Method | HTTP request | Description
 
 ## create_type
 
-> models::ApimodelPeriodTypeResponse create_type(anytype_version, space_id, apimodel_period_create_type_request)
+> models::ApimodelTypeResponse create_type(anytype_version, space_id, apimodel_create_type_request)
 Create type
 
 Creates a new type in the specified space using a JSON payload. The creation process is subject to rate limiting. The payload must include type details such as the name, icon, and layout. The endpoint then returns the full type data, ready to be used for creating objects.
@@ -26,11 +26,11 @@ Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **anytype_version** | **String** | The version of the API to use | [required] |[default to 2025-05-20]
 **space_id** | **String** | The ID of the space in which to create the type; must be retrieved from ListSpaces endpoint | [required] |
-**apimodel_period_create_type_request** | [**ApimodelPeriodCreateTypeRequest**](ApimodelPeriodCreateTypeRequest.md) | The type to create | [required] |
+**apimodel_create_type_request** | [**ApimodelCreateTypeRequest**](ApimodelCreateTypeRequest.md) | The type to create | [required] |
 
 ### Return type
 
-[**models::ApimodelPeriodTypeResponse**](apimodel.TypeResponse.md)
+[**models::ApimodelTypeResponse**](apimodel.TypeResponse.md)
 
 ### Authorization
 
@@ -46,7 +46,7 @@ Name | Type | Description  | Required | Notes
 
 ## delete_type
 
-> models::ApimodelPeriodTypeResponse delete_type(anytype_version, space_id, type_id)
+> models::ApimodelTypeResponse delete_type(anytype_version, space_id, type_id)
 Delete type
 
 This endpoint “deletes” an type by marking it as archived. The deletion process is performed safely and is subject to rate limiting. It returns the type’s details after it has been archived. Proper error handling is in place for situations such as when the type isn’t found or the deletion cannot be performed because of permission issues.
@@ -62,7 +62,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::ApimodelPeriodTypeResponse**](apimodel.TypeResponse.md)
+[**models::ApimodelTypeResponse**](apimodel.TypeResponse.md)
 
 ### Authorization
 
@@ -78,7 +78,7 @@ Name | Type | Description  | Required | Notes
 
 ## get_type
 
-> models::ApimodelPeriodTypeResponse get_type(anytype_version, space_id, type_id)
+> models::ApimodelTypeResponse get_type(anytype_version, space_id, type_id)
 Get type
 
 Fetches detailed information about one specific type by its ID. This includes the type’s unique key, name, icon, and layout. This detailed view assists clients in understanding the expected structure and style for objects of that type and in guiding the user interface (such as displaying appropriate icons or layout hints).
@@ -94,7 +94,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::ApimodelPeriodTypeResponse**](apimodel.TypeResponse.md)
+[**models::ApimodelTypeResponse**](apimodel.TypeResponse.md)
 
 ### Authorization
 
@@ -110,7 +110,7 @@ Name | Type | Description  | Required | Notes
 
 ## list_types
 
-> models::PaginationPeriodPaginatedResponseApimodelType list_types(anytype_version, space_id, offset, limit)
+> models::PaginationPaginatedResponseApimodelType list_types(anytype_version, space_id, offset, limit)
 List types
 
 This endpoint retrieves a paginated list of types (e.g. 'Page', 'Note', 'Task') available within the specified space. Each type’s record includes its unique identifier, type key, display name, icon, and layout. While a type's id is truly unique, a type's key can be the same across spaces for known types, e.g. 'page' for 'Page'. Clients use this information when offering choices for object creation or for filtering objects by type through search.
@@ -127,7 +127,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::PaginationPeriodPaginatedResponseApimodelType**](pagination.PaginatedResponse-apimodel_Type.md)
+[**models::PaginationPaginatedResponseApimodelType**](pagination.PaginatedResponse-apimodel_Type.md)
 
 ### Authorization
 
@@ -143,7 +143,7 @@ Name | Type | Description  | Required | Notes
 
 ## update_type
 
-> models::ApimodelPeriodTypeResponse update_type(anytype_version, space_id, type_id, apimodel_period_update_type_request)
+> models::ApimodelTypeResponse update_type(anytype_version, space_id, type_id, apimodel_update_type_request)
 Update type
 
 This endpoint updates an existing type in the specified space using a JSON payload. The update process is subject to rate limiting. The payload must include the name and properties to be updated. The endpoint then returns the full type data, ready for further interactions.
@@ -156,11 +156,11 @@ Name | Type | Description  | Required | Notes
 **anytype_version** | **String** | The version of the API to use | [required] |[default to 2025-05-20]
 **space_id** | **String** | The ID of the space in which the type exists; must be retrieved from ListSpaces endpoint | [required] |
 **type_id** | **String** | The ID of the type to update; must be retrieved from ListTypes endpoint or obtained from response context | [required] |
-**apimodel_period_update_type_request** | [**ApimodelPeriodUpdateTypeRequest**](ApimodelPeriodUpdateTypeRequest.md) | The type details to update | [required] |
+**apimodel_update_type_request** | [**ApimodelUpdateTypeRequest**](ApimodelUpdateTypeRequest.md) | The type details to update | [required] |
 
 ### Return type
 
-[**models::ApimodelPeriodTypeResponse**](apimodel.TypeResponse.md)
+[**models::ApimodelTypeResponse**](apimodel.TypeResponse.md)
 
 ### Authorization
 

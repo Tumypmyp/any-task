@@ -26,13 +26,13 @@ impl Client {
     pub async fn create_auth_challenge(
         &self,
     ) -> Result<
-        ApimodelPeriodCreateChallengeResponse,
+        ApimodelCreateChallengeResponse,
         Error<openapi::apis::auth_api::CreateAuthChallengeError>,
     > {
         openapi::apis::auth_api::create_auth_challenge(
             &self.config,
             API_VERSION,
-            openapi::models::ApimodelPeriodCreateChallengeRequest {
+            openapi::models::ApimodelCreateChallengeRequest {
                 app_name: Some("AnyTask".to_string()),
             },
         )
@@ -42,12 +42,12 @@ impl Client {
         &self,
         challenge_id: String,
         code: String,
-    ) -> Result<ApimodelPeriodCreateApiKeyResponse, Error<openapi::apis::auth_api::CreateApiKeyError>>
+    ) -> Result<ApimodelCreateApiKeyResponse, Error<openapi::apis::auth_api::CreateApiKeyError>>
     {
         openapi::apis::auth_api::create_api_key(
             &self.config,
             API_VERSION,
-            openapi::models::ApimodelPeriodCreateApiKeyRequest {
+            openapi::models::ApimodelCreateApiKeyRequest {
                 challenge_id: Some(challenge_id.to_string()),
                 code: Some(code.to_string()),
             },
@@ -57,7 +57,7 @@ impl Client {
     pub async fn list_spaces(
         &self,
     ) -> Result<
-        PaginationPeriodPaginatedResponseApimodelSpace,
+        PaginationPaginatedResponseApimodelSpace,
         Error<openapi::apis::spaces_api::ListSpacesError>,
     > {
         openapi::apis::spaces_api::list_spaces(&self.config, API_VERSION, None, None).await
@@ -67,7 +67,7 @@ impl Client {
         space_id: &str,
         list_id: &str,
     ) -> Result<
-        PaginationPeriodPaginatedResponseApimodelView,
+        PaginationPaginatedResponseApimodelView,
         Error<openapi::apis::lists_api::GetListViewsError>,
     > {
         openapi::apis::lists_api::get_list_views(
@@ -84,7 +84,7 @@ impl Client {
         &self,
         space_id: &str,
     ) -> Result<
-        PaginationPeriodPaginatedResponseApimodelProperty,
+        PaginationPaginatedResponseApimodelProperty,
         Error<openapi::apis::properties_api::ListPropertiesError>,
     > {
         openapi::apis::properties_api::list_properties(
@@ -101,7 +101,7 @@ impl Client {
         space_id: &str,
         property_id: &str,
     ) -> Result<
-        openapi::models::PaginationPeriodPaginatedResponseApimodelTag,
+        openapi::models::PaginationPaginatedResponseApimodelTag,
         Error<openapi::apis::tags_api::ListTagsError>,
     > {
         openapi::apis::tags_api::list_tags(&self.config, API_VERSION, space_id, property_id).await
@@ -111,10 +111,10 @@ impl Client {
         space_id: &str,
         types: Vec<String>,
     ) -> Result<
-        PaginationPeriodPaginatedResponseApimodelObject,
+        PaginationPaginatedResponseApimodelObject,
         Error<openapi::apis::search_api::SearchSpaceError>,
     > {
-        let mut req = openapi::models::ApimodelPeriodSearchRequest::new();
+        let mut req = openapi::models::ApimodelSearchRequest::new();
         req.types = types.into();
         openapi::apis::search_api::search_space(
             &self.config,
@@ -129,17 +129,15 @@ impl Client {
     pub async fn get_space(
         &self,
         space_id: Signal<String>,
-    ) -> Result<ApimodelPeriodSpaceResponse, Error<openapi::apis::spaces_api::GetSpaceError>> {
+    ) -> Result<ApimodelSpaceResponse, Error<openapi::apis::spaces_api::GetSpaceError>> {
         openapi::apis::spaces_api::get_space(&self.config, API_VERSION, &space_id()).await
     }
     pub async fn get_property(
         &self,
         space_id: &str,
         property_id: String,
-    ) -> Result<
-        ApimodelPeriodPropertyResponse,
-        Error<openapi::apis::properties_api::GetPropertyError>,
-    > {
+    ) -> Result<ApimodelPropertyResponse, Error<openapi::apis::properties_api::GetPropertyError>>
+    {
         openapi::apis::properties_api::get_property(
             &self.config,
             API_VERSION,
@@ -152,8 +150,7 @@ impl Client {
         &self,
         space_id: Signal<String>,
         object_id: Signal<String>,
-    ) -> Result<ApimodelPeriodObjectResponse, Error<openapi::apis::objects_api::GetObjectError>>
-    {
+    ) -> Result<ApimodelObjectResponse, Error<openapi::apis::objects_api::GetObjectError>> {
         openapi::apis::objects_api::get_object(
             &self.config,
             API_VERSION,
@@ -169,7 +166,7 @@ impl Client {
         list_id: Signal<String>,
         view_id: Store<String>,
     ) -> Result<
-        PaginationPeriodPaginatedResponseApimodelObject,
+        PaginationPaginatedResponseApimodelObject,
         Error<openapi::apis::lists_api::GetListObjectsError>,
     > {
         openapi::apis::lists_api::get_list_objects(
@@ -186,14 +183,12 @@ impl Client {
     pub fn update_done_property(&self, space_id: String, object_id: String, done: Option<bool>) {
         let config = self.config.clone();
         spawn(async move {
-            let mut prop = ApimodelPeriodCheckboxPropertyLinkValue::new();
+            let mut prop = ApimodelCheckboxPropertyLinkValue::new();
             prop.key = "done".to_string().into();
             prop.checkbox = done;
-            let mut req = ApimodelPeriodUpdateObjectRequest::new();
+            let mut req = ApimodelUpdateObjectRequest::new();
             req.properties = Some(vec![
-                ApimodelPeriodPropertyLinkWithValue::ApimodelPeriodCheckboxPropertyLinkValue(
-                    Box::new(prop),
-                ),
+                ApimodelPropertyLinkWithValue::ApimodelCheckboxPropertyLinkValue(Box::new(prop)),
             ]);
             tracing::debug!("{:#?}", req);
             let res = openapi::apis::objects_api::update_object(
@@ -216,15 +211,13 @@ impl Client {
     ) {
         let config = self.config.clone();
         spawn(async move {
-            let mut prop = ApimodelPeriodDatePropertyLinkValue::new();
+            let mut prop = ApimodelDatePropertyLinkValue::new();
             prop.key = property_key.into();
             tracing::debug!("debug {:#?}", date);
             prop.date = date.format(&Rfc3339).unwrap().into();
-            let mut req = ApimodelPeriodUpdateObjectRequest::new();
+            let mut req = ApimodelUpdateObjectRequest::new();
             req.properties = Some(vec![
-                ApimodelPeriodPropertyLinkWithValue::ApimodelPeriodDatePropertyLinkValue(Box::new(
-                    prop,
-                )),
+                ApimodelPropertyLinkWithValue::ApimodelDatePropertyLinkValue(Box::new(prop)),
             ]);
             tracing::debug!("{:#?}", req);
             let res = openapi::apis::objects_api::update_object(
@@ -245,14 +238,12 @@ impl Client {
         property_key: String,
         option: Option<String>,
     ) {
-        let mut prop = ApimodelPeriodSelectPropertyLinkValue::new();
+        let mut prop = ApimodelSelectPropertyLinkValue::new();
         prop.key = property_key.into();
         prop.select = option;
-        let mut req = ApimodelPeriodUpdateObjectRequest::new();
+        let mut req = ApimodelUpdateObjectRequest::new();
         req.properties = Some(vec![
-            ApimodelPeriodPropertyLinkWithValue::ApimodelPeriodSelectPropertyLinkValue(Box::new(
-                prop,
-            )),
+            ApimodelPropertyLinkWithValue::ApimodelSelectPropertyLinkValue(Box::new(prop)),
         ]);
         let res = openapi::apis::objects_api::update_object(
             &self.config,

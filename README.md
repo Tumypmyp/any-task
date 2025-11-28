@@ -29,10 +29,8 @@ Then connect to the same Private network (Wi-Fi) and enter the desktop ip in the
 - Request 4-digit code
 - Enter the code in the app
 
-### Desktop
 
-
-#### Windows
+### Windows
 
 ## Developing
 

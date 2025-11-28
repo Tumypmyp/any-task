@@ -46,11 +46,7 @@ pub fn Home() -> Element {
             }
         }
         None => {
-            message::error_with_description("Failed to load spaces", "Server did not reply");
-            nav.push(Route::Login {});
-            rsx! {
-                Logout {}
-            }
+            rsx!()
         }
     }
 }

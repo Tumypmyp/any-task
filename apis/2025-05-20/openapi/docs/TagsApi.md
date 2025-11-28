@@ -14,7 +14,7 @@ Method | HTTP request | Description
 
 ## create_tag
 
-> models::ApimodelPeriodTagResponse create_tag(anytype_version, space_id, property_id, apimodel_period_create_tag_request)
+> models::ApimodelTagResponse create_tag(anytype_version, space_id, property_id, apimodel_create_tag_request)
 Create tag
 
 This endpoint creates a new tag for a given property id in a space. The creation process is subject to rate limiting. The tag is identified by its unique identifier within the specified space. The request must include the tag's name and color. The response includes the tag's details such as its ID, name, and color. This is useful for clients when users want to add new tag options to a property.
@@ -27,11 +27,11 @@ Name | Type | Description  | Required | Notes
 **anytype_version** | **String** | The version of the API to use | [required] |[default to 2025-05-20]
 **space_id** | **String** | The ID of the space to create the tag in; must be retrieved from ListSpaces endpoint | [required] |
 **property_id** | **String** | The ID of the property to create the tag for; must be retrieved from ListProperties endpoint or obtained from response context | [required] |
-**apimodel_period_create_tag_request** | [**ApimodelPeriodCreateTagRequest**](ApimodelPeriodCreateTagRequest.md) | The tag to create | [required] |
+**apimodel_create_tag_request** | [**ApimodelCreateTagRequest**](ApimodelCreateTagRequest.md) | The tag to create | [required] |
 
 ### Return type
 
-[**models::ApimodelPeriodTagResponse**](apimodel.TagResponse.md)
+[**models::ApimodelTagResponse**](apimodel.TagResponse.md)
 
 ### Authorization
 
@@ -47,7 +47,7 @@ Name | Type | Description  | Required | Notes
 
 ## delete_tag
 
-> models::ApimodelPeriodTagResponse delete_tag(anytype_version, space_id, property_id, tag_id)
+> models::ApimodelTagResponse delete_tag(anytype_version, space_id, property_id, tag_id)
 Delete tag
 
 This endpoint “deletes” a tag by marking it as archived. The deletion process is performed safely and is subject to rate limiting. It returns the tag’s details after it has been archived. Proper error handling is in place for situations such as when the tag isn’t found or the deletion cannot be performed because of permission issues.
@@ -64,7 +64,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::ApimodelPeriodTagResponse**](apimodel.TagResponse.md)
+[**models::ApimodelTagResponse**](apimodel.TagResponse.md)
 
 ### Authorization
 
@@ -80,7 +80,7 @@ Name | Type | Description  | Required | Notes
 
 ## get_tag
 
-> models::ApimodelPeriodTagResponse get_tag(anytype_version, space_id, property_id, tag_id)
+> models::ApimodelTagResponse get_tag(anytype_version, space_id, property_id, tag_id)
 Get tag
 
 This endpoint retrieves a tag for a given property id. The tag is identified by its unique identifier within the specified space. The response includes the tag's details such as its ID, name, and color. This is useful for clients to display or when editing a specific tag option.
@@ -97,7 +97,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::ApimodelPeriodTagResponse**](apimodel.TagResponse.md)
+[**models::ApimodelTagResponse**](apimodel.TagResponse.md)
 
 ### Authorization
 
@@ -113,7 +113,7 @@ Name | Type | Description  | Required | Notes
 
 ## list_tags
 
-> models::PaginationPeriodPaginatedResponseApimodelTag list_tags(anytype_version, space_id, property_id)
+> models::PaginationPaginatedResponseApimodelTag list_tags(anytype_version, space_id, property_id)
 List tags
 
 This endpoint retrieves a paginated list of tags available for a specific property within a space. Each tag record includes its unique identifier, name, and color. This information is essential for clients to display select or multi-select options to users when they are creating or editing objects. The endpoint also supports pagination through offset and limit parameters.
@@ -129,7 +129,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::PaginationPeriodPaginatedResponseApimodelTag**](pagination.PaginatedResponse-apimodel_Tag.md)
+[**models::PaginationPaginatedResponseApimodelTag**](pagination.PaginatedResponse-apimodel_Tag.md)
 
 ### Authorization
 
@@ -145,7 +145,7 @@ Name | Type | Description  | Required | Notes
 
 ## update_tag
 
-> models::ApimodelPeriodTagResponse update_tag(anytype_version, space_id, property_id, tag_id, apimodel_period_update_tag_request)
+> models::ApimodelTagResponse update_tag(anytype_version, space_id, property_id, tag_id, apimodel_update_tag_request)
 Update tag
 
 This endpoint updates a tag for a given property id in a space. The update process is subject to rate limiting. The tag is identified by its unique identifier within the specified space. The request must include the tag's name and color. The response includes the tag's details such as its ID, name, and color. This is useful for clients when users want to edit existing tags for a property.
@@ -159,11 +159,11 @@ Name | Type | Description  | Required | Notes
 **space_id** | **String** | The ID of the space to update the tag in; must be retrieved from ListSpaces endpoint | [required] |
 **property_id** | **String** | The ID of the property to update the tag for; must be retrieved from ListProperties endpoint or obtained from response context | [required] |
 **tag_id** | **String** | The ID of the tag to update; must be retrieved from ListTags endpoint or obtained from response context | [required] |
-**apimodel_period_update_tag_request** | [**ApimodelPeriodUpdateTagRequest**](ApimodelPeriodUpdateTagRequest.md) | The tag to update | [required] |
+**apimodel_update_tag_request** | [**ApimodelUpdateTagRequest**](ApimodelUpdateTagRequest.md) | The tag to update | [required] |
 
 ### Return type
 
-[**models::ApimodelPeriodTagResponse**](apimodel.TagResponse.md)
+[**models::ApimodelTagResponse**](apimodel.TagResponse.md)
 
 ### Authorization
 

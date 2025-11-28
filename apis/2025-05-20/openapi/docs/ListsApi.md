@@ -13,7 +13,7 @@ Method | HTTP request | Description
 
 ## add_list_objects
 
-> String add_list_objects(anytype_version, space_id, list_id, apimodel_period_add_objects_to_list_request)
+> String add_list_objects(anytype_version, space_id, list_id, apimodel_add_objects_to_list_request)
 Add objects to list
 
 Adds one or more objects to a specific list (collection only) by submitting a JSON array of object IDs. Upon success, the endpoint returns a confirmation message. This endpoint is vital for building user interfaces that allow drag‑and‑drop or multi‑select additions to collections, enabling users to dynamically manage their collections without needing to modify the underlying object data.
@@ -26,7 +26,7 @@ Name | Type | Description  | Required | Notes
 **anytype_version** | **String** | The version of the API to use | [required] |[default to 2025-05-20]
 **space_id** | **String** | The ID of the space to which the list belongs; must be retrieved from ListSpaces endpoint | [required] |
 **list_id** | **String** | The ID of the list to which objects will be added; must be retrieved from SearchSpace endpoint with types: ['collection', 'set'] | [required] |
-**apimodel_period_add_objects_to_list_request** | [**ApimodelPeriodAddObjectsToListRequest**](ApimodelPeriodAddObjectsToListRequest.md) | The list of object IDs to add to the list; must be retrieved from SearchSpace or GlobalSearch endpoints or obtained from response context | [required] |
+**apimodel_add_objects_to_list_request** | [**ApimodelAddObjectsToListRequest**](ApimodelAddObjectsToListRequest.md) | The list of object IDs to add to the list; must be retrieved from SearchSpace or GlobalSearch endpoints or obtained from response context | [required] |
 
 ### Return type
 
@@ -46,7 +46,7 @@ Name | Type | Description  | Required | Notes
 
 ## get_list_objects
 
-> models::PaginationPeriodPaginatedResponseApimodelObject get_list_objects(anytype_version, space_id, list_id, view_id, offset, limit)
+> models::PaginationPaginatedResponseApimodelObject get_list_objects(anytype_version, space_id, list_id, view_id, offset, limit)
 Get objects in list
 
 Returns a paginated list of objects associated with a specific list (query or collection) within a space. When a view ID is provided, the objects are filtered and sorted according to the view's configuration. If no view ID is specified, all list objects are returned without filtering and sorting. This endpoint helps clients to manage grouped objects (for example, tasks within a list) by returning information for each item of the list.
@@ -65,7 +65,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::PaginationPeriodPaginatedResponseApimodelObject**](pagination.PaginatedResponse-apimodel_Object.md)
+[**models::PaginationPaginatedResponseApimodelObject**](pagination.PaginatedResponse-apimodel_Object.md)
 
 ### Authorization
 
@@ -81,7 +81,7 @@ Name | Type | Description  | Required | Notes
 
 ## get_list_views
 
-> models::PaginationPeriodPaginatedResponseApimodelView get_list_views(anytype_version, space_id, list_id, offset, limit)
+> models::PaginationPaginatedResponseApimodelView get_list_views(anytype_version, space_id, list_id, offset, limit)
 Get list views
 
 Returns a paginated list of views defined for a specific list (query or collection) within a space. Each view includes details such as layout, applied filters, and sorting options, enabling clients to render the list according to user preferences and context. This endpoint is essential for applications that need to display lists in various formats (e.g., grid, table) or with different sorting/filtering criteria.
@@ -99,7 +99,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::PaginationPeriodPaginatedResponseApimodelView**](pagination.PaginatedResponse-apimodel_View.md)
+[**models::PaginationPaginatedResponseApimodelView**](pagination.PaginatedResponse-apimodel_View.md)
 
 ### Authorization
 

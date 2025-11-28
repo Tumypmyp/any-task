@@ -23,7 +23,7 @@ pub fn Logout() -> Element {
     let mut settings =
         use_synced_storage::<LocalStorage, _>(USER_SETTINGS_KEY.into(), || AppSettings {
             token: "".to_string(),
-            server: "127.0.0.1:31009".to_string(),
+            server: "127.0.0.1:31010".to_string(),
         });
     rsx! {
         ActionHolder { position: Position::Left,
@@ -54,7 +54,7 @@ pub fn LoginWithCode() -> Element {
     let mut settings =
         use_synced_storage::<LocalStorage, _>(USER_SETTINGS_KEY.into(), || AppSettings {
             token: "".to_string(),
-            server: "127.0.0.1:31019".to_string(),
+            server: "127.0.0.1:31010".to_string(),
         });
     tracing::debug!("settings loaded as {:#?}", settings.read());
 

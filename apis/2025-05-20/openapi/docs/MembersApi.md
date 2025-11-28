@@ -11,7 +11,7 @@ Method | HTTP request | Description
 
 ## get_member
 
-> models::ApimodelPeriodMemberResponse get_member(anytype_version, space_id, member_id)
+> models::ApimodelMemberResponse get_member(anytype_version, space_id, member_id)
 Get member
 
 Fetches detailed information about a single member within a space. The endpoint returns the member’s identifier, name, icon, identity, global name, status and role. The member_id path parameter can be provided as either the member's ID (starting  with `_participant`) or the member's identity. This is useful for user profile pages, permission management, and displaying member-specific information in collaborative environments.
@@ -27,7 +27,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::ApimodelPeriodMemberResponse**](apimodel.MemberResponse.md)
+[**models::ApimodelMemberResponse**](apimodel.MemberResponse.md)
 
 ### Authorization
 
@@ -43,7 +43,7 @@ Name | Type | Description  | Required | Notes
 
 ## list_members
 
-> models::PaginationPeriodPaginatedResponseApimodelMember list_members(anytype_version, space_id, offset, limit)
+> models::PaginationPaginatedResponseApimodelMember list_members(anytype_version, space_id, offset, limit)
 List members
 
 Returns a paginated list of members belonging to the specified space. Each member record includes the member’s profile ID, name, icon (which may be derived from an emoji or image), network identity, global name, status (e.g. joining, active) and role (e.g. Viewer, Editor, Owner). This endpoint supports collaborative features by allowing clients to show who is in a space and manage access rights.
@@ -60,7 +60,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::PaginationPeriodPaginatedResponseApimodelMember**](pagination.PaginatedResponse-apimodel_Member.md)
+[**models::PaginationPaginatedResponseApimodelMember**](pagination.PaginatedResponse-apimodel_Member.md)
 
 ### Authorization
 

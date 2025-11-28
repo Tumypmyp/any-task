@@ -13,7 +13,7 @@ Method | HTTP request | Description
 
 ## create_space
 
-> models::ApimodelPeriodSpaceResponse create_space(anytype_version, apimodel_period_create_space_request)
+> models::ApimodelSpaceResponse create_space(anytype_version, apimodel_create_space_request)
 Create space
 
 Creates a new space based on a supplied name and description in the JSON request body. The endpoint is subject to rate limiting and automatically applies default configurations such as generating a random icon and initializing the workspace with default settings (for example, a default dashboard or home page). On success, the new space’s full metadata is returned, enabling the client to immediately switch context to the new internal.
@@ -24,11 +24,11 @@ Creates a new space based on a supplied name and description in the JSON request
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **anytype_version** | **String** | The version of the API to use | [required] |[default to 2025-05-20]
-**apimodel_period_create_space_request** | [**ApimodelPeriodCreateSpaceRequest**](ApimodelPeriodCreateSpaceRequest.md) | The space to create | [required] |
+**apimodel_create_space_request** | [**ApimodelCreateSpaceRequest**](ApimodelCreateSpaceRequest.md) | The space to create | [required] |
 
 ### Return type
 
-[**models::ApimodelPeriodSpaceResponse**](apimodel.SpaceResponse.md)
+[**models::ApimodelSpaceResponse**](apimodel.SpaceResponse.md)
 
 ### Authorization
 
@@ -44,7 +44,7 @@ Name | Type | Description  | Required | Notes
 
 ## get_space
 
-> models::ApimodelPeriodSpaceResponse get_space(anytype_version, space_id)
+> models::ApimodelSpaceResponse get_space(anytype_version, space_id)
 Get space
 
 Fetches full details about a single space identified by its space ID. The response includes metadata such as the space name, icon, and various workspace IDs (home, archive, profile, etc.). This detailed view supports use cases such as displaying space-specific settings.
@@ -59,7 +59,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::ApimodelPeriodSpaceResponse**](apimodel.SpaceResponse.md)
+[**models::ApimodelSpaceResponse**](apimodel.SpaceResponse.md)
 
 ### Authorization
 
@@ -75,7 +75,7 @@ Name | Type | Description  | Required | Notes
 
 ## list_spaces
 
-> models::PaginationPeriodPaginatedResponseApimodelSpace list_spaces(anytype_version, offset, limit)
+> models::PaginationPaginatedResponseApimodelSpace list_spaces(anytype_version, offset, limit)
 List spaces
 
 Retrieves a paginated list of all spaces that are accessible by the authenticated user. Each space record contains detailed information such as the space ID, name, icon (derived either from an emoji or image URL), and additional metadata. This endpoint is key to displaying a user’s workspaces.
@@ -91,7 +91,7 @@ Name | Type | Description  | Required | Notes
 
 ### Return type
 
-[**models::PaginationPeriodPaginatedResponseApimodelSpace**](pagination.PaginatedResponse-apimodel_Space.md)
+[**models::PaginationPaginatedResponseApimodelSpace**](pagination.PaginatedResponse-apimodel_Space.md)
 
 ### Authorization
 
@@ -107,7 +107,7 @@ Name | Type | Description  | Required | Notes
 
 ## update_space
 
-> models::ApimodelPeriodSpaceResponse update_space(anytype_version, space_id, apimodel_period_update_space_request)
+> models::ApimodelSpaceResponse update_space(anytype_version, space_id, apimodel_update_space_request)
 Update space
 
 Updates the name or description of an existing space. The request body should contain the new name and/or description in JSON format. This endpoint is useful for renaming or rebranding a workspace without needing to recreate it. The updated space’s metadata is returned in the response.
@@ -119,11 +119,11 @@ Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **anytype_version** | **String** | The version of the API to use | [required] |[default to 2025-05-20]
 **space_id** | **String** | The ID of the space to update; must be retrieved from ListSpaces endpoint | [required] |
-**apimodel_period_update_space_request** | [**ApimodelPeriodUpdateSpaceRequest**](ApimodelPeriodUpdateSpaceRequest.md) | The space details to update | [required] |
+**apimodel_update_space_request** | [**ApimodelUpdateSpaceRequest**](ApimodelUpdateSpaceRequest.md) | The space details to update | [required] |
 
 ### Return type
 
-[**models::ApimodelPeriodSpaceResponse**](apimodel.SpaceResponse.md)
+[**models::ApimodelSpaceResponse**](apimodel.SpaceResponse.md)
 
 ### Authorization
 

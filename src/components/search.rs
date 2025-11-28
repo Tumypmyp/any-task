@@ -9,7 +9,7 @@ use std::vec;
 struct Object {
     name: String,
     object_id: String,
-    data: ApimodelPeriodObject,
+    data: ApimodelObject,
 }
 #[component]
 pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {

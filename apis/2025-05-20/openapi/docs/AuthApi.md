@@ -11,7 +11,7 @@ Method | HTTP request | Description
 
 ## create_api_key
 
-> models::ApimodelPeriodCreateApiKeyResponse create_api_key(anytype_version, apimodel_period_create_api_key_request)
+> models::ApimodelCreateApiKeyResponse create_api_key(anytype_version, apimodel_create_api_key_request)
 Create API Key
 
 After receiving a `challenge_id` from the `/v1/auth/challenges` endpoint, the client calls this endpoint to provide the corresponding 4-digit code along with the challenge ID. The endpoint verifies that the challenge solution is correct and, if it is, returns an `api_key`. This endpoint is central to the authentication process, as it validates the user's identity and issues a key that can be used for further interactions with the API.
@@ -22,11 +22,11 @@ After receiving a `challenge_id` from the `/v1/auth/challenges` endpoint, the cl
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **anytype_version** | **String** | The version of the API to use | [required] |[default to 2025-05-20]
-**apimodel_period_create_api_key_request** | [**ApimodelPeriodCreateApiKeyRequest**](ApimodelPeriodCreateApiKeyRequest.md) | The request body containing the challenge ID and code | [required] |
+**apimodel_create_api_key_request** | [**ApimodelCreateApiKeyRequest**](ApimodelCreateApiKeyRequest.md) | The request body containing the challenge ID and code | [required] |
 
 ### Return type
 
-[**models::ApimodelPeriodCreateApiKeyResponse**](apimodel.CreateApiKeyResponse.md)
+[**models::ApimodelCreateApiKeyResponse**](apimodel.CreateApiKeyResponse.md)
 
 ### Authorization
 
@@ -42,7 +42,7 @@ No authorization required
 
 ## create_auth_challenge
 
-> models::ApimodelPeriodCreateChallengeResponse create_auth_challenge(anytype_version, apimodel_period_create_challenge_request)
+> models::ApimodelCreateChallengeResponse create_auth_challenge(anytype_version, apimodel_create_challenge_request)
 Create Challenge
 
 Generates a one-time authentication challenge for granting API access to the user's vault. Upon providing a valid `app_name`, the server issues a unique `challenge_id` and displays a 4-digit code within the Anytype Desktop. The `challenge_id` must then be used with the `/v1/auth/api_keys` endpoint to solve the challenge and retrieve an authentication token. This mechanism ensures that only trusted applications and authorized users gain access.
@@ -53,11 +53,11 @@ Generates a one-time authentication challenge for granting API access to the use
 Name | Type | Description  | Required | Notes
 ------------- | ------------- | ------------- | ------------- | -------------
 **anytype_version** | **String** | The version of the API to use | [required] |[default to 2025-05-20]
-**apimodel_period_create_challenge_request** | [**ApimodelPeriodCreateChallengeRequest**](ApimodelPeriodCreateChallengeRequest.md) | The request body containing the app name | [required] |
+**apimodel_create_challenge_request** | [**ApimodelCreateChallengeRequest**](ApimodelCreateChallengeRequest.md) | The request body containing the app name | [required] |
 
 ### Return type
 
-[**models::ApimodelPeriodCreateChallengeResponse**](apimodel.CreateChallengeResponse.md)
+[**models::ApimodelCreateChallengeResponse**](apimodel.CreateChallengeResponse.md)
 
 ### Authorization
 
