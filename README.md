@@ -94,3 +94,15 @@ or
 ```bash
 (devenv) bundle-android-apk
 ```
+
+### Generate API
+
+- copy `openapi.yaml` to `apis/`
+
+#### 2025-05-05 Patches
+- change version to "0.0.0"
+- remove view type enums
+
+```
+(devenv) client-api-generate
+```
