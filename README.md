@@ -1,8 +1,9 @@
-# AnyTask
+# AnyTask: Cross-Platform Client for Anytype
+**A modern, lightweight client for Anytype built with Rust and Dioxus.**
 
-[Anytype](https://github.com/anyproto/) has great desktop, Android and iOS clients. This project focuses on cross-platform compatibility between clients using [Dioxus](https://github.com/DioxusLabs/dioxus), a modern Rust framework.
+[Anytype](https://github.com/anyproto/) has a great desktop, Android and iOS clients. This project focuses on cross-platform compatibility between clients using [Dioxus](https://github.com/DioxusLabs/dioxus), a modern Rust framework.
 
-The client is currently in active development and supports building for desktop and Android. The full portable version of the client will be available after the release of headless Anytype. Currently the app asks for network connection to official Anytype desktop app.
+**⚠️ AnyTask is currently in active development.**
 
 <div align="center">
   <img src="./notes/ui.png" width="1000">
@@ -20,10 +21,12 @@ The client is currently in active development and supports building for desktop 
 
 ## How to use
 
+**⚠️ Requirement:** The current version of AnyTask requires a **running official Anytype desktop client** on the local network to function.
+
 ### Android
 
 To use Android app you should first install AnyTask on device with a desktop Anytype installed.
-Then connect to the same Private network (Wi-Fi) and enter the desktop ip in the app (example: 10.0.0.45:31029).
+Then connect to the same Private network (Wi-Fi) and enter the desktop ip in the app (example: 10.0.0.45:31010).
 - Request 4-digit code
 - Enter the code in the app
 
@@ -37,6 +40,7 @@ Then connect to the same Private network (Wi-Fi) and enter the desktop ip in the
 ### Dependencies
 
 - Client API code is generated with [openapi-generator](https://github.com/OpenAPITools/openapi-generator)
+- [anytype-api](https://github.com/anyproto/anytype-api/)
 - [dioxus-cli](https://github.com/DioxusLabs/dioxus)
 
 #### Windows, Linux
@@ -102,7 +106,6 @@ or
 #### 2025-05-20 Patches
 - change version to `0.0.0` (version format is not supported in Rust)
 - remove view type enums (can return types outside the enum set)
-- remove extra `set` (typo on `line 1866`)
 
 ```bash
 (devenv) client-api-generate
