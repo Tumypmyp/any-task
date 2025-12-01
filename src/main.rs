@@ -79,6 +79,7 @@ fn App() -> Element {
         });
         println!("Background proxy task started.");
     });
+    load_client();
     rsx! {
         ToastProvider {
             document::Link { rel: "icon", href: FAVICON }

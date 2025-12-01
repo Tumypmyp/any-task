@@ -64,7 +64,7 @@ pub fn ChooseView(
                     SelectGroupLabel { "Views" }
                     {views}
                 }
-           }
+            }
         }
     }
 }

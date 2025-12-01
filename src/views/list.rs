@@ -79,7 +79,6 @@ pub fn Objects(
     show_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     let resp = use_resource(move || async move {
-        tracing::debug!("requesting list view {:#?}", view_id());
         API_CLIENT
             .read()
             .get_list_objects(space_id, list_id, view_id)

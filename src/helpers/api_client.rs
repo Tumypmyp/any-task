@@ -169,6 +169,12 @@ impl Client {
         PaginationPaginatedResponseApimodelObject,
         Error<openapi::apis::lists_api::GetListObjectsError>,
     > {
+        tracing::debug!(
+            "get list objects -> space: {}, list: {}, view: {}",
+            space_id(),
+            list_id(),
+            view_id()
+        );
         openapi::apis::lists_api::get_list_objects(
             &self.config,
             API_VERSION,

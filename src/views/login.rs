@@ -1,6 +1,7 @@
 use crate::API_CLIENT;
 use crate::Route;
 use crate::actions::*;
+use crate::api_client::Client;
 use crate::components::base::message;
 use crate::components::button::ButtonHolder;
 use crate::components::input::Input;
@@ -46,6 +47,21 @@ pub fn Logout() -> Element {
 #[component]
 pub fn Login() -> Element {
     LoginWithCode()
+}
+
+pub fn load_client() -> Client {
+    let settings =
+        use_synced_storage::<LocalStorage, _>(USER_SETTINGS_KEY.into(), || AppSettings {
+            token: "".to_string(),
+            server: "127.0.0.1:31010".to_string(),
+        });
+    tracing::debug!("settings loaded as {:#?}", settings.read());
+    let server = use_signal(|| settings.read().server.to_string());
+    let token = use_signal(|| settings.read().token.to_string());
+
+    API_CLIENT.write().set_server(server());
+    API_CLIENT.write().set_token(token());
+    API_CLIENT()
 }
 
 #[component]
