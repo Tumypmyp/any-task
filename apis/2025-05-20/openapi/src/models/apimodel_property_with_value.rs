@@ -12,24 +12,36 @@ use crate::models;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
+#[serde(tag = "format")]
 pub enum ApimodelPropertyWithValue {
-    ApimodelTextPropertyValue(Box<models::ApimodelTextPropertyValue>),
-    ApimodelNumberPropertyValue(Box<models::ApimodelNumberPropertyValue>),
-    ApimodelSelectPropertyValue(Box<models::ApimodelSelectPropertyValue>),
-    ApimodelMultiSelectPropertyValue(Box<models::ApimodelMultiSelectPropertyValue>),
-    ApimodelDatePropertyValue(Box<models::ApimodelDatePropertyValue>),
-    ApimodelFilesPropertyValue(Box<models::ApimodelFilesPropertyValue>),
-    ApimodelCheckboxPropertyValue(Box<models::ApimodelCheckboxPropertyValue>),
-    ApimodelUrlPropertyValue(Box<models::ApimodelUrlPropertyValue>),
-    ApimodelEmailPropertyValue(Box<models::ApimodelEmailPropertyValue>),
-    ApimodelPhonePropertyValue(Box<models::ApimodelPhonePropertyValue>),
-    ApimodelObjectsPropertyValue(Box<models::ApimodelObjectsPropertyValue>),
+    #[serde(rename="text")]
+    Text(Box<models::ApimodelTextPropertyValue>),
+    #[serde(rename="number")]
+    Number(Box<models::ApimodelNumberPropertyValue>),
+    #[serde(rename="select")]
+    Select(Box<models::ApimodelSelectPropertyValue>),
+    #[serde(rename="multi_select")]
+    MultiSelect(Box<models::ApimodelMultiSelectPropertyValue>),
+    #[serde(rename="date")]
+    Date(Box<models::ApimodelDatePropertyValue>),
+    #[serde(rename="files")]
+    Files(Box<models::ApimodelFilesPropertyValue>),
+    #[serde(rename="checkbox")]
+    Checkbox(Box<models::ApimodelCheckboxPropertyValue>),
+    #[serde(rename="url")]
+    Url(Box<models::ApimodelUrlPropertyValue>),
+    #[serde(rename="email")]
+    Email(Box<models::ApimodelEmailPropertyValue>),
+    #[serde(rename="phone")]
+    Phone(Box<models::ApimodelPhonePropertyValue>),
+    #[serde(rename="objects")]
+    Objects(Box<models::ApimodelObjectsPropertyValue>),
 }
 
 impl Default for ApimodelPropertyWithValue {
     fn default() -> Self {
-        Self::ApimodelTextPropertyValue(Default::default())
+        Self::Text(Default::default())
     }
 }
+
 

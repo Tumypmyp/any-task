@@ -106,6 +106,23 @@ or
 #### 2025-05-20 Patches
 - change version to `0.0.0` (version format is not supported in Rust)
 - remove view type enums (can return types outside the enum set)
+- ```   
+    apimodel.PropertyWithValue:
+      discriminator:
+        propertyName: format
+        mapping:
+          text: "#/components/schemas/apimodel.TextPropertyValue"
+          number: "#/components/schemas/apimodel.NumberPropertyValue"
+          select: "#/components/schemas/apimodel.SelectPropertyValue"
+          multi_select: "#/components/schemas/apimodel.MultiSelectPropertyValue"
+          date: "#/components/schemas/apimodel.DatePropertyValue"
+          files: "#/components/schemas/apimodel.FilesPropertyValue"
+          checkbox: "#/components/schemas/apimodel.CheckboxPropertyValue"
+          url: "#/components/schemas/apimodel.URLPropertyValue"
+          email: "#/components/schemas/apimodel.EmailPropertyValue"
+          phone: "#/components/schemas/apimodel.PhonePropertyValue"
+          objects: "#/components/schemas/apimodel.ObjectsPropertyValue"
+ ```
 
 ```bash
 (devenv) client-api-generate

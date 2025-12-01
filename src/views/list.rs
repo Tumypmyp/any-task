@@ -87,7 +87,7 @@ pub fn Objects(
 
     match &*resp.read() {
         Some(Ok(p)) => {
-            // tracing::debug!("objects: {:#?}", p.clone().data.unwrap());
+            tracing::debug!("objects: {:#?}", p.clone().data.unwrap());
             rsx! {
                 for obj in p.clone().data.unwrap() {
                     ListEntry {

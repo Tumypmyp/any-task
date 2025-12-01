@@ -36,7 +36,7 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
     };
     object_properties.write().insert(
         PropertyID(NAME_PROPERTY_ID_STR.to_string()),
-        ApimodelPropertyWithValue::ApimodelTextPropertyValue(Box::new(text_property_value)),
+        ApimodelPropertyWithValue::Text(Box::new(text_property_value)),
     );
     let p = props.clone();
     let p2 = props.clone();
@@ -82,16 +82,16 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
 }
 fn get_property_id(prop: ApimodelPropertyWithValue) -> PropertyID {
     return PropertyID(match prop.clone() {
-        ApimodelPropertyWithValue::ApimodelTextPropertyValue(p) => p.id.clone().unwrap(),
-        ApimodelPropertyWithValue::ApimodelNumberPropertyValue(p) => p.id.clone().unwrap(),
-        ApimodelPropertyWithValue::ApimodelSelectPropertyValue(p) => p.id.clone().unwrap(),
-        ApimodelPropertyWithValue::ApimodelMultiSelectPropertyValue(p) => p.id.clone().unwrap(),
-        ApimodelPropertyWithValue::ApimodelDatePropertyValue(p) => p.id.clone().unwrap(),
-        ApimodelPropertyWithValue::ApimodelFilesPropertyValue(p) => p.id.clone().unwrap(),
-        ApimodelPropertyWithValue::ApimodelCheckboxPropertyValue(p) => p.id.clone().unwrap(),
-        ApimodelPropertyWithValue::ApimodelUrlPropertyValue(p) => p.id.clone().unwrap(),
-        ApimodelPropertyWithValue::ApimodelEmailPropertyValue(p) => p.id.clone().unwrap(),
-        ApimodelPropertyWithValue::ApimodelPhonePropertyValue(p) => p.id.clone().unwrap(),
-        ApimodelPropertyWithValue::ApimodelObjectsPropertyValue(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::Text(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::Number(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::Select(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::MultiSelect(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::Date(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::Files(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::Checkbox(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::Url(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::Email(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::Phone(p) => p.id.clone().unwrap(),
+        ApimodelPropertyWithValue::Objects(p) => p.id.clone().unwrap(),
     });
 }

@@ -1609,6 +1609,20 @@ components:
           $ref: "#/components/schemas/apimodel.Property"
       type: object
     apimodel.PropertyWithValue:
+      discriminator:
+        propertyName: format
+        mapping:
+          text: "#/components/schemas/apimodel.TextPropertyValue"
+          number: "#/components/schemas/apimodel.NumberPropertyValue"
+          select: "#/components/schemas/apimodel.SelectPropertyValue"
+          multi_select: "#/components/schemas/apimodel.MultiSelectPropertyValue"
+          date: "#/components/schemas/apimodel.DatePropertyValue"
+          files: "#/components/schemas/apimodel.FilesPropertyValue"
+          checkbox: "#/components/schemas/apimodel.CheckboxPropertyValue"
+          url: "#/components/schemas/apimodel.URLPropertyValue"
+          email: "#/components/schemas/apimodel.EmailPropertyValue"
+          phone: "#/components/schemas/apimodel.PhonePropertyValue"
+          objects: "#/components/schemas/apimodel.ObjectsPropertyValue"
       oneOf:
         - $ref: "#/components/schemas/apimodel.TextPropertyValue"
         - $ref: "#/components/schemas/apimodel.NumberPropertyValue"

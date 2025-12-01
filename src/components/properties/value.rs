@@ -13,7 +13,7 @@ pub fn PropertyValue(
     info: ReadSignal<PropertyInfo>,
 ) -> Element {
     match data() {
-        Some(ApimodelPropertyWithValue::ApimodelTextPropertyValue(text)) => {
+        Some(ApimodelPropertyWithValue::Text(text)) => {
             rsx! {
                 TextPropertyValue {
                     space_id: &space_id,
@@ -23,7 +23,7 @@ pub fn PropertyValue(
                 }
             }
         }
-        Some(ApimodelPropertyWithValue::ApimodelCheckboxPropertyValue(checkbox)) => {
+        Some(ApimodelPropertyWithValue::Checkbox(checkbox)) => {
             rsx! {
                 CheckboxPropertyValue {
                     space_id: &space_id,
@@ -33,7 +33,7 @@ pub fn PropertyValue(
                 }
             }
         }
-        Some(ApimodelPropertyWithValue::ApimodelSelectPropertyValue(select)) => {
+        Some(ApimodelPropertyWithValue::Select(select)) => {
             rsx! {
                 SelectPropertyValue {
                     space_id: &space_id,
@@ -43,7 +43,7 @@ pub fn PropertyValue(
                 }
             }
         }
-        Some(ApimodelPropertyWithValue::ApimodelDatePropertyValue(date)) => {
+        Some(ApimodelPropertyWithValue::Date(date)) => {
             rsx! {
                 ButtonHolder {
                     DateTimePropertyValues {

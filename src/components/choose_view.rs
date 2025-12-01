@@ -52,6 +52,7 @@ pub fn ChooseView(
     let mut view_id_setter = view_id.clone();
     rsx! {
         Select::<String> {
+            width: "20vw",
             // default_value: Some(view_id()),
             value: select_value,
             // placeholder: "Select a view",
