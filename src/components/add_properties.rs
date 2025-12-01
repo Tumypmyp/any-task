@@ -7,6 +7,8 @@ use crate::helpers::*;
 use dioxus::prelude::*;
 use dioxus_primitives::scroll_area::ScrollDirection;
 use std::vec;
+
+// todo: dont expose other properties
 #[component]
 pub fn ShowPropertiesSetting(
     space_id: Signal<String>,

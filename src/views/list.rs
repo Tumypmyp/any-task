@@ -61,17 +61,12 @@ pub fn ListHeader(
         _ => {}
     }
     let other_properties: Store<Vec<PropertyInfo>> = use_store(|| vec![]);
-    let all_views: Store<Vec<ViewInfo>> = use_store(|| vec![]);
+
     rsx! {
         Header {
             Title { title: "{name}" }
             ShowPropertiesSetting { space_id, show_properties, other_properties }
-            ChooseView {
-                space_id,
-                list_id,
-                view_id,
-                all_views,
-            }
+            ChooseView { space_id, list_id, view_id }
         }
         PropertiesOrder { show_properties, other_properties }
     }

@@ -1,31 +1,30 @@
 use crate::API_CLIENT;
-use crate::components::button::*;
-use crate::components::popover::*;
-use crate::components::scroll_area::ScrollArea;
+use crate::components::select::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
-use dioxus_primitives::scroll_area::ScrollDirection;
 use std::vec;
 #[component]
 pub fn ChooseView(
     space_id: Signal<String>,
     list_id: Signal<String>,
     view_id: Store<String>,
-    all_views: Store<Vec<ViewInfo>>,
 ) -> Element {
+    let mut all_views: Store<Vec<ViewInfo>> = use_store(|| vec![]);
+
     use_effect(move || {
         spawn(async move {
-            let space_id = space_id();
-            let list_id = list_id();
-            let views = API_CLIENT.read().get_views(&space_id, &list_id).await;
+            let views = API_CLIENT.read().get_views(&space_id(), &list_id()).await;
             match views {
                 Ok(view) => {
                     tracing::debug!("got views: {:#?}", view);
                     for v in view.data.unwrap() {
                         all_views.write().push(ViewInfo {
-                            id: v.id.unwrap(),
+                            id: v.id.clone().unwrap(),
                             name: v.name.unwrap(),
                         });
+                        if view_id.read().is_empty() {
+                            view_id.set(v.id.clone().unwrap());
+                        }
                     }
                 }
                 Err(e) => {
@@ -34,38 +33,38 @@ pub fn ChooseView(
             }
         });
     });
-    let mut open = use_signal(|| false);
-    rsx! {
-        PopoverRoot {
-            open: open(),
-            on_open_change: move |v| {
-                open.set(v);
-            },
-            PopoverTrigger { "Views" }
-            PopoverContent {
-                ScrollArea { style: "max-height: 40vh;",
-                    for (i , view) in all_views.read().clone().iter().enumerate() {
-                        ViewButton { index: i, view_id, view: view.clone() }
-                    }
-                }
+    let views = all_views.iter().enumerate().map(|(i, f)| {
+        rsx! {
+            SelectOption::<String> { index: i, value: f().id, text_value: f().name,
+                "{f().name}"
+                SelectItemIndicator {}
             }
         }
-    }
-}
-
-#[component]
-pub fn ViewButton(index: usize, view_id: Store<String>, view: ViewInfo) -> Element {
-    let value = view.id.clone();
+    });
+    let select_value = use_memo(move || {
+        let current_view_id = view_id.read();
+        if current_view_id.is_empty() {
+            None
+        } else {
+            Some(Some(current_view_id.clone()))
+        }
+    });
+    let mut view_id_setter = view_id.clone();
     rsx! {
-        ButtonWithHolder {
-            variant: ButtonVariant::Ghost,
-            onclick: move |_| {
-                view_id
-                    .with_mut(|v| {
-                        *v = value.clone();
-                    });
+        Select::<String> {
+            // default_value: Some(view_id()),
+            value: select_value,
+            // placeholder: "Select a view",
+            on_value_change: move |v: Option<String>| {
+                view_id_setter.set(v.unwrap());
             },
-            "{view.name}"
+            SelectTrigger { aria_label: "Select Trigger", width: "12rem", SelectValue {} }
+            SelectList { aria_label: "Select",
+                SelectGroup {
+                    SelectGroupLabel { "Views" }
+                    {views}
+                }
+           }
         }
     }
 }
