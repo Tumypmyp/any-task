@@ -32,7 +32,7 @@ pub fn Input(value: Signal<String>) -> Element {
 #[component]
 pub fn CancelPopoverButton(open: Signal<bool>) -> Element {
     rsx! {
-        ButtonWithHolder {
+        Button {
             variant: ButtonVariant::Outline,
             onclick: move |_| {
                 open.set(false);

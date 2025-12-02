@@ -1,4 +1,4 @@
-use crate::components::button::ButtonWithHolder;
+use crate::components::button::Button;
 use crate::helpers::*;
 use dioxus::prelude::*;
 use openapi::models::ApimodelTextPropertyValue;
@@ -11,6 +11,6 @@ pub fn TextPropertyValue(
 ) -> Element {
     let value = prop().text.unwrap_or_default();
     rsx! {
-        ButtonWithHolder { width: "{info().width}vw", "{value}" }
+        Button { width: "{info().width}vw", "{value}" }
     }
 }

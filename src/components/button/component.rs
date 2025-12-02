@@ -21,7 +21,6 @@ pub fn ButtonWithHolder(
     children: Element,
 ) -> Element {
     rsx! {
-        ButtonHolder {
             Button {
                 variant,
                 attributes,
@@ -30,10 +29,8 @@ pub fn ButtonWithHolder(
                 onmouseup,
                 children,
             }
-        }
     }
 }
-
 #[derive(Copy, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub enum ButtonVariant {
@@ -70,7 +67,6 @@ pub fn Button(
 ) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
-
         button {
             class: "button",
             "data-style": variant.class(),

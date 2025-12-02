@@ -61,7 +61,7 @@ fn main() {
     } else {
         Config::new()
     };
-    let cfg = cfg.with_background_color((0, 0, 0, 0));
+    // let cfg = cfg.with_background_color((0, 0, 0, 0));
     tracing::info!("config is ready");
     dioxus_desktop::launch::launch(App, vec![], vec![Box::new(cfg)]);
 }
@@ -70,21 +70,22 @@ fn main() {
 fn App() -> Element {
     _ = document::eval("document.documentElement.setAttribute('data-theme', 'dark');");
     tracing::info!("app is running");
-    // This hook runs only once when the component is mounted.
     use_effect(|| {
         tokio::task::spawn(async move {
             if let Err(e) = run_proxy_server().await {
-                eprintln!("Proxy server failed: {}", e);
+                tracing::error!("Proxy server failed: {}", e);
             }
         });
-        println!("Background proxy task started.");
+        tracing::info!("Background proxy task started.");
     });
-    load_client();
+    // load_client();
+    tracing::debug!("Client loaded");
     rsx! {
         ToastProvider {
             document::Link { rel: "icon", href: FAVICON }
             document::Link { rel: "stylesheet", href: MAIN_CSS }
             document::Link { rel: "stylesheet", href: THEME_CSS }
+            document::Link { rel: "stylesheet", href: asset!("/src/components/button/style.css") }
             Router::<Route> {}
         }
     }

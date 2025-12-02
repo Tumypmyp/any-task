@@ -148,7 +148,7 @@ pub fn ShowProperty2(
     let name = (show_properties.get(index).unwrap())().name.clone();
 
     rsx! {
-        ButtonWithHolder {
+        Button {
             variant: ButtonVariant::Primary,
             onclick: move |_| {
                 other_properties
@@ -179,7 +179,7 @@ pub fn ShowProperty3(
     let name = (other_properties.get(index).unwrap())().name.clone();
 
     rsx! {
-        ButtonWithHolder {
+        Button {
             variant: ButtonVariant::Ghost,
             onclick: move |_| {
                 show_properties

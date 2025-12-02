@@ -1,5 +1,5 @@
 use crate::{
-    components::button::{ButtonHolder, ButtonWithHolder},
+    components::button::{Button, ButtonHolder},
     helpers::PropertyInfo,
     properties::*,
 };
@@ -57,7 +57,7 @@ pub fn PropertyValue(
         }
         _ => {
             rsx! {
-                ButtonWithHolder { width: "{info().width}vw", " " }
+                Button { width: "{info().width}vw", " " }
             }
         }
     }

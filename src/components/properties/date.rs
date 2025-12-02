@@ -102,7 +102,7 @@ pub fn DatePropertyValue(
                         }
                         CalendarGrid {}
                     }
-                    ButtonWithHolder {
+                    Button {
                         variant: ButtonVariant::Outline,
                         onclick: move |_| {
                             if let Some(d) = selected_date() {
@@ -156,7 +156,7 @@ pub fn TimePropertyValue(
                 PopoverContent {
                     PopoverHeader { text: "{property_name}" }
                     Input { value: time_set }
-                    ButtonWithHolder {
+                    Button {
                         variant: ButtonVariant::Outline,
                         onclick: move |_| {
                             if let Ok(t) = Time::parse(&time_set.read(), format) {

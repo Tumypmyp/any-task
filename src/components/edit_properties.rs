@@ -1,4 +1,4 @@
-use crate::components::button::{ButtonHolder, ButtonWithHolder};
+use crate::components::button::{Button, ButtonHolder};
 use crate::components::popover::*;
 use crate::components::row::*;
 use crate::components::slider::*;
@@ -65,7 +65,7 @@ pub fn PropertyHolder(
                         SliderThumb {}
                     }
                 }
-                ButtonWithHolder {
+                Button {
                     onclick: move |_| {
                         other_properties
                             .with_mut(|v| {

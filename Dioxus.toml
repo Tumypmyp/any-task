@@ -5,26 +5,17 @@ name = "AnyTask"
 title = "AnyTask"
 
 # include `assets` in web platform
-[web.resource]
+# [web.resource]
 
 # Additional CSS style files
 style = []
-
-# Additional JavaScript files
-script = []
-
-[web.resource.dev]
-
-# Javascript code file
-# serve: [dev-server] only
-script = []
 
 [bundle]
 identifier = "com.Tumypmyp.AnyTask"
 publisher = "Tumypmyp"
 icon = ["assets/favicon.ico"]
 category = "Productivity"
-short_description = "Cross-platform Anytype client"
+short_description = "Cross-Platform Anytype client"
 
 [bundle.windows]
 icon_path = "assets/favicon.ico"
