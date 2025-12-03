@@ -1,16 +1,12 @@
 use crate::API_CLIENT;
 use crate::Route;
 use crate::actions::*;
-use crate::api_client::Client;
 use crate::components::base::message;
+use crate::components::button::{Button, ButtonHolder, ButtonVariant};
 use crate::components::input::Input;
 use crate::components::list::List;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
-pub const USER_SETTINGS_KEY: &str = "settings";
-use crate::components::button::{Button, ButtonHolder, ButtonVariant};
-use dioxus_sdk_storage::LocalStorage;
-use dioxus_sdk_storage::use_synced_storage;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Default)]
 pub struct AppSettings {

@@ -14,7 +14,6 @@ use helpers::*;
 mod proxy;
 use proxy::*;
 pub const USER_SETTINGS_KEY: &str = "settings";
-use crate::components::button::{Button, ButtonHolder, ButtonVariant};
 use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
 use views::AppSettings;
@@ -67,7 +66,7 @@ fn main() {
     } else {
         Config::new()
     };
-    // let cfg = cfg.with_background_color((0, 0, 0, 0));
+    let cfg = cfg.with_background_color((0, 0, 0, 0));
     tracing::info!("config is ready");
     dioxus_desktop::launch::launch(App, vec![], vec![Box::new(cfg)]);
 }
@@ -75,7 +74,7 @@ fn main() {
 #[component]
 fn App() -> Element {
     _ = document::eval("document.documentElement.setAttribute('data-theme', 'dark');");
-    tracing::info!("app is running");
+    tracing::info!("App is started");
     use_effect(|| {
         tokio::task::spawn(async move {
             if let Err(e) = run_proxy_server().await {
@@ -106,7 +105,7 @@ fn App() -> Element {
             token: client_token.clone(),
             server: client_server.clone(),
         };
-        tracing::debug!("setting local setting: {:#?}", settings());
+        tracing::debug!("Saved settings locally: {:#?}", settings());
     });
     tracing::debug!("Client loaded: {:#?}", API_CLIENT.read().config);
     rsx! {
@@ -114,6 +113,7 @@ fn App() -> Element {
             document::Link { rel: "icon", href: FAVICON }
             document::Stylesheet { href: MAIN_CSS }
             document::Stylesheet { href: THEME_CSS }
+            // todo: asset does not load by itself
             document::Stylesheet { href: asset!("/src/components/button/style.css") }
             Router::<Route> {}
         }
