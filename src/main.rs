@@ -13,6 +13,12 @@ mod helpers;
 use helpers::*;
 mod proxy;
 use proxy::*;
+pub const USER_SETTINGS_KEY: &str = "settings";
+use crate::components::button::{Button, ButtonHolder, ButtonVariant};
+use dioxus_sdk_storage::LocalStorage;
+use dioxus_sdk_storage::use_synced_storage;
+use views::AppSettings;
+
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/main.css");
 const THEME_CSS: Asset = asset!("/assets/dx-components-theme.css");
@@ -78,14 +84,37 @@ fn App() -> Element {
         });
         tracing::info!("Background proxy task started.");
     });
-    // load_client();
-    tracing::debug!("Client loaded");
+    let mut settings =
+        use_synced_storage::<LocalStorage, _>(USER_SETTINGS_KEY.into(), || AppSettings {
+            token: "".to_string(),
+            server: "127.0.0.1:31010".to_string(),
+        });
+    use_effect(move || {
+        let loaded_settings = settings.read();
+        API_CLIENT
+            .write()
+            .set_server(loaded_settings.server.clone());
+        API_CLIENT.write().set_token(loaded_settings.token.clone());
+    });
+    use_effect(move || {
+        let client_token = API_CLIENT.read().get_token();
+        let client_server = API_CLIENT.read().get_server();
+        if settings.read().token == client_token {
+            return;
+        }
+        *settings.write() = AppSettings {
+            token: client_token.clone(),
+            server: client_server.clone(),
+        };
+        tracing::debug!("setting local setting: {:#?}", settings());
+    });
+    tracing::debug!("Client loaded: {:#?}", API_CLIENT.read().config);
     rsx! {
         ToastProvider {
             document::Link { rel: "icon", href: FAVICON }
-            document::Link { rel: "stylesheet", href: MAIN_CSS }
-            document::Link { rel: "stylesheet", href: THEME_CSS }
-            document::Link { rel: "stylesheet", href: asset!("/src/components/button/style.css") }
+            document::Stylesheet { href: MAIN_CSS }
+            document::Stylesheet { href: THEME_CSS }
+            document::Stylesheet { href: asset!("/src/components/button/style.css") }
             Router::<Route> {}
         }
     }

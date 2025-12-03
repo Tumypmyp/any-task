@@ -5,11 +5,11 @@ use openapi::models::*;
 use time::UtcDateTime;
 use time::format_description::well_known::Rfc3339;
 const API_VERSION: &str = "2025-05-20";
-pub static API_CLIENT: GlobalSignal<Client> = Global::new(|| Client::new());
+pub static API_CLIENT: GlobalSignal<Client> = Signal::global(|| Client::new());
 
 #[derive(Clone, Debug)]
 pub struct Client {
-    config: Configuration,
+    pub config: Configuration,
 }
 impl Client {
     fn new() -> Self {
@@ -23,6 +23,31 @@ impl Client {
     pub fn set_server(&mut self, server: String) {
         self.config.base_path = format!("http://{server}");
     }
+    /// Gets the current server address and port, stripping the protocol prefix.
+    pub fn get_server(&self) -> String {
+        // Get a reference to the base_path
+        let path = &self.config.base_path;
+
+        // Check for "http://" prefix and strip it if found.
+        if path.starts_with("http://") {
+            // Skips the first 7 characters ("http://").
+            // We use .to_string() to return an owned String.
+            path[7..].to_string()
+        } else {
+            // If no protocol is present, return the path as is (though this shouldn't happen
+            // if set_server is always used).
+            path.clone()
+        }
+    }
+
+    /// Gets the current token. Returns an empty string if no token is set.
+    pub fn get_token(&self) -> String {
+        self.config.bearer_access_token.clone().unwrap_or_default()
+    }
+
+    // pub fn set_server(&mut self, server: String) {
+    //     self.config.base_path = format!("{server}");
+    // }
     pub async fn create_auth_challenge(
         &self,
     ) -> Result<
@@ -44,6 +69,8 @@ impl Client {
         code: String,
     ) -> Result<ApimodelCreateApiKeyResponse, Error<openapi::apis::auth_api::CreateApiKeyError>>
     {
+        tracing::debug!("create_api_key: {:#?} {} {}", self, challenge_id, code);
+        // self.config.bearer_access_token = None;
         openapi::apis::auth_api::create_api_key(
             &self.config,
             API_VERSION,

@@ -52,8 +52,11 @@ pub fn ListHeader(
     show_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     let mut name = use_signal(|| "".to_string());
-    let resp =
-        use_resource(move || async move { API_CLIENT.read().get_object(space_id, list_id).await });
+    let api_client_handle = API_CLIENT.read().clone();
+    let resp = use_resource(move || {
+        let client = api_client_handle.clone();
+        async move { client.get_object(space_id, list_id).await }
+    });
     match &*resp.read() {
         Some(Ok(p)) => {
             name.set(p.clone().object.unwrap().name.unwrap());
@@ -78,11 +81,10 @@ pub fn Objects(
     view_id: Store<String>,
     show_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
-    let resp = use_resource(move || async move {
-        API_CLIENT
-            .read()
-            .get_list_objects(space_id, list_id, view_id)
-            .await
+    let api_client_handle = API_CLIENT.read().clone();
+    let resp = use_resource(move || {
+        let client = api_client_handle.clone();
+        async move { client.get_list_objects(space_id, list_id, view_id).await }
     });
 
     match &*resp.read() {

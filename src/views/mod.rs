@@ -8,4 +8,5 @@ pub use login::Logout;
 mod list;
 pub use list::List;
 
-pub use login::load_client;
+pub use login::AppSettings;
+// pub use login::load_client;

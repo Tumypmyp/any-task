@@ -21,14 +21,14 @@ pub fn ButtonWithHolder(
     children: Element,
 ) -> Element {
     rsx! {
-            Button {
-                variant,
-                attributes,
-                onclick,
-                onmousedown,
-                onmouseup,
-                children,
-            }
+        Button {
+            variant,
+            attributes,
+            onclick,
+            onmousedown,
+            onmouseup,
+            children,
+        }
     }
 }
 #[derive(Copy, Clone, PartialEq, Default)]
