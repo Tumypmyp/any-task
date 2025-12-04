@@ -55,11 +55,13 @@ pub fn Actions() -> Element {
             },
             "Home"
         }
-        Button {
-            onclick: move |_| {
-                nav.go_back();
-            },
-            "Back"
+        if nav.can_go_back() {
+            Button {
+                onclick: move |_| {
+                    nav.go_back();
+                },
+                "Back"
+            }
         }
     }
 }

@@ -14,8 +14,9 @@ struct Object {
 #[component]
 pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {
     let resp = use_resource(move || {
+        let client = API_CLIENT.read().clone();
         let types = types.clone();
-        async move { API_CLIENT.read().get_types(&space_id(), types).await }
+        async move { client.get_types(&space_id(), types).await }
     });
     let mut objects = Vec::<Object>::new();
     match &*resp.read() {

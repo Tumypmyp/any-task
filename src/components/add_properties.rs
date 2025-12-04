@@ -16,16 +16,16 @@ pub fn ShowPropertiesSetting(
     other_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     use_effect(move || {
+        let client = API_CLIENT.read();
         spawn(async move {
             let space_id = space_id();
-            let properties = API_CLIENT.read().list_properties(&space_id).await;
+            let properties = client.list_properties(&space_id).await;
             match properties {
                 Ok(props) => {
                     for prop in props.data.unwrap() {
                         let property_id = PropertyID(prop.id.clone().unwrap());
                         let property_name = prop.name.clone().unwrap();
-                        let select_property_options = API_CLIENT
-                            .read()
+                        let select_property_options = client
                             .list_select_property_options(&space_id, property_id.clone().as_str())
                             .await;
                         let options = match select_property_options {

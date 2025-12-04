@@ -52,9 +52,8 @@ pub fn ListHeader(
     show_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     let mut name = use_signal(|| "".to_string());
-    let api_client_handle = API_CLIENT.read().clone();
     let resp = use_resource(move || {
-        let client = api_client_handle.clone();
+        let client = API_CLIENT.read().clone();
         async move { client.get_object(space_id, list_id).await }
     });
     match &*resp.read() {
@@ -89,7 +88,7 @@ pub fn Objects(
 
     match &*resp.read() {
         Some(Ok(p)) => {
-            tracing::debug!("objects: {:#?}", p.clone().data.unwrap());
+            // tracing::debug!("objects: {:#?}", p.clone().data.unwrap());
             rsx! {
                 for obj in p.clone().data.unwrap() {
                     ListEntry {

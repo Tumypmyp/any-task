@@ -40,24 +40,22 @@ pub fn LoginWithCode() -> Element {
     let mut code = use_signal(|| "".to_string());
     let mut token = use_signal(|| "settings.read().token".to_string());
 
-    // let _validate_settings = use_resource(move || async move {
-    //     // settings.set(AppSettings {
-    //     //     token: token(),
-    //     //     server: server(),
-    //     // });
-    //     // tracing::debug!("settings saved as {:#?}", settings.read());
-    //     match API_CLIENT.cloned().list_spaces().await {
-    //         Ok(_) => {
-    //             tracing::debug!("Token valid, spaces listed successfully.");
-    //             let nav = navigator();
-    //             nav.push(Route::Home {});
-    //         }
-    //         Err(e) => {
-    //             tracing::error!("Auto-Token check failed: {:#?}", e);
-    //             message::info("Auto-Login failed".to_string(), "".to_string());
-    //         }
-    //     }
-    // });
+    let _validate_settings = use_resource(move || {
+        let client = API_CLIENT.read().clone();
+        async move {
+            match client.list_spaces().await {
+                Ok(_) => {
+                    tracing::debug!("Token valid, spaces listed successfully.");
+                    let nav = navigator();
+                    nav.push(Route::Home {});
+                }
+                Err(e) => {
+                    tracing::error!("Auto-Token check failed: {:#?}", e);
+                    message::info("Auto-Login failed".to_string(), "".to_string());
+                }
+            }
+        }
+    });
 
     rsx! {
         List { style: "padding-top: 40vh;",

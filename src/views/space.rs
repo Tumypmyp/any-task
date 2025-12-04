@@ -17,7 +17,10 @@ pub fn Space(space_id: String) -> Element {
 #[component]
 pub fn SpaceTitle(space_id: Signal<String>) -> Element {
     let mut name = use_signal(|| "".to_string());
-    let resp = use_resource(move || async move { API_CLIENT.read().get_space(space_id).await });
+    let resp = use_resource(move || {
+        let client = API_CLIENT.read().clone();
+        async move { client.get_space(space_id).await }
+    });
     match &*resp.read() {
         Some(Ok(p)) => {
             name.set(p.clone().space.unwrap_or_default().name.unwrap_or_default());

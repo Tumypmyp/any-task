@@ -9,7 +9,11 @@ use dioxus::prelude::*;
 #[component]
 pub fn Home() -> Element {
     let nav = navigator();
-    let spaces = use_resource(move || async move { API_CLIENT().list_spaces().await });
+    let spaces = use_resource(move || {
+        let client = API_CLIENT.read().clone();
+
+        async move { client.list_spaces().await }
+    });
     tracing::info!("Opened home");
     match &*spaces.read() {
         Some(Ok(s)) => {

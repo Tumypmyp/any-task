@@ -12,8 +12,9 @@ pub fn ChooseView(
     let mut all_views: Store<Vec<ViewInfo>> = use_store(|| vec![]);
 
     use_effect(move || {
+        let client = API_CLIENT.read().clone();
         spawn(async move {
-            let views = API_CLIENT.read().get_views(&space_id(), &list_id()).await;
+            let views = client.get_views(&space_id(), &list_id()).await;
             match views {
                 Ok(view) => {
                     tracing::debug!("got views: {:#?}", view);
