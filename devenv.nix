@@ -40,8 +40,6 @@ let
         darwin.apple_sdk.frameworks.CoreServices
       ];
   };
-  # aabOutputPath = "target/dx/any-task/release/android/app/app/build/outputs/bundle/release/AnyTask-x86_64-linux-android.aab";
-  aabOutputPath = "target/dx/any-task/release/android/app/app/build/outputs/bundle/release/AnyTask-aarch64-linux-android.aab";
 in
 {
    android = {
@@ -141,30 +139,30 @@ in
   };
 
 
-  env.TEMP_DIR = "${config.env.DEVENV_ROOT}/.tmp";
-  env.AAB_OUTPUT = aabOutputPath;
-    env = {
-      APP_NAME = "AnyTask";
-      OUTPUT_DIR = "${config.env.DEVENV_ROOT}/dist/android";
-      OUTPUT_APKS = "${config.env.OUTPUT_DIR}/${config.env.APP_NAME}-dev.apks";
-      OUTPUT_APK = "${config.env.OUTPUT_DIR}/${config.env.APP_NAME}-universal.apk";
-   };
+  # env.TEMP_DIR = "${config.devenv.runtime}/bundle-android";
+  env.TEMP_DIR = "${config.devenv.root}/.tmp";
+  env = {
+    APP_NAME = "AnyTask";
+    OUTPUT_DIR = "${config.devenv.root}/dist/android";
+    OUTPUT_AAB = "${config.env.TEMP_DIR}/AnyTask-aarch64-linux-android.aab";
+    OUTPUT_APKS = "${config.env.OUTPUT_DIR}/${config.env.APP_NAME}-dev.apks";
+    OUTPUT_APK = "${config.env.OUTPUT_DIR}/${config.env.APP_NAME}-universal.apk";
+  };
 
-  # dx bundle --android --release --target  aarch64-linux-android
   scripts.bundle-android-apk = {
     packages = [
       pkgs.bundletool
       pkgs.unzip
     ];
     exec = ''
-      dx bundle --android --release --target  aarch64-linux-android || { echo "Failed to bundle AAB with dioxuss"; exit 1; }
+      dx bundle --android --release --target  aarch64-linux-android --out-dir "$TEMP_DIR" || { echo "Failed to bundle AAB with dioxuss"; exit 1; }
+
       if [ -d "$OUTPUT_DIR" ]; then
           echo "Removing existing Android files: $OUTPUT_DIR"
           rm -rf "$OUTPUT_DIR"
       fi
 
-      bundletool build-apks --bundle="''${DEVENV_ROOT}/$AAB_OUTPUT" --output="$OUTPUT_APKS" --mode=universal || { echo "Failed to build APKS."; exit 1; }
-      mkdir -p "''${DEVENV_ROOT}/TEMP_DIR"
+      bundletool build-apks --bundle="$OUTPUT_AAB" --output="$OUTPUT_APKS" --mode=universal || { echo "Failed to build APKS."; exit 1; }
       unzip "$OUTPUT_APKS" -d "$TEMP_DIR"
       mv "$TEMP_DIR/universal.apk" "$OUTPUT_APK" || { echo "Failed to find universal.apk in APKS."; rm -rf "$TEMP_DIR"; exit 1; }
       rm -rf "$TEMP_DIR"
