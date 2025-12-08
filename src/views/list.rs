@@ -60,7 +60,12 @@ pub fn ListHeader(
         Some(Ok(p)) => {
             name.set(p.clone().object.unwrap().name.unwrap());
         }
-        _ => {}
+        Some(err) => {
+            tracing::debug!("error reading header: {:#?}", err);
+        }
+        _ => {
+            tracing::debug!("error reading header");
+        }
     }
     let other_properties: Store<Vec<PropertyInfo>> = use_store(|| vec![]);
 
@@ -80,31 +85,36 @@ pub fn Objects(
     view_id: Store<String>,
     show_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
-    let api_client_handle = API_CLIENT.read().clone();
+    let api_client_handle = API_CLIENT.cloned();
     let resp = use_resource(move || {
+        let view_id = view_id.read().clone();
         let client = api_client_handle.clone();
         async move { client.get_list_objects(space_id, list_id, view_id).await }
     });
 
-    match &*resp.read() {
-        Some(Ok(p)) => {
-            // tracing::debug!("objects: {:#?}", p.clone().data.unwrap());
-            rsx! {
-                for obj in p.clone().data.unwrap() {
-                    ListEntry {
-                        name: obj.clone().name.unwrap(),
-                        space_id,
-                        object_id: obj.clone().id.unwrap(),
-                        show_properties,
-                        data: obj.clone(),
-                    }
+    // let objects = match resp.result() {
+    let resp_value = resp.read();
+    let objects = match resp_value.as_ref() {
+        Some(Ok(objs)) => objs,
+        Some(Err(err)) => {
+            message::error("Failed to fetch objects", err);
+            return rsx! {};
+        }
+        None => return rsx! { "Loading..." },
+    };
+
+    rsx! {
+        for obj in objects.clone().data.unwrap_or_default() {
+            if let Some(id) = obj.clone().id {
+                ListEntry {
+                    key: "{id}",
+                    name: obj.clone().name.unwrap(),
+                    space_id,
+                    object_id: obj.clone().id.unwrap(),
+                    show_properties,
+                    data: obj.clone(),
                 }
             }
         }
-        Some(Err(err)) => {
-            message::error("Failed to fetch objects", err);
-            rsx! {}
-        }
-        None => rsx! { "Loading..." },
     }
 }

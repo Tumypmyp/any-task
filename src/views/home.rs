@@ -50,7 +50,7 @@ pub fn Home() -> Element {
             }
         }
         None => {
-            rsx!()
+            rsx! {}
         }
     }
 }

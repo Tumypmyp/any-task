@@ -191,7 +191,7 @@ impl Client {
         &self,
         space_id: Signal<String>,
         list_id: Signal<String>,
-        view_id: Store<String>,
+        view_id: String,
     ) -> Result<
         PaginationPaginatedResponseApimodelObject,
         Error<openapi::apis::lists_api::GetListObjectsError>,
@@ -200,14 +200,14 @@ impl Client {
             "get list objects -> space: {}, list: {}, view: {}",
             space_id(),
             list_id(),
-            view_id()
+            view_id.clone(),
         );
         openapi::apis::lists_api::get_list_objects(
             &self.config,
             API_VERSION,
             &space_id(),
             &list_id(),
-            &view_id(),
+            &view_id.clone(),
             None,
             None,
         )

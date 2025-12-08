@@ -17,7 +17,7 @@ pub fn ChooseView(
             let views = client.get_views(&space_id(), &list_id()).await;
             match views {
                 Ok(view) => {
-                    tracing::debug!("got views: {:#?}", view);
+                    // tracing::debug!("got views: {:#?}", view);
                     for v in view.data.unwrap() {
                         all_views.write().push(ViewInfo {
                             id: v.id.clone().unwrap(),
@@ -42,20 +42,21 @@ pub fn ChooseView(
             }
         }
     });
+    let mut view_id_setter = use_signal(|| view_id().clone());
     let select_value = use_memo(move || {
-        let current_view_id = view_id.read();
+        let current_view_id = view_id_setter.read();
         if current_view_id.is_empty() {
             None
         } else {
+            view_id.set(current_view_id.clone());
             Some(Some(current_view_id.clone()))
         }
     });
-    let mut view_id_setter = view_id.clone();
     rsx! {
         Select::<String> {
-            width: "20vw",
+            width: "15vw",
             // default_value: Some(view_id()),
-            value: select_value,
+            // value: select_value,
             // placeholder: "Select a view",
             on_value_change: move |v: Option<String>| {
                 view_id_setter.set(v.unwrap());
