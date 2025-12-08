@@ -16,13 +16,16 @@ pub struct AppSettings {
 
 #[component]
 pub fn Logout() -> Element {
+    let nav = navigator();
     rsx! {
         ActionHolder { position: Position::Left,
             Button {
                 onclick: move |_| {
                     API_CLIENT.write().set_token("token".to_string());
                     tracing::info!("removed the token");
+                    nav.push(Route::Login {});
                 },
+
                 "Logout"
             }
         }

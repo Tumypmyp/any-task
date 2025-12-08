@@ -104,7 +104,7 @@ pub fn Objects(
     };
 
     rsx! {
-        for obj in objects.clone().data.unwrap_or_default() {
+        for obj in objects.data.clone().unwrap_or_default() {
             if let Some(id) = obj.clone().id {
                 ListEntry {
                     key: "{id}",

@@ -3,54 +3,64 @@ use crate::Logout;
 use crate::Route;
 use crate::components::Title;
 use crate::components::base::message;
-use crate::components::button::ButtonHolder;
+use crate::components::button::Button;
+use crate::components::button::ButtonVariant;
 use crate::components::list::List;
 use dioxus::prelude::*;
+use openapi::models::ApimodelSpace;
 #[component]
 pub fn Home() -> Element {
-    let nav = navigator();
-    let spaces = use_resource(move || {
+    let resp = use_resource(move || {
         let client = API_CLIENT.read().clone();
-
         async move { client.list_spaces().await }
     });
-    tracing::info!("Opened home");
-    match &*spaces.read() {
-        Some(Ok(s)) => {
-            rsx! {
-                Title { title: "Spaces" }
-                List {
-                    for space in s.clone().data.unwrap_or_default().clone() {
-                        ButtonHolder { key: "{space.clone().id.unwrap_or_default()}",
-                            button {
-                                class: "button",
-                                width: "90vw",
-                                height: "8vh",
-                                "data-style": "primary",
-                                style: "font-size: 1.1rem;",
-                                onclick: move |_| {
-                                    nav.push(Route::Space {
-                                        space_id: space.clone().id.unwrap_or_default(),
-                                    });
-                                },
-                                "{space.clone().name.unwrap_or_default()}"
-                            }
-                        }
-                    }
-                }
-                Logout {}
-            }
-        }
+
+    // let objects = match resp.result() {
+    let resp_value = resp.read();
+    let spaces = match resp_value.as_ref() {
+        Some(Ok(objs)) => objs,
         Some(Err(err)) => {
             tracing::debug!("error: {:#?}", err);
-            message::error("Failed to load spaces", err);
-            nav.push(Route::Login {});
-            rsx! {
+            message::error("Failed to load spaces, retry later", err);
+            // nav.push(Route::Login {});
+            return rsx! {
                 Logout {}
+            };
+        }
+        None => return rsx! { "Loading..." },
+    };
+
+    tracing::info!("Opened home");
+    rsx! {
+        Title { title: "Spaces" }
+        List {
+            for space in spaces.data.clone().unwrap_or_default() {
+                SpaceButton { space }
             }
         }
-        None => {
-            rsx! {}
+        Logout {}
+    }
+}
+
+#[component]
+fn SpaceButton(space: ApimodelSpace) -> Element {
+    let nav = navigator();
+    let space_id = space.id.unwrap_or_default();
+    let space_name = space.name.unwrap_or_default();
+
+    rsx! {
+        Button {
+            id: "{space_id}",
+            width: "90vw",
+            height: "8vh",
+            variant: ButtonVariant::Primary,
+            style: "font-size: 1.1rem;",
+            onclick: move |_| {
+                nav.push(Route::Space {
+                    space_id: space_id.clone(),
+                });
+            },
+            "{space_name}"
         }
     }
 }
