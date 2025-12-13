@@ -9,15 +9,7 @@ pub fn Title(title: String) -> Element {
 #[component]
 pub fn Header(children: Element) -> Element {
     rsx! {
-        div { style: "
-                // align-items: center;
-                flex-direction: row;
-                display: flex;
-                gap: 5px;
-                // justify-content: space-between;
-                // padding: 0.5rem 0;
-            ",
-            {children}
-        }
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        div { class: "header", {children} }
     }
 }

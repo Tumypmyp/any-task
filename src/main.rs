@@ -115,6 +115,7 @@ fn App() -> Element {
             document::Stylesheet { href: THEME_CSS }
             // todo: asset does not load by itself
             document::Stylesheet { href: asset!("/src/components/button/style.css") }
+            // document::Stylesheet { href: asset!("/src/components/action/style.css") }
             Router::<Route> {}
         }
     }

@@ -1,7 +1,7 @@
 use crate::API_CLIENT;
 use crate::Search;
-use crate::actions::*;
-use crate::components::Title;
+use crate::components::action::*;
+use crate::components::header::{Header, Title};
 use dioxus::prelude::*;
 #[component]
 pub fn Space(space_id: String) -> Element {
@@ -11,7 +11,7 @@ pub fn Space(space_id: String) -> Element {
         SpaceTitle { space_id }
         Search { space_id, types: vec!["set".to_string()] }
         Search { space_id, types: vec!["collection".to_string()] }
-        ActionHolder { Actions {} }
+        ActionHolder { BaseActions {} }
     }
 }
 #[component]
@@ -28,6 +28,8 @@ pub fn SpaceTitle(space_id: Signal<String>) -> Element {
         _ => {}
     }
     rsx! {
-        Title { title: "{name}" }
+        Header {
+            Title { title: "{name}" }
+        }
     }
 }

@@ -1,6 +1,6 @@
 use crate::API_CLIENT;
 use crate::Route;
-use crate::actions::*;
+use crate::components::action::*;
 use crate::components::base::message;
 use crate::components::button::{Button, ButtonHolder, ButtonVariant};
 use crate::components::input::Input;
@@ -18,16 +18,14 @@ pub struct AppSettings {
 pub fn Logout() -> Element {
     let nav = navigator();
     rsx! {
-        ActionHolder { position: Position::Left,
-            Button {
-                onclick: move |_| {
-                    API_CLIENT.write().set_token("token".to_string());
-                    tracing::info!("removed the token");
-                    nav.push(Route::Login {});
-                },
+        Button {
+            onclick: move |_| {
+                API_CLIENT.write().set_token("token".to_string());
+                tracing::info!("removed the token");
+                nav.push(Route::Login {});
+            },
 
-                "Logout"
-            }
+            "Logout"
         }
     }
 }

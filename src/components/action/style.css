@@ -1,0 +1,30 @@
+.action-holder {
+    position: fixed;
+    display: flex;
+    flex-direction: row;
+    bottom: -1;
+    padding: 0.4vw 2vw;
+    gap: 4px;
+    z-index: 999;
+}
+/* 1. Centered Horizontal Positioning */
+.action-holder[data-position="center"] {
+    /* Use standard Flexbox alignment to center the items */
+    transform: translateX(-51%);
+    left: 49%;
+    /*justify-content: center;*/
+}
+
+/* 2. Left Horizontal Positioning */
+.action-holder[data-position="left"] {
+    /* Use standard Flexbox alignment to push items to the start (left) */
+    transform: translateX(-1%);
+    left: 1%;
+    /*justify-content: flex-start;*/
+}
+
+/* Optional: Right Positioning (Good for completeness) */
+.action-holder[data-position="right"] {
+    /* Use standard Flexbox alignment to push items to the end (right) */
+    /*justify-content: flex-end;*/
+}

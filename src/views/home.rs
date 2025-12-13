@@ -1,10 +1,11 @@
 use crate::API_CLIENT;
 use crate::Logout;
 use crate::Route;
-use crate::components::Title;
+use crate::components::action::*;
 use crate::components::base::message;
 use crate::components::button::Button;
 use crate::components::button::ButtonVariant;
+use crate::components::header::Title;
 use crate::components::list::List;
 use dioxus::prelude::*;
 use openapi::models::ApimodelSpace;
@@ -24,7 +25,7 @@ pub fn Home() -> Element {
             message::error("Failed to load spaces, retry later", err);
             // nav.push(Route::Login {});
             return rsx! {
-                Logout {}
+                ActionHolder { position: Position::Left, Logout {} }
             };
         }
         None => return rsx! { "Loading..." },
@@ -38,7 +39,7 @@ pub fn Home() -> Element {
                 SpaceButton { space }
             }
         }
-        Logout {}
+        ActionHolder { position: Position::Left, Logout {} }
     }
 }
 

@@ -1,6 +1,5 @@
 use crate::Route;
 use crate::components::button::Button;
-use crate::row::Row;
 use dioxus::prelude::*;
 #[derive(Copy, Clone, PartialEq, Default)]
 #[non_exhaustive]
@@ -10,43 +9,24 @@ pub enum Position {
     Left,
 }
 impl Position {
-    pub fn left_pos(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
-            Position::Center => "50%",
-            Position::Left => "0%",
-        }
-    }
-
-    pub fn transform_value(&self) -> &'static str {
-        match self {
-            Position::Center => "translateX(-50%)",
-            Position::Left => "translateX(0%)",
+            Position::Center => "center",
+            Position::Left => "left",
         }
     }
 }
 
 #[component]
 pub fn ActionHolder(#[props(default)] position: Position, children: Element) -> Element {
-    let style = format!(
-        "position: fixed;
-         display: flex;
-         flex-direction: row;
-         bottom: 0;
-         left: {};
-         transform: {};
-         padding: 0.5vw 2vw;
-         gap: 5px;
-         z-index: 1000;",
-        position.left_pos(),
-        position.transform_value(),
-    );
     rsx! {
-        div { style: "{style}", {children} }
+        document::Link { rel: "stylesheet", href: asset!("./style.css") }
+        div { class: "action-holder", "data-position": position.as_str(), {children} }
     }
 }
 
 #[component]
-pub fn Actions() -> Element {
+pub fn BaseActions() -> Element {
     let nav = navigator();
     rsx! {
         Button {

@@ -1,13 +1,11 @@
 use crate::API_CLIENT;
-use crate::ActionHolder;
-use crate::Actions;
 use crate::ListEntry;
-use crate::components::Header;
-use crate::components::Title;
+use crate::components::action::{ActionHolder, BaseActions};
 use crate::components::add_properties::ShowPropertiesSetting;
 use crate::components::base::message;
 use crate::components::choose_view::ChooseView;
 use crate::components::edit_properties::PropertiesOrder;
+use crate::components::header::{Header, Title};
 use crate::helpers::models::DateTimeFormat;
 use crate::helpers::*;
 use dioxus::prelude::*;
@@ -41,7 +39,7 @@ pub fn List(space_id: String, list_id: String) -> Element {
             view_id,
             show_properties,
         }
-        ActionHolder { Actions {} }
+        ActionHolder { BaseActions {} }
     }
 }
 #[component]
