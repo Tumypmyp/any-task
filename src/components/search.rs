@@ -35,13 +35,14 @@ pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {
         }
         _ => {}
     }
-    let show_properties: Store<Vec<PropertyInfo>> = use_store(|| {
+    let properties: Store<Vec<PropertyInfo>> = use_store(|| {
         vec![PropertyInfo {
             id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
             name: "Name".to_string(),
             options: vec![],
             date_format: DateTimeFormat::DateTime,
             width: 30.0,
+            show: true,
         }]
     });
     rsx! {
@@ -52,7 +53,7 @@ pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {
                     name: obj.name.clone(),
                     space_id,
                     object_id: obj.object_id.clone(),
-                    show_properties,
+                    properties,
                     data: obj.data.clone(),
                 }
             }

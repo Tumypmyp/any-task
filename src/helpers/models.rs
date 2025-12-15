@@ -20,6 +20,7 @@ pub struct PropertyInfo {
     pub options: Vec<ApimodelTag>,
     pub date_format: DateTimeFormat,
     pub width: f64,
+    pub show: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]

@@ -13,7 +13,7 @@ pub struct ListEntryProps {
     pub space_id: String,
     pub object_id: String,
     pub data: ApimodelObject,
-    pub show_properties: Store<Vec<PropertyInfo>>,
+    pub properties: Store<Vec<PropertyInfo>>,
 }
 #[component]
 pub fn ListEntry(props: ListEntryProps) -> Element {
@@ -58,22 +58,24 @@ pub fn ListEntry(props: ListEntryProps) -> Element {
                     });
                 }
             },
-            for property in p2.clone().show_properties.read().clone() {
-                if let Some(prop) = object_properties.get(property.clone().id) {
-                    PropertyValue {
-                        key: "{property.id.as_str()}",
-                        space_id: props.space_id.clone(),
-                        object_id: props.object_id.clone(),
-                        data: prop.read().clone(),
-                        info: property,
-                    }
-                } else {
-                    PropertyValue {
-                        key: "{property.id.as_str()}",
-                        space_id: props.space_id.clone(),
-                        object_id: props.object_id.clone(),
-                        data: None,
-                        info: property,
+            for property in p2.clone().properties.read().clone() {
+                if property.show {
+                    if let Some(prop) = object_properties.get(property.clone().id) {
+                        PropertyValue {
+                            key: "{property.id.as_str()}",
+                            space_id: props.space_id.clone(),
+                            object_id: props.object_id.clone(),
+                            data: prop.read().clone(),
+                            info: property,
+                        }
+                    } else {
+                        PropertyValue {
+                            key: "{property.id.as_str()}",
+                            space_id: props.space_id.clone(),
+                            object_id: props.object_id.clone(),
+                            data: None,
+                            info: property,
+                        }
                     }
                 }
             }

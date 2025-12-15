@@ -6,19 +6,17 @@ use crate::helpers::*;
 use dioxus::prelude::*;
 use std::vec;
 #[component]
-pub fn PropertiesOrder(
-    show_properties: Store<Vec<PropertyInfo>>,
-    other_properties: Store<Vec<PropertyInfo>>,
-) -> Element {
+pub fn PropertiesOrder(properties: Store<Vec<PropertyInfo>>) -> Element {
     rsx! {
         Row {
-            for (index , property) in show_properties.read().clone().iter().enumerate() {
-                PropertyHolder {
-                    key: "{property.id.as_str()}",
-                    index,
-                    id: property.id.clone(),
-                    show_properties,
-                    other_properties,
+            for (index , property) in properties.read().clone().iter().enumerate() {
+                if property.show {
+                    PropertyHolder {
+                        key: "{property.id.as_str()}",
+                        index,
+                        id: property.id.clone(),
+                        properties,
+                    }
                 }
             }
         }
@@ -28,11 +26,9 @@ pub fn PropertiesOrder(
 pub fn PropertyHolder(
     index: usize,
     id: PropertyID,
-    show_properties: Store<Vec<PropertyInfo>>,
-    // other_proerties might change if deselect the shown
-    other_properties: Store<Vec<PropertyInfo>>,
+    properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
-    let property = show_properties.get(index).unwrap();
+    let property = properties.get(index).unwrap();
     let mut open = use_signal(|| false);
     let mut current_value = use_signal(|| property().width);
     rsx! {
@@ -58,7 +54,7 @@ pub fn PropertyHolder(
                     on_value_change: move |value: SliderValue| {
                         let SliderValue::Single(v) = value;
                         current_value.set(v);
-                        show_properties.get_mut(index).unwrap().width = v;
+                        properties.get_mut(index).unwrap().width = v;
                     },
                     SliderTrack {
                         SliderRange {}
@@ -67,18 +63,11 @@ pub fn PropertyHolder(
                 }
                 Button {
                     onclick: move |_| {
-                        other_properties
+                        properties
                             .with_mut(|v| {
-                                v.push((show_properties.get(index).unwrap())());
-                                let cmp = |p1: &PropertyInfo, p2: &PropertyInfo| {
-                                    p1.name.cmp(&p2.name)
-                                };
-                                v.sort_by(cmp);
-                            });
-
-                        show_properties
-                            .with_mut(|v| {
-                                v.retain(|p| p.id != id);
+                                if let Some(property) = v.iter_mut().find(|p| p.id == id) {
+                                    property.show = !property.show;
+                                }
                             });
                     },
                     "Hide property"

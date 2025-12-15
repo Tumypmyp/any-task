@@ -54,15 +54,19 @@ pub fn ChooseView(
     });
     rsx! {
         Select::<String> {
-            width: "15vw",
             // default_value: Some(view_id()),
             // value: select_value,
-            // placeholder: "Select a view",
+            placeholder: "Select a view",
             on_value_change: move |v: Option<String>| {
                 view_id_setter.set(v.unwrap());
             },
-            SelectTrigger { aria_label: "Select Trigger", width: "12rem", SelectValue {} }
-            SelectList { aria_label: "Select",
+            SelectTrigger {
+                aria_label: "Select View",
+                // width: "8rem",
+                width: "20vw",
+                SelectValue {}
+            }
+            SelectList { aria_label: "Views",
                 SelectGroup {
                     SelectGroupLabel { "Views" }
                     {views}

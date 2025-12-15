@@ -17,13 +17,14 @@ pub fn List(space_id: String, list_id: String) -> Element {
     let list_id = use_signal(|| list_id);
     let view_id = use_store(|| "".to_string());
 
-    let show_properties: Store<Vec<PropertyInfo>> = use_store(|| {
+    let properties: Store<Vec<PropertyInfo>> = use_store(|| {
         vec![PropertyInfo {
             id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
             name: "Name".to_string(),
             date_format: DateTimeFormat::DateTime,
             options: vec![],
             width: 30.0,
+            show: true,
         }]
     });
     rsx! {
@@ -31,13 +32,13 @@ pub fn List(space_id: String, list_id: String) -> Element {
             space_id,
             list_id,
             view_id,
-            show_properties,
+            properties,
         }
         Objects {
             space_id,
             list_id,
             view_id,
-            show_properties,
+            properties,
         }
         ActionHolder { BaseActions {} }
     }
@@ -47,7 +48,7 @@ pub fn ListHeader(
     space_id: Signal<String>,
     list_id: Signal<String>,
     view_id: Store<String>,
-    show_properties: Store<Vec<PropertyInfo>>,
+    properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     let mut name = use_signal(|| "".to_string());
     let resp = use_resource(move || {
@@ -65,15 +66,14 @@ pub fn ListHeader(
             tracing::debug!("error reading header");
         }
     }
-    let other_properties: Store<Vec<PropertyInfo>> = use_store(|| vec![]);
 
     rsx! {
         Header {
             Title { title: "{name}" }
-            ShowPropertiesSetting { space_id, show_properties, other_properties }
+            ShowPropertiesSetting { space_id, properties }
             ChooseView { space_id, list_id, view_id }
         }
-        PropertiesOrder { show_properties, other_properties }
+        PropertiesOrder { properties }
     }
 }
 #[component]
@@ -81,7 +81,7 @@ pub fn Objects(
     space_id: Signal<String>,
     list_id: Signal<String>,
     view_id: Store<String>,
-    show_properties: Store<Vec<PropertyInfo>>,
+    properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     let api_client_handle = API_CLIENT.cloned();
     let resp = use_resource(move || {
@@ -109,7 +109,7 @@ pub fn Objects(
                     name: obj.clone().name.unwrap(),
                     space_id,
                     object_id: obj.clone().id.unwrap(),
-                    show_properties,
+                    properties,
                     data: obj.clone(),
                 }
             }
