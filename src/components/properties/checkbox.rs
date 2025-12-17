@@ -12,21 +12,24 @@ pub fn CheckboxPropertyValue(
     info: ReadSignal<PropertyInfo>,
 ) -> Element {
     rsx! {
-        div { class: "checkbox-holder", width: "{info().width}vw",
-            Checkbox {
-                on_checked_change: move |e| {
-                    let sp = space_id.clone();
-                    let ob = object_id.clone();
-                    prop.write().checkbox = if e == CheckboxState::Checked {
-                        Some(true)
-                    } else {
-                        Some(false)
-                    };
-                    API_CLIENT.read().update_done_property(sp, ob, prop.read().checkbox);
-                },
+        Checkbox {
+            height: "{info().height}vh",
+            width: "{info().height}vh", // make it square
+            // style: "height: 100%; aspect-ratio: 1 / 1; display: flex;",
+            // width: "100%",
+            // height: "100%",
+            on_checked_change: move |e| {
+                let sp = space_id.clone();
+                let ob = object_id.clone();
+                prop.write().checkbox = if e == CheckboxState::Checked {
+                    Some(true)
+                } else {
+                    Some(false)
+                };
+                API_CLIENT.read().update_done_property(sp, ob, prop.read().checkbox);
+            },
 
-                default_checked: if prop().checkbox.unwrap_or_default() { CheckboxState::Checked } else { CheckboxState::Unchecked },
-            }
+            default_checked: if prop().checkbox.unwrap_or_default() { CheckboxState::Checked } else { CheckboxState::Unchecked },
         }
     }
 }

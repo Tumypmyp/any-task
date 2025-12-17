@@ -1,7 +1,10 @@
 use crate::PropertyInfo;
-use crate::components::add_properties::ShowPropertiesSetting;
+use crate::components::add_properties::*;
 use crate::components::button::*;
+use crate::components::separator::*;
 use crate::components::properties_row::PropertiesRow;
+use crate::components::scroll_area::*;
+use dioxus_primitives::scroll_area::ScrollDirection;
 use crate::components::sheet::*;
 use dioxus::prelude::*;
 use std::vec;
@@ -18,9 +21,11 @@ pub fn EditView(properties: Store<Vec<PropertyInfo>>, space_id: Signal<String>) 
             }
         }
         Sheet { open: open(), on_open_change: move |v| open.set(v),
-            SheetContent { side: SheetSide::Top,
-                PropertiesRow { properties }
-                ShowPropertiesSetting { space_id, properties }
+            SheetContent { side: SheetSide::Bottom, style: "max-height: 70vh;",
+                ScrollArea { direction: ScrollDirection::Vertical,
+                    PropertiesRow { properties }
+                    AddProperties { properties }
+                }
             }
         }
     }

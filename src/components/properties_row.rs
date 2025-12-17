@@ -1,4 +1,5 @@
 use crate::components::button::{Button, ButtonHolder, ButtonVariant};
+use crate::components::separator::*;
 use crate::components::label::*;
 use crate::components::list::*;
 use crate::components::row::*;
@@ -18,6 +19,7 @@ pub fn PropertiesRow(properties: Store<Vec<PropertyInfo>>) -> Element {
                         id: property.id.clone(),
                         properties,
                     }
+                    Separator {}
                 }
             }
         }
@@ -26,10 +28,13 @@ pub fn PropertiesRow(properties: Store<Vec<PropertyInfo>>) -> Element {
 #[component]
 pub fn Property(index: usize, id: PropertyID, properties: Store<Vec<PropertyInfo>>) -> Element {
     let property = properties.get(index).unwrap();
-    let mut current_value = use_signal(|| property().width);
+    // let mut current_value = use_signal(|| property().width);
     rsx! {
         Row {
-            Button { width: "{current_value}vw", "{property().clone().name}" }
+            Button { variant: ButtonVariant::Secondary,
+                // width: "{current_value}vw",
+                "{property().clone().name}"
+            }
             Button {
                 variant: ButtonVariant::Destructive,
                 onclick: move |_| {
@@ -48,14 +53,35 @@ pub fn Property(index: usize, id: PropertyID, properties: Store<Vec<PropertyInfo
             id: "width_slider",
             label: "Property width",
             horizontal: true,
-            min: 10.0,
+            min: 5.0,
             max: 50.0,
             step: 1.0,
-            default_value: SliderValue::Single(current_value()),
+            // default_value: SliderValue::Single((properties.get(index))().unwrap().width),
+            default_value: SliderValue::Single(15.0),
             on_value_change: move |value: SliderValue| {
                 let SliderValue::Single(v) = value;
-                current_value.set(v);
+                // current_value.set(v);
                 properties.get_mut(index).unwrap().width = v;
+            },
+            SliderTrack {
+                SliderRange {}
+                SliderThumb {}
+            }
+        }
+        Label { html_for: "height_slider", "Height" }
+        Slider {
+            id: "height_slider",
+            label: "Property width",
+            horizontal: true,
+            min: 5.0,
+            max: 50.0,
+            step: 1.0,
+            default_value: SliderValue::Single(10.0),
+            // default_value: SliderValue::Single((properties.get(index))().unwrap().height),
+            on_value_change: move |value: SliderValue| {
+                let SliderValue::Single(v) = value;
+                // current_value.set(v);
+                properties.get_mut(index).unwrap().height = v;
             },
             SliderTrack {
                 SliderRange {}

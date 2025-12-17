@@ -23,3 +23,15 @@
     background-color: transparent;
     color: var(--secondary-color-4);
 }
+
+.row[data-position="left"] {
+    justify-content: flex-start;
+}
+
+.row[data-position="middle"] {
+    justify-content: center;
+}
+
+.row[data-position="right"] {
+    justify-content: flex-end;
+}

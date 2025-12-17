@@ -7,9 +7,9 @@ license = "Apache-2.0"
 
 
 [dependencies]
-dioxus = { version = "0.7", features = ["router"] }
-dioxus-liveview = { version = "0.7", default-features = false }
-dioxus-desktop = { version = "0.7" }
+dioxus = { version = "0.7.2", features = ["router"] }
+dioxus-liveview = { version = "0.7.2", default-features = false }
+dioxus-desktop = { version = "0.7.2" }
 dioxus-sdk-storage = { version = "0.7" }
 
 serde = { version = "1.0.219", features = ["derive"] }

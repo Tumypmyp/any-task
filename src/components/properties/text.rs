@@ -11,6 +11,6 @@ pub fn TextPropertyValue(
 ) -> Element {
     let value = prop().text.unwrap_or_default();
     rsx! {
-        Button { width: "{info().width}vw", "{value}" }
+        Button { width: "100%", height: "100%", "{value}" }
     }
 }

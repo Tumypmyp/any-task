@@ -17,16 +17,52 @@ pub fn List(space_id: String, list_id: String) -> Element {
     let list_id = use_signal(|| list_id);
     let view_id = use_store(|| "".to_string());
 
-    let properties: Store<Vec<PropertyInfo>> = use_store(|| {
+    let mut properties: Store<Vec<PropertyInfo>> = use_store(|| {
         vec![PropertyInfo {
             id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
             name: "Name".to_string(),
             date_format: DateTimeFormat::DateTime,
             options: vec![],
             width: 30.0,
+            height: 10.0,
             show: true,
         }]
     });
+    use_effect(move || {
+           let client = API_CLIENT.read();
+           spawn(async move {
+               let space_id = space_id();
+               let resp = client.list_properties(&space_id).await;
+               match resp {
+                   Ok(props) => {
+                       for prop in props.data.unwrap() {
+                           let property_id = PropertyID(prop.id.clone().unwrap());
+                           let property_name = prop.name.clone().unwrap();
+                           let select_property_options = client
+                               .list_select_property_options(&space_id, property_id.clone().as_str())
+                               .await;
+                           let options = match select_property_options {
+                               Ok(o) => o.data.unwrap(),
+                               _ => vec![],
+                           };
+                           properties.write().push(PropertyInfo {
+                               id: property_id.clone(),
+                               name: property_name,
+                               options,
+                               date_format: DateTimeFormat::DateTime,
+                               width: 15.0,
+                               height: 10.0,
+                               show: false,
+                           });
+                       }
+                   }
+                   Err(e) => {
+                       tracing::error!("error loading property list: {:#?}", e);
+                   }
+               }
+           });
+       });
+
     rsx! {
         ListHeader {
             space_id,

@@ -10,7 +10,6 @@ pub mod calendar;
 pub mod checkbox;
 pub mod choose_view;
 pub mod date_picker;
-pub mod dropdown_menu;
 pub mod edit_view;
 pub mod header;
 pub mod input;

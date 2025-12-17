@@ -15,27 +15,29 @@ pub fn SelectPropertyValue(
     let space_id_clone = use_signal(|| space_id.clone());
     let object_id_clone = use_signal(|| object_id.clone());
     rsx! {
-        ButtonHolder { width: "{info().width}vw",
-            Select::<Option<String>> {
-                placeholder: "{prop().select.unwrap_or_default().name.clone().unwrap_or_default()}",
-                default_value: prop().select.unwrap_or_default().name.clone(),
-                on_value_change: move |v: Option<Option<String>>| {
-                    spawn(async move {
-                        tracing::debug!("chosen option: {:#?}", v);
-                        API_CLIENT
-                            .read()
-                            .update_select_property(
-                                space_id_clone(),
-                                object_id_clone(),
-                                prop().key.unwrap(),
-                                v.unwrap(),
-                            )
-                            .await;
-                    });
-                },
-                SelectTrigger { SelectValue {} }
-                SelectPropertySelectList { options }
+        Select::<Option<String>> {
+            width: "100%",
+            height: "100%",
+            placeholder: "{prop().select.unwrap_or_default().name.clone().unwrap_or_default()}",
+            default_value: prop().select.unwrap_or_default().name.clone(),
+            on_value_change: move |v: Option<Option<String>>| {
+                spawn(async move {
+                    tracing::debug!("chosen option: {:#?}", v);
+                    API_CLIENT
+                        .read()
+                        .update_select_property(
+                            space_id_clone(),
+                            object_id_clone(),
+                            prop().key.unwrap(),
+                            v.unwrap(),
+                        )
+                        .await;
+                });
+            },
+            SelectTrigger { width: "100%", height: "100%",
+                SelectValue { width: "100%", height: "100%" }
             }
+            SelectPropertySelectList { options }
         }
     }
 }

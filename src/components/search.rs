@@ -42,6 +42,7 @@ pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {
             options: vec![],
             date_format: DateTimeFormat::DateTime,
             width: 30.0,
+            height: 10.0,
             show: true,
         }]
     });
