@@ -1,5 +1,5 @@
 use crate::API_CLIENT;
-use crate::ListEntry;
+use crate::ObjectRow;
 use crate::components::list::List;
 use crate::helpers::models::DateTimeFormat;
 use crate::helpers::*;
@@ -48,7 +48,7 @@ pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {
     rsx! {
         List {
             for obj in objects.iter() {
-                ListEntry {
+                ObjectRow {
                     key: "{obj.object_id}",
                     name: obj.name.clone(),
                     space_id,

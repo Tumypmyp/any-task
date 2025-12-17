@@ -42,14 +42,14 @@ let
   };
 in
 {
-   android = {
+  android = {
     enable = true;
     platforms.version = [ "33" ];
   };
 
   languages.rust = {
     enable = true;
-    channel = "stable";
+    channel = "nightly";
     targets = [
       "wasm32-unknown-unknown"
       "aarch64-linux-android"
@@ -85,29 +85,27 @@ in
     # pkgs.pkgsCross.mingwW64.gcc
 
     # This is the correct way to reference the 64-bit compiler package
-        # pkgs.mingwW64.x86_64-w64-mingw32-gcc
+    # pkgs.mingwW64.x86_64-w64-mingw32-gcc
 
-        # This is the correct way to reference the 32-bit compiler package (if you need it)
-        # pkgs.mingwW64.i686-w64-mingw32-gcc
+    # This is the correct way to reference the 32-bit compiler package (if you need it)
+    # pkgs.mingwW64.i686-w64-mingw32-gcc
 
-        # For any C dependencies (like OpenSSL or similar), you might also need this:
-        # pkgs.mingwW64.pkg-config
+    # For any C dependencies (like OpenSSL or similar), you might also need this:
+    # pkgs.mingwW64.pkg-config
 
-
-          # pkgs.pkgsCross.mingwW64.stdenv
-          # pkgs.pkgsCross.mingwW64.windows.pthreads
-          # pkgs.pkgsCross.mingwW64.libxcrypt
+    # pkgs.pkgsCross.mingwW64.stdenv
+    # pkgs.pkgsCross.mingwW64.windows.pthreads
+    # pkgs.pkgsCross.mingwW64.libxcrypt
   ];
   # https://wiki.nixos.org/wiki/Tauri
-# https://devenv.sh/processes/
+  # https://devenv.sh/processes/
   # processes.dev.exec = "${lib.getExe pkgs.watchexec} -n -- ls -la";
 
   # https://devenv.sh/services/
   # services.postgres.enable = true;
 
   # https://devenv.sh/basics/
-  enterShell = ''
-  '';
+  enterShell = '''';
 
   # https://devenv.sh/tasks/
   # tasks = {
@@ -130,14 +128,13 @@ in
         -o "''${API_DIR}/openapi" \
         --skip-validate-spec
     '';
-   };
-
-   scripts.bundle-windows = {
-    exec = ''
-       dx bundle --windows --target x86_64-pc-windows-msvc
-    '';
   };
 
+  scripts.bundle-windows = {
+    exec = ''
+      dx bundle --windows --target x86_64-pc-windows-msvc
+    '';
+  };
 
   # env.TEMP_DIR = "${config.devenv.runtime}/bundle-android";
   env.TEMP_DIR = "${config.devenv.root}/.tmp";

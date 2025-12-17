@@ -8,7 +8,7 @@ use dioxus::prelude::*;
 use openapi::models::*;
 use std::collections::HashMap;
 #[derive(Clone, Props, PartialEq)]
-pub struct ListEntryProps {
+pub struct ObjectProps {
     pub name: String,
     pub space_id: String,
     pub object_id: String,
@@ -16,7 +16,7 @@ pub struct ListEntryProps {
     pub properties: Store<Vec<PropertyInfo>>,
 }
 #[component]
-pub fn ListEntry(props: ListEntryProps) -> Element {
+pub fn ObjectRow(props: ObjectProps) -> Element {
     let nav = navigator();
     let mut object_properties =
         use_store(|| HashMap::<PropertyID, ApimodelPropertyWithValue>::new());

@@ -52,9 +52,11 @@ pub fn ShowPropertiesSetting(
             on_open_change: move |v| {
                 open.set(v);
             },
-            PopoverTrigger { "Properties" }
+            PopoverTrigger {
+                Button { "Properties" }
+            }
             PopoverContent {
-                ScrollArea { style: "max-height: 40vh;",
+                ScrollArea { style: "max-height: 40vh; flex-direction: column; display: flex; gap: 2px;",
                     for (i , property) in properties.read().clone().iter().enumerate() {
                         if property.show {
                             ShowProperty {
@@ -83,7 +85,6 @@ pub fn ShowPropertiesSetting(
 #[component]
 pub fn ShowProperty(index: usize, id: PropertyID, properties: Store<Vec<PropertyInfo>>) -> Element {
     let name = (properties.get(index).unwrap())().name.clone();
-
     rsx! {
         Button {
             variant: if (properties.get(index).unwrap())().show { ButtonVariant::Primary } else { ButtonVariant::Ghost },

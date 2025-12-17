@@ -1,11 +1,11 @@
 use crate::API_CLIENT;
-use crate::ListEntry;
+use crate::ObjectRow;
 use crate::components::action::{ActionHolder, BaseActions};
-use crate::components::add_properties::ShowPropertiesSetting;
 use crate::components::base::message;
 use crate::components::choose_view::ChooseView;
-use crate::components::edit_properties::PropertiesOrder;
 use crate::components::header::{Header, Title};
+use crate::components::properties_row::PropertiesRow;
+use crate::edit_view::*;
 use crate::helpers::models::DateTimeFormat;
 use crate::helpers::*;
 use dioxus::prelude::*;
@@ -70,10 +70,9 @@ pub fn ListHeader(
     rsx! {
         Header {
             Title { title: "{name}" }
-            ShowPropertiesSetting { space_id, properties }
             ChooseView { space_id, list_id, view_id }
+            EditView { properties, space_id }
         }
-        PropertiesOrder { properties }
     }
 }
 #[component]
@@ -104,7 +103,7 @@ pub fn Objects(
     rsx! {
         for obj in objects.data.clone().unwrap_or_default() {
             if let Some(id) = obj.clone().id {
-                ListEntry {
+                ObjectRow {
                     key: "{id}",
                     name: obj.clone().name.unwrap(),
                     space_id,
