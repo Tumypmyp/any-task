@@ -1,6 +1,6 @@
 use crate::{
     components::button::*,
-    helpers::PropertyInfo,
+    helpers::*,
     properties::*,
 };
 use dioxus::prelude::*;
@@ -10,14 +10,15 @@ pub fn PropertyValue(
     space_id: String,
     object_id: String,
     data: ReadSignal<Option<ApimodelPropertyWithValue>>,
-    info: ReadSignal<PropertyInfo>,
+    // info: ReadSignal<PropertyInfo>,
+    info: ReadSignal<(PropertyInfo, PropertySettings)>,
 ) -> Element {
     rsx!{
         div {
             style: "display: flex; align-items: center; justify-content: center;",
-            width: "{info().width}vw",
-            height: "{info().height}vh",
-            background: "#444555",
+            width: "{info().1.width}vw",
+            height: "{info().1.height}vh",
+            // background: "#444555",
             match data() {
                 Some(ApimodelPropertyWithValue::Text(text)) => {
                     rsx! {
@@ -61,7 +62,7 @@ pub fn PropertyValue(
                 }
                 _ => {
                     rsx! {
-                        Button { variant: ButtonVariant::Ghost, width: "{info().width}vw", " " }
+                        Button { variant: ButtonVariant::Ghost, width: "{info().1.width}vw", " " }
                     }
                 }
             }

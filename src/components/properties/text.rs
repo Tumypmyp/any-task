@@ -7,7 +7,8 @@ pub fn TextPropertyValue(
     space_id: String,
     object_id: String,
     prop: Signal<ApimodelTextPropertyValue>,
-    info: ReadSignal<PropertyInfo>,
+    // info: ReadSignal<PropertyInfo>,
+    info: ReadSignal<(PropertyInfo, PropertySettings)>,
 ) -> Element {
     let value = prop().text.unwrap_or_default();
     rsx! {

@@ -35,16 +35,17 @@ pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {
         }
         _ => {}
     }
-    let properties: Store<Vec<PropertyInfo>> = use_store(|| {
-        vec![PropertyInfo {
+    let properties: Store<Vec<(PropertyInfo, PropertySettings)>> = use_store(|| {
+        vec![(PropertyInfo {
             id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
             name: "Name".to_string(),
             options: vec![],
+        }, PropertySettings{
             date_format: DateTimeFormat::DateTime,
             width: 30.0,
             height: 10.0,
             show: true,
-        }]
+        })]
     });
     rsx! {
         List {

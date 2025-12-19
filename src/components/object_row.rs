@@ -13,7 +13,7 @@ pub struct ObjectProps {
     pub space_id: String,
     pub object_id: String,
     pub data: ApimodelObject,
-    pub properties: Store<Vec<PropertyInfo>>,
+    pub properties: Store<Vec<(PropertyInfo, PropertySettings)>>,
 }
 #[component]
 pub fn ObjectRow(props: ObjectProps) -> Element {
@@ -59,23 +59,21 @@ pub fn ObjectRow(props: ObjectProps) -> Element {
                 }
             },
             for property in p2.clone().properties.read().clone() {
-                if property.show {
-                    if let Some(prop) = object_properties.get(property.clone().id) {
-                        PropertyValue {
-                            key: "{property.id.as_str()}",
-                            space_id: props.space_id.clone(),
-                            object_id: props.object_id.clone(),
-                            data: prop.read().clone(),
-                            info: property,
-                        }
-                    } else {
-                        PropertyValue {
-                            key: "{property.id.as_str()}",
-                            space_id: props.space_id.clone(),
-                            object_id: props.object_id.clone(),
-                            data: None,
-                            info: property,
-                        }
+                if let Some(prop) = object_properties.get(property.clone().0.id) {
+                    PropertyValue {
+                        key: "{property.0.id.as_str()}",
+                        space_id: props.space_id.clone(),
+                        object_id: props.object_id.clone(),
+                        data: prop.read().clone(),
+                        info: property,
+                    }
+                } else {
+                    PropertyValue {
+                        key: "{property.0.id.as_str()}",
+                        space_id: props.space_id.clone(),
+                        object_id: props.object_id.clone(),
+                        data: None,
+                        info: property,
                     }
                 }
             }

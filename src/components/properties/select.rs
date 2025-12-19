@@ -9,9 +9,10 @@ pub fn SelectPropertyValue(
     space_id: String,
     object_id: String,
     prop: Signal<ApimodelSelectPropertyValue>,
-    info: ReadSignal<PropertyInfo>,
+    // info: ReadSignal<PropertyInfo>,
+    info: ReadSignal<(PropertyInfo, PropertySettings)>,
 ) -> Element {
-    let options = info().options;
+    let options = info().0.options;
     let space_id_clone = use_signal(|| space_id.clone());
     let object_id_clone = use_signal(|| object_id.clone());
     rsx! {

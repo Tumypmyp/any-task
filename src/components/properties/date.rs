@@ -14,7 +14,8 @@ pub fn DateTimePropertyValues(
     space_id: String,
     object_id: String,
     prop: Signal<ApimodelDatePropertyValue>,
-    info: ReadSignal<PropertyInfo>,
+    // info: ReadSignal<PropertySettings>,
+    info: ReadSignal<(PropertyInfo, PropertySettings)>,
 ) -> Element {
     let property_name = use_signal(|| prop().name.unwrap());
     let property_key = use_signal(|| prop().key.unwrap());
@@ -30,8 +31,8 @@ pub fn DateTimePropertyValues(
             .to_offset(offset)
     });
     rsx! {
-        if info().date_format == DateTimeFormat::DateTime
-            || info().date_format == DateTimeFormat::Date
+        if info().1.date_format == DateTimeFormat::DateTime
+            || info().1.date_format == DateTimeFormat::Date
         {
             DatePropertyValue {
                 space_id,
@@ -42,8 +43,8 @@ pub fn DateTimePropertyValues(
                 info,
             }
         }
-        if info().date_format == DateTimeFormat::DateTime
-            || info().date_format == DateTimeFormat::Time
+        if info().1.date_format == DateTimeFormat::DateTime
+            || info().1.date_format == DateTimeFormat::Time
         {
             TimePropertyValue {
                 space_id,
@@ -63,7 +64,8 @@ pub fn DatePropertyValue(
     property_key: Signal<String>,
     property_name: Signal<String>,
     dt: Signal<OffsetDateTime>,
-    info: ReadSignal<PropertyInfo>,
+    // info: ReadSignal<PropertySettings>,
+    info: ReadSignal<(PropertyInfo, PropertySettings)>,
 ) -> Element {
     let format = format_description!("[year]-[month]-[day]");
     let mut date = use_signal(|| dt().format(format).unwrap());
@@ -134,7 +136,7 @@ pub fn TimePropertyValue(
     property_key: Signal<String>,
     property_name: Signal<String>,
     dt: Signal<OffsetDateTime>,
-    info: ReadSignal<PropertyInfo>,
+    info: ReadSignal<(PropertyInfo, PropertySettings)>,
 ) -> Element {
     let format = format_description!("[hour]:[minute]");
     let mut time = use_signal(|| dt().format(format).unwrap());

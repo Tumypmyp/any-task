@@ -17,16 +17,25 @@ pub fn List(space_id: String, list_id: String) -> Element {
     let list_id = use_signal(|| list_id);
     let view_id = use_store(|| "".to_string());
 
-    let mut properties: Store<Vec<PropertyInfo>> = use_store(|| {
-        vec![PropertyInfo {
+    let mut properties: Store<Vec<(PropertyInfo, PropertySettings)>> = use_store(|| {
+        vec![(PropertyInfo {
             id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
             name: "Name".to_string(),
-            date_format: DateTimeFormat::DateTime,
-            options: vec![],
+            options: vec![],} ,
+        PropertySettings{
+                date_format: DateTimeFormat::DateTime,
             width: 30.0,
             height: 10.0,
             show: true,
-        }]
+        })]
+    });
+    let mut all_properties: Store<Vec<PropertyInfo>> = use_store(|| {
+    vec![PropertyInfo {
+                id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
+                name: "Name".to_string(),
+                options: vec![],}
+
+    ]
     });
     use_effect(move || {
            let client = API_CLIENT.read();
@@ -45,15 +54,11 @@ pub fn List(space_id: String, list_id: String) -> Element {
                                Ok(o) => o.data.unwrap(),
                                _ => vec![],
                            };
-                           properties.write().push(PropertyInfo {
+                           all_properties.write().push(PropertyInfo {
                                id: property_id.clone(),
                                name: property_name,
                                options,
-                               date_format: DateTimeFormat::DateTime,
-                               width: 15.0,
-                               height: 10.0,
-                               show: false,
-                           });
+                           } );
                        }
                    }
                    Err(e) => {
@@ -69,6 +74,7 @@ pub fn List(space_id: String, list_id: String) -> Element {
             list_id,
             view_id,
             properties,
+            all_properties,
         }
         Objects {
             space_id,
@@ -84,7 +90,8 @@ pub fn ListHeader(
     space_id: Signal<String>,
     list_id: Signal<String>,
     view_id: Store<String>,
-    properties: Store<Vec<PropertyInfo>>,
+    properties: Store<Vec<(PropertyInfo, PropertySettings)>>,
+    all_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     let mut name = use_signal(|| "".to_string());
     let resp = use_resource(move || {
@@ -107,7 +114,7 @@ pub fn ListHeader(
         Header {
             Title { title: "{name}" }
             ChooseView { space_id, list_id, view_id }
-            EditView { properties, space_id }
+            EditView { properties, all_properties, space_id }
         }
     }
 }
@@ -116,7 +123,7 @@ pub fn Objects(
     space_id: Signal<String>,
     list_id: Signal<String>,
     view_id: Store<String>,
-    properties: Store<Vec<PropertyInfo>>,
+    properties: Store<Vec<(PropertyInfo, PropertySettings)>>,
 ) -> Element {
     let api_client_handle = API_CLIENT.cloned();
     let resp = use_resource(move || {

@@ -1,4 +1,4 @@
-use crate::PropertyInfo;
+use crate::helpers::*;
 use crate::components::add_properties::*;
 use crate::components::button::*;
 use crate::components::separator::*;
@@ -9,7 +9,9 @@ use crate::components::sheet::*;
 use dioxus::prelude::*;
 use std::vec;
 #[component]
-pub fn EditView(properties: Store<Vec<PropertyInfo>>, space_id: Signal<String>) -> Element {
+pub fn EditView(
+    properties: Store<Vec<(PropertyInfo, PropertySettings)>>,
+    all_properties: Store<Vec<PropertyInfo>>, space_id: Signal<String>) -> Element {
     let mut open = use_signal(|| false);
 
     rsx! {
@@ -24,7 +26,7 @@ pub fn EditView(properties: Store<Vec<PropertyInfo>>, space_id: Signal<String>) 
             SheetContent { side: SheetSide::Bottom, style: "max-height: 70vh;",
                 ScrollArea { direction: ScrollDirection::Vertical,
                     PropertiesRow { properties }
-                    AddProperties { properties }
+                    AddProperties { properties, all_properties }
                 }
             }
         }
