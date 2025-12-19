@@ -3,25 +3,46 @@ use crate::components::button::ButtonHolder;
 use crate::components::select::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
+use openapi::models::ApimodelTag;
 use openapi::models::*;
+
+impl PropertyRenderer for ApimodelSelectPropertyValue {
+    fn render(
+        &self,
+        space_id: String,
+        object_id: String,
+        info: PropertyInfo,
+        _settings: PropertySettings,
+    ) -> Element {
+        rsx! {
+            SelectPropertyValue {
+                space_id: &space_id,
+                object_id: &object_id,
+                prop: self.clone(),
+                options: info.options,
+            }
+        }
+    }
+}
+
 #[component]
 pub fn SelectPropertyValue(
     space_id: String,
     object_id: String,
-    prop: Signal<ApimodelSelectPropertyValue>,
-    // info: ReadSignal<PropertyInfo>,
-    info: ReadSignal<(PropertyInfo, PropertySettings)>,
+    prop: ApimodelSelectPropertyValue,
+    options: Vec<ApimodelTag>,
 ) -> Element {
-    let options = info().0.options;
+    // let options = info().0.options;
     let space_id_clone = use_signal(|| space_id.clone());
     let object_id_clone = use_signal(|| object_id.clone());
     rsx! {
         Select::<Option<String>> {
             width: "100%",
             height: "100%",
-            placeholder: "{prop().select.unwrap_or_default().name.clone().unwrap_or_default()}",
-            default_value: prop().select.unwrap_or_default().name.clone(),
+            placeholder: "{prop.clone().select.unwrap_or_default().name.clone().unwrap_or_default()}",
+            default_value: prop.clone().select.unwrap_or_default().name.clone(),
             on_value_change: move |v: Option<Option<String>>| {
+                let prop = prop.clone();
                 spawn(async move {
                     tracing::debug!("chosen option: {:#?}", v);
                     API_CLIENT
@@ -29,7 +50,7 @@ pub fn SelectPropertyValue(
                         .update_select_property(
                             space_id_clone(),
                             object_id_clone(),
-                            prop().key.unwrap(),
+                            prop.key.unwrap(),
                             v.unwrap(),
                         )
                         .await;

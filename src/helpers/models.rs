@@ -1,3 +1,4 @@
+use dioxus::prelude::*;
 use openapi::models::ApimodelTag;
 #[derive(Eq, Hash, PartialEq, Clone, Debug)]
 pub struct PropertyID(pub String);
@@ -28,6 +29,29 @@ pub struct PropertySettings {
     pub height: f64,
     pub show: bool,
 }
+
+pub trait PropertyRenderer {
+    fn render(
+        &self,
+        space_id: String,
+        object_id: String,
+        info: PropertyInfo,
+        settings: PropertySettings,
+    ) -> Element;
+}
+
+pub trait PropertyEditor {
+    fn edit(&self, space_id: String, object_id: String) -> Element;
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct DatePropertySettings {
+    pub date_format: DateTimeFormat,
+    pub width: f64,
+    pub height: f64,
+    pub show: bool,
+}
+
 impl Default for PropertySettings {
     fn default() -> Self {
         Self {

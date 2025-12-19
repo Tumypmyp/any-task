@@ -9,17 +9,36 @@ use openapi::models::ApimodelDatePropertyValue;
 use time::format_description::well_known::Rfc3339;
 use time::macros::{format_description, offset};
 use time::{Date, OffsetDateTime, Time, UtcDateTime, UtcOffset};
+
+impl PropertyRenderer for ApimodelDatePropertyValue {
+    fn render(
+        &self,
+        space_id: String,
+        object_id: String,
+        _info: PropertyInfo,
+        settings: PropertySettings,
+    ) -> Element {
+        rsx! {
+            DateTimePropertyValues {
+                space_id: &space_id,
+                object_id: &object_id,
+                prop: self.clone(),
+                settings: settings.date_format,
+            }
+        }
+    }
+}
+
 #[component]
 pub fn DateTimePropertyValues(
     space_id: String,
     object_id: String,
-    prop: Signal<ApimodelDatePropertyValue>,
-    // info: ReadSignal<PropertySettings>,
-    info: ReadSignal<(PropertyInfo, PropertySettings)>,
+    prop: ApimodelDatePropertyValue,
+    settings: DateTimeFormat,
 ) -> Element {
-    let property_name = use_signal(|| prop().name.unwrap());
-    let property_key = use_signal(|| prop().key.unwrap());
-    let date = prop().date.unwrap_or_default();
+    let property_name = use_signal(|| prop.name.unwrap());
+    let property_key = use_signal(|| prop.key.unwrap());
+    let date = prop.date.unwrap_or_default();
     let space_id = use_signal(|| space_id.clone());
     let object_id = use_signal(|| object_id.clone());
     let offset = UtcOffset::current_local_offset().unwrap_or(offset! {
@@ -30,29 +49,26 @@ pub fn DateTimePropertyValues(
             .unwrap()
             .to_offset(offset)
     });
+    // let settings = date_settgins.info.1.render(&info.0, &info.1);
     rsx! {
-        if info().1.date_format == DateTimeFormat::DateTime
-            || info().1.date_format == DateTimeFormat::Date
-        {
+        if settings == DateTimeFormat::DateTime || settings == DateTimeFormat::Date {
             DatePropertyValue {
                 space_id,
                 object_id,
                 property_key,
                 property_name,
                 dt,
-                info,
+                        // info,
             }
         }
-        if info().1.date_format == DateTimeFormat::DateTime
-            || info().1.date_format == DateTimeFormat::Time
-        {
+        if settings == DateTimeFormat::DateTime || settings == DateTimeFormat::Time {
             TimePropertyValue {
                 space_id,
                 object_id,
                 property_key,
                 property_name,
                 dt,
-                info,
+                        // info,
             }
         }
     }
@@ -65,7 +81,7 @@ pub fn DatePropertyValue(
     property_name: Signal<String>,
     dt: Signal<OffsetDateTime>,
     // info: ReadSignal<PropertySettings>,
-    info: ReadSignal<(PropertyInfo, PropertySettings)>,
+    // info: ReadSignal<(PropertyInfo, PropertySettings)>,
 ) -> Element {
     let format = format_description!("[year]-[month]-[day]");
     let mut date = use_signal(|| dt().format(format).unwrap());
@@ -136,7 +152,7 @@ pub fn TimePropertyValue(
     property_key: Signal<String>,
     property_name: Signal<String>,
     dt: Signal<OffsetDateTime>,
-    info: ReadSignal<(PropertyInfo, PropertySettings)>,
+    // info: ReadSignal<(PropertyInfo, PropertySettings)>,
 ) -> Element {
     let format = format_description!("[hour]:[minute]");
     let mut time = use_signal(|| dt().format(format).unwrap());
