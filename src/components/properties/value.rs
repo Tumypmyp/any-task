@@ -1,5 +1,5 @@
 use crate::{
-    components::button::{Button, ButtonHolder},
+    components::button::*,
     helpers::PropertyInfo,
     properties::*,
 };
@@ -14,9 +14,10 @@ pub fn PropertyValue(
 ) -> Element {
     rsx!{
         div {
-            style: "align-items: center; justify-content: center;",
-            width: "{info().width}vw", height: "{info().height}vh",
-            // background: "#555555",
+            style: "display: flex; align-items: center; justify-content: center;",
+            width: "{info().width}vw",
+            height: "{info().height}vh",
+            background: "#444555",
             match data() {
                 Some(ApimodelPropertyWithValue::Text(text)) => {
                     rsx! {
@@ -50,19 +51,17 @@ pub fn PropertyValue(
                 }
                 Some(ApimodelPropertyWithValue::Date(date)) => {
                     rsx! {
-                        ButtonHolder {
-                            DateTimePropertyValues {
-                                space_id: &space_id,
-                                object_id: &object_id,
-                                prop: use_signal(|| *date),
-                                info,
-                            }
+                        DateTimePropertyValues {
+                            space_id: &space_id,
+                            object_id: &object_id,
+                            prop: use_signal(|| *date),
+                            info,
                         }
                     }
                 }
                 _ => {
                     rsx! {
-                        Button { width: "{info().width}vw", " " }
+                        Button { variant: ButtonVariant::Ghost, width: "{info().width}vw", " " }
                     }
                 }
             }

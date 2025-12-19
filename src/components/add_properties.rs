@@ -14,7 +14,7 @@ pub fn AddProperties(
 ) -> Element {
    rsx! {
     Row { position: Position::Middle,
-        Button { "Add Properties" }
+        Button { variant: ButtonVariant::Secondary, "Add Properties" }
     }
     for (i , property) in properties.read().clone().iter().enumerate() {
         if property.show {
