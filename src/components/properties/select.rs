@@ -15,11 +15,13 @@ impl PropertyRenderer for ApimodelSelectPropertyValue {
         _settings: PropertySettings,
     ) -> Element {
         rsx! {
-            SelectPropertyValue {
-                space_id: &space_id,
-                object_id: &object_id,
-                prop: self.clone(),
-                options: info.options,
+            if let OptionalInfo::Select(options) = info.optional {
+                SelectPropertyValue {
+                    space_id: &space_id,
+                    object_id: &object_id,
+                    prop: self.clone(),
+                    options,
+                }
             }
         }
     }

@@ -12,8 +12,8 @@ pub fn PropertyValue(
     rsx! {
         div {
             style: "display: flex; align-items: center; justify-content: center;",
-            width: "{info().1.width}vw",
-            height: "{info().1.height}vh",
+            width: "{info().1.width()}vw",
+            height: "{info().1.height()}vh",
             // background: "#444555",
             match data() {
                 Some(ApimodelPropertyWithValue::Text(v)) => {

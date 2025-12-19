@@ -18,7 +18,7 @@ impl PropertyRenderer for ApimodelCheckboxPropertyValue {
                 space_id: &space_id,
                 object_id: &object_id,
                 prop: self.clone(),
-                size: settings.height,
+                size: settings.height(),
             }
         }
     }

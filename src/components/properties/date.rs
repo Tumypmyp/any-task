@@ -18,13 +18,18 @@ impl PropertyRenderer for ApimodelDatePropertyValue {
         _info: PropertyInfo,
         settings: PropertySettings,
     ) -> Element {
-        rsx! {
-            DateTimePropertyValues {
-                space_id: &space_id,
-                object_id: &object_id,
-                prop: self.clone(),
-                settings: settings.date_format,
+        match settings {
+            PropertySettings::Date(s) => {
+                rsx! {
+                    DateTimePropertyValues {
+                        space_id: &space_id,
+                        object_id: &object_id,
+                        prop: self.clone(),
+                        settings: s.date_format,
+                    }
+                }
             }
+            _ => rsx! {},
         }
     }
 }

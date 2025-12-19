@@ -1,8 +1,8 @@
 use crate::components::button::*;
-use crate::components::separator::*;
 use crate::components::label::*;
 use crate::components::list::*;
 use crate::components::row::*;
+use crate::components::separator::*;
 use crate::components::slider::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
@@ -12,14 +12,13 @@ pub fn PropertiesRow(properties: Store<Vec<(PropertyInfo, PropertySettings)>>) -
     rsx! {
         List {
             for (index , property) in properties.read().clone().iter().enumerate() {
-                if property.1.show {
-                    Property {
-                        key: "{property.0.id.as_str()}",
-                        index,
-                        properties,
-                    }
-                    Separator {}
+                // if property.1.show {
+                Property {
+                    key: "{property.0.id.as_str()}",
+                    index,
+                    properties,
                 }
+                Separator {}
             }
         }
     }
@@ -53,10 +52,10 @@ pub fn Property(index: usize, properties: Store<Vec<(PropertyInfo, PropertySetti
             min: 5.0,
             max: 100.0,
             step: 1.0,
-            default_value: SliderValue::Single(properties.get(index).unwrap()().1.width),
+            default_value: SliderValue::Single((properties.get(index).unwrap())().1.width()),
             on_value_change: move |value: SliderValue| {
                 let SliderValue::Single(v) = value;
-                properties.get_mut(index).unwrap().1.width = v;
+                properties.get_mut(index).unwrap().1.set_width(v);
             },
             SliderTrack {
                 SliderRange {}
@@ -72,10 +71,10 @@ pub fn Property(index: usize, properties: Store<Vec<(PropertyInfo, PropertySetti
             min: 5.0,
             max: 100.0,
             step: 1.0,
-            default_value: SliderValue::Single(properties.get(index).unwrap()().1.height),
+            default_value: SliderValue::Single((properties.get(index).unwrap())().1.height()),
             on_value_change: move |value: SliderValue| {
                 let SliderValue::Single(v) = value;
-                properties.get_mut(index).unwrap().1.height = v;
+                properties.get_mut(index).unwrap().1.set_height(v);
             },
             SliderTrack {
                 SliderRange {}
