@@ -34,6 +34,9 @@ pub fn ShowProperty(
             onclick: move |_| {
                 let settings = match property.optional {
                     OptionalInfo::Date => PropertySettings::Date(DateSettings::default()),
+                    OptionalInfo::Checkbox => {
+                        PropertySettings::Checkbox(CheckboxSettings::default())
+                    }
                     _ => PropertySettings::default(),
                 };
                 properties

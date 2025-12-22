@@ -8,13 +8,15 @@ use crate::components::slider::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
 use std::vec;
+
 #[component]
 pub fn PropertiesRow(properties: Store<Vec<(PropertyInfo, PropertySettings)>>) -> Element {
     rsx! {
         List {
             for (index , property) in properties.read().clone().iter().enumerate() {
                 Property {
-                    key: "{property.0.id.as_str()}",
+                    // should be different (use property view hash)
+                    // key: "{property.0.id.as_str()}",
                     index,
                     properties,
                 }
@@ -23,6 +25,7 @@ pub fn PropertiesRow(properties: Store<Vec<(PropertyInfo, PropertySettings)>>) -
         }
     }
 }
+
 #[component]
 pub fn Property(index: usize, properties: Store<Vec<(PropertyInfo, PropertySettings)>>) -> Element {
     let property = properties.get(index).unwrap();
@@ -42,8 +45,51 @@ pub fn Property(index: usize, properties: Store<Vec<(PropertyInfo, PropertySetti
                         });
                 },
             }
+            GeneralPropertyEdit {
+                settings: settings.general,
+                on_change: move |new_settings: GeneralPropertySettings| {
+                    properties
+                        .write()
+                        .get_mut(index)
+                        .map(|(_, s)| {
+                            if let PropertySettings::Date(d) = s {
+                                d.general = new_settings;
+                            }
+                        });
+                },
+            }
         },
-        PropertySettings::General(settings) => rsx! {},
+        PropertySettings::General(settings) => rsx! {
+            GeneralPropertyEdit {
+                settings,
+                on_change: move |new_settings: GeneralPropertySettings| {
+                    properties
+                        .write()
+                        .get_mut(index)
+                        .map(|(_, s)| {
+                            if let PropertySettings::General(g) = s {
+                                *g = new_settings;
+                            }
+
+                        });
+                },
+            }
+        },
+        PropertySettings::Checkbox(settings) => rsx! {
+            SizeSlider {
+                size: settings.size,
+                on_change: move |new_size: f64| {
+                    properties
+                        .write()
+                        .get_mut(index)
+                        .map(|(_, s)| {
+                            if let PropertySettings::Checkbox(c) = s {
+                                c.size = new_size;
+                            }
+                        });
+                },
+            }
+        },
     };
     rsx! {
         Row {
@@ -62,38 +108,79 @@ pub fn Property(index: usize, properties: Store<Vec<(PropertyInfo, PropertySetti
             }
         }
         {edit}
-        Label { html_for: "width_slider", "Width" }
-        Slider {
+    }
+}
+
+#[component]
+pub fn GeneralPropertyEdit(
+    settings: GeneralPropertySettings,
+    on_change: EventHandler<GeneralPropertySettings>,
+) -> Element {
+    rsx! {
+        PropertySlider {
             id: "width_slider",
-            label: "Property width",
-            width: "50vw",
-            horizontal: true,
+            label: "Width",
+            value: settings.width,
             min: 5.0,
             max: 100.0,
-            step: 1.0,
-            default_value: SliderValue::Single((properties.get(index).unwrap())().1.width()),
-            on_value_change: move |value: SliderValue| {
-                let SliderValue::Single(v) = value;
-                properties.get_mut(index).unwrap().1.set_width(v);
+            on_change: move |v| {
+                let mut new_settings = settings.clone();
+                new_settings.width = v;
+                on_change.call(new_settings);
             },
-            SliderTrack {
-                SliderRange {}
-                SliderThumb {}
-            }
         }
-        Label { html_for: "height_slider", "Height" }
-        Slider {
+        PropertySlider {
             id: "height_slider",
-            label: "Property width",
-            width: "50vw",
-            horizontal: true,
+            label: "Height",
+            value: settings.height,
             min: 5.0,
             max: 100.0,
+            on_change: move |v| {
+                let mut new_settings = settings.clone();
+                new_settings.height = v;
+                on_change.call(new_settings);
+            },
+        }
+    }
+}
+
+#[component]
+fn SizeSlider(size: f64, on_change: EventHandler<f64>) -> Element {
+    rsx! {
+        PropertySlider {
+            id: "size_slider",
+            label: "Size",
+            value: size,
+            min: 5.0,
+            max: 30.0,
+            on_change: move |v| on_change.call(v),
+        }
+    }
+}
+
+#[component]
+fn PropertySlider(
+    id: String,
+    label: String,
+    value: f64,
+    min: f64,
+    max: f64,
+    on_change: EventHandler<f64>,
+) -> Element {
+    rsx! {
+        Label { html_for: "{id}", "{label}" }
+        Slider {
+            id: "{id}",
+            label: "{label}",
+            width: "50vw",
+            horizontal: true,
+            min,
+            max,
             step: 1.0,
-            default_value: SliderValue::Single((properties.get(index).unwrap())().1.height()),
-            on_value_change: move |value: SliderValue| {
-                let SliderValue::Single(v) = value;
-                properties.get_mut(index).unwrap().1.set_height(v);
+            default_value: SliderValue::Single(value),
+            on_value_change: move |val: SliderValue| {
+                let SliderValue::Single(v) = val;
+                on_change.call(v);
             },
             SliderTrack {
                 SliderRange {}

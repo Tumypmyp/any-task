@@ -21,7 +21,7 @@ pub fn DateSettingsEdit(
             default_value: format,
             on_value_change: move |v: Option<DateTimeFormat>| {
                 if let Some(f) = v {
-                   on_change.call(f);
+                    on_change.call(f);
                 }
             },
             SelectTrigger { SelectValue {} }

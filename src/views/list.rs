@@ -57,6 +57,7 @@ pub fn List(space_id: String, list_id: String) -> Element {
                         let optional_info = match format {
                             Format::PropertyFormatSelect => OptionalInfo::Select(options),
                             Format::PropertyFormatDate => OptionalInfo::Date,
+                            Format::PropertyFormatCheckbox => OptionalInfo::Checkbox,
                             _ => OptionalInfo::Other,
                         };
                         all_properties.write().push(PropertyInfo {

@@ -26,6 +26,7 @@ pub struct PropertyInfo {
 pub enum OptionalInfo {
     Select(Vec<ApimodelTag>),
     Date,
+    Checkbox,
     #[default]
     Other,
 }
@@ -42,6 +43,16 @@ pub struct DateSettings {
     pub date_format: DateTimeFormat,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct CheckboxSettings {
+    pub size: f64,
+}
+
+impl Default for CheckboxSettings {
+    fn default() -> Self {
+        Self { size: 5.0 }
+    }
+}
 impl Default for DateSettings {
     fn default() -> Self {
         Self {
@@ -66,6 +77,7 @@ impl Default for GeneralPropertySettings {
 pub enum PropertySettings {
     General(GeneralPropertySettings),
     Date(DateSettings),
+    Checkbox(CheckboxSettings),
 }
 
 impl Default for PropertySettings {
@@ -79,18 +91,21 @@ impl PropertySettings {
         match self {
             Self::General(s) => s.height,
             Self::Date(s) => s.general.height,
+            Self::Checkbox(s) => s.size,
         }
     }
     pub fn width(&self) -> f64 {
         match self {
             Self::General(s) => s.width,
             Self::Date(s) => s.general.width,
+            Self::Checkbox(s) => s.size,
         }
     }
     pub fn set_height(&mut self, val: f64) {
         match self {
             Self::General(s) => s.height = val,
             Self::Date(s) => s.general.height = val,
+            _ => {}
         }
     }
 
@@ -98,6 +113,7 @@ impl PropertySettings {
         match self {
             Self::General(s) => s.width = val,
             Self::Date(s) => s.general.width = val,
+            _ => {}
         }
     }
 }

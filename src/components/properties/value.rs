@@ -13,7 +13,7 @@ pub fn PropertyValue(
         div {
             style: "display: flex; align-items: center; justify-content: center;",
             width: "{info().1.width()}vw",
-            height: "{info().1.height()}vh",
+            height: "{info().1.height()}vw",
             // background: "#444555",
             match data() {
                 Some(v) => v.render(space_id, object_id, p_info, settings),
