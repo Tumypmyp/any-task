@@ -2,6 +2,7 @@ use crate::API_CLIENT;
 use crate::components::button::*;
 use crate::components::calendar::*;
 use crate::components::popover::*;
+use crate::components::select::*;
 use crate::helpers::models::DateTimeFormat;
 use crate::helpers::*;
 use dioxus::prelude::*;
@@ -9,6 +10,46 @@ use openapi::models::ApimodelDatePropertyValue;
 use time::format_description::well_known::Rfc3339;
 use time::macros::{format_description, offset};
 use time::{Date, OffsetDateTime, Time, UtcDateTime, UtcOffset};
+
+#[component]
+pub fn DateSettingsEdit(
+    format: DateTimeFormat,
+    on_change: EventHandler<DateTimeFormat>,
+) -> Element {
+    rsx! {
+        Select::<DateTimeFormat> {
+            default_value: format,
+            on_value_change: move |v: Option<DateTimeFormat>| {
+                if let Some(f) = v {
+                   on_change.call(f);
+                }
+            },
+            SelectTrigger { SelectValue {} }
+            SelectList {
+                SelectGroup {
+                    SelectOption::<DateTimeFormat> {
+                        index: 0usize,
+                        value: DateTimeFormat::DateTime,
+                        text_value: "DateTime",
+                        "DateTime"
+                    }
+                    SelectOption::<DateTimeFormat> {
+                        index: 1usize,
+                        value: DateTimeFormat::Date,
+                        text_value: "Date",
+                        "Date"
+                    }
+                    SelectOption::<DateTimeFormat> {
+                        index: 2usize,
+                        value: DateTimeFormat::Time,
+                        text_value: "Time",
+                        "Time"
+                    }
+                }
+            }
+        }
+    }
+}
 
 impl PropertyRenderer for ApimodelDatePropertyValue {
     fn render(
@@ -54,7 +95,6 @@ pub fn DateTimePropertyValues(
             .unwrap()
             .to_offset(offset)
     });
-    // let settings = date_settgins.info.1.render(&info.0, &info.1);
     rsx! {
         if settings == DateTimeFormat::DateTime || settings == DateTimeFormat::Date {
             DatePropertyValue {
@@ -63,7 +103,6 @@ pub fn DateTimePropertyValues(
                 property_key,
                 property_name,
                 dt,
-                        // info,
             }
         }
         if settings == DateTimeFormat::DateTime || settings == DateTimeFormat::Time {
@@ -73,7 +112,6 @@ pub fn DateTimePropertyValues(
                 property_key,
                 property_name,
                 dt,
-                        // info,
             }
         }
     }
@@ -85,8 +123,6 @@ pub fn DatePropertyValue(
     property_key: Signal<String>,
     property_name: Signal<String>,
     dt: Signal<OffsetDateTime>,
-    // info: ReadSignal<PropertySettings>,
-    // info: ReadSignal<(PropertyInfo, PropertySettings)>,
 ) -> Element {
     let format = format_description!("[year]-[month]-[day]");
     let mut date = use_signal(|| dt().format(format).unwrap());
@@ -157,7 +193,6 @@ pub fn TimePropertyValue(
     property_key: Signal<String>,
     property_name: Signal<String>,
     dt: Signal<OffsetDateTime>,
-    // info: ReadSignal<(PropertyInfo, PropertySettings)>,
 ) -> Element {
     let format = format_description!("[hour]:[minute]");
     let mut time = use_signal(|| dt().format(format).unwrap());

@@ -16,22 +16,29 @@ pub fn PropertyValue(
             height: "{info().1.height()}vh",
             // background: "#444555",
             match data() {
-                Some(ApimodelPropertyWithValue::Text(v)) => {
-                    v.render(space_id, object_id, p_info, settings)
-                }
-                Some(ApimodelPropertyWithValue::Checkbox(v)) => {
-                    v.render(space_id, object_id, p_info, settings)
-                }
-                Some(ApimodelPropertyWithValue::Select(v)) => {
-                    v.render(space_id, object_id, p_info, settings)
-                }
-                Some(ApimodelPropertyWithValue::Date(v)) => {
-                    v.render(space_id, object_id, p_info, settings)
-                }
+                Some(v) => v.render(space_id, object_id, p_info, settings),
                 _ => rsx! {
                     Button { variant: ButtonVariant::Ghost, " " }
                 },
             }
+        }
+    }
+}
+
+impl PropertyRenderer for ApimodelPropertyWithValue {
+    fn render(
+        &self,
+        space_id: String,
+        object_id: String,
+        p_info: PropertyInfo,
+        settings: PropertySettings,
+    ) -> Element {
+        match self {
+            Self::Text(v) => v.render(space_id, object_id, p_info, settings),
+            Self::Checkbox(v) => v.render(space_id, object_id, p_info, settings),
+            Self::Select(v) => v.render(space_id, object_id, p_info, settings),
+            Self::Date(v) => v.render(space_id, object_id, p_info, settings),
+            _ => rsx!(),
         }
     }
 }

@@ -1,6 +1,7 @@
 use crate::components::button::*;
 use crate::components::label::*;
 use crate::components::list::*;
+use crate::components::properties::*;
 use crate::components::row::*;
 use crate::components::separator::*;
 use crate::components::slider::*;
@@ -12,7 +13,6 @@ pub fn PropertiesRow(properties: Store<Vec<(PropertyInfo, PropertySettings)>>) -
     rsx! {
         List {
             for (index , property) in properties.read().clone().iter().enumerate() {
-                // if property.1.show {
                 Property {
                     key: "{property.0.id.as_str()}",
                     index,
@@ -27,6 +27,24 @@ pub fn PropertiesRow(properties: Store<Vec<(PropertyInfo, PropertySettings)>>) -
 pub fn Property(index: usize, properties: Store<Vec<(PropertyInfo, PropertySettings)>>) -> Element {
     let property = properties.get(index).unwrap();
     let name = property().0.name;
+    let edit = match property().1 {
+        PropertySettings::Date(settings) => rsx! {
+            DateSettingsEdit {
+                format: settings.date_format,
+                on_change: move |new_format: DateTimeFormat| {
+                    properties
+                        .write()
+                        .get_mut(index)
+                        .map(|(_, s)| {
+                            if let PropertySettings::Date(d) = s {
+                                d.date_format = new_format;
+                            }
+                        });
+                },
+            }
+        },
+        PropertySettings::General(settings) => rsx! {},
+    };
     rsx! {
         Row {
             Button { variant: ButtonVariant::Secondary, "{name}" }
@@ -43,6 +61,7 @@ pub fn Property(index: usize, properties: Store<Vec<(PropertyInfo, PropertySetti
                 "X"
             }
         }
+        {edit}
         Label { html_for: "width_slider", "Width" }
         Slider {
             id: "width_slider",
