@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-
 #[derive(Default, PartialEq, Clone, Copy)]
 pub enum Position {
     #[default]
@@ -7,7 +6,6 @@ pub enum Position {
     Middle,
     Right,
 }
-
 impl Position {
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -17,7 +15,6 @@ impl Position {
         }
     }
 }
-
 #[component]
 pub fn Row(
     #[props(default)]

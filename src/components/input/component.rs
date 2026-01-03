@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-
 #[component]
 pub fn Input(
     oninput: Option<EventHandler<FormEvent>>,
@@ -20,8 +19,8 @@ pub fn Input(
     oncopy: Option<EventHandler<ClipboardEvent>>,
     oncut: Option<EventHandler<ClipboardEvent>>,
     onpaste: Option<EventHandler<ClipboardEvent>>,
-    #[props(extends=GlobalAttributes)]
-    #[props(extends=input)]
+    #[props(extends = GlobalAttributes)]
+    #[props(extends = input)]
     attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {

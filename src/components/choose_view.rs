@@ -10,19 +10,19 @@ pub fn ChooseView(
     view_id: Store<String>,
 ) -> Element {
     let mut all_views: Store<Vec<ViewInfo>> = use_store(|| vec![]);
-
     use_effect(move || {
         let client = API_CLIENT.read().clone();
         spawn(async move {
             let views = client.get_views(&space_id(), &list_id()).await;
             match views {
                 Ok(view) => {
-                    // tracing::debug!("got views: {:#?}", view);
                     for v in view.data.unwrap() {
-                        all_views.write().push(ViewInfo {
-                            id: v.id.clone().unwrap(),
-                            name: v.name.unwrap(),
-                        });
+                        all_views
+                            .write()
+                            .push(ViewInfo {
+                                id: v.id.clone().unwrap(),
+                                name: v.name.unwrap(),
+                            });
                         if view_id.read().is_empty() {
                             view_id.set(v.id.clone().unwrap());
                         }
@@ -34,14 +34,17 @@ pub fn ChooseView(
             }
         });
     });
-    let views = all_views.iter().enumerate().map(|(i, f)| {
-        rsx! {
-            SelectOption::<String> { index: i, value: f().id, text_value: f().name,
-                "{f().name}"
-                SelectItemIndicator {}
+    let views = all_views
+        .iter()
+        .enumerate()
+        .map(|(i, f)| {
+            rsx! {
+                SelectOption::<String> { index: i, value: f().id, text_value: f().name,
+                    "{f().name}"
+                    SelectItemIndicator {}
+                }
             }
-        }
-    });
+        });
     let mut view_id_setter = use_signal(|| view_id().clone());
     let select_value = use_memo(move || {
         let current_view_id = view_id_setter.read();
@@ -54,18 +57,11 @@ pub fn ChooseView(
     });
     rsx! {
         Select::<String> {
-            // default_value: Some(view_id()),
-            // value: select_value,
             placeholder: "Select a view",
             on_value_change: move |v: Option<String>| {
                 view_id_setter.set(v.unwrap());
             },
-            SelectTrigger {
-                aria_label: "Select View",
-                // width: "8rem",
-                width: "20vw",
-                SelectValue {}
-            }
+            SelectTrigger { aria_label: "Select View", width: "20vw", SelectValue {} }
             SelectList { aria_label: "Views",
                 SelectGroup {
                     SelectGroupLabel { "Views" }

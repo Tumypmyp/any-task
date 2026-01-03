@@ -5,7 +5,6 @@ use crate::helpers::*;
 use dioxus::prelude::*;
 use openapi::models::ApimodelTag;
 use openapi::models::*;
-
 impl PropertyRenderer for ApimodelSelectPropertyValue {
     fn render(
         &self,
@@ -26,7 +25,6 @@ impl PropertyRenderer for ApimodelSelectPropertyValue {
         }
     }
 }
-
 #[component]
 pub fn SelectPropertyValue(
     space_id: String,
@@ -34,7 +32,6 @@ pub fn SelectPropertyValue(
     prop: ApimodelSelectPropertyValue,
     options: Vec<ApimodelTag>,
 ) -> Element {
-    // let options = info().0.options;
     let space_id_clone = use_signal(|| space_id.clone());
     let object_id_clone = use_signal(|| object_id.clone());
     rsx! {

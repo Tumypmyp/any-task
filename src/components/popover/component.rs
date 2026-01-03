@@ -56,14 +56,12 @@ pub fn PopoverRoot(props: PopoverRootProps) -> Element {
         }
     }
 }
-
 #[component]
 pub fn PopoverTrigger(props: PopoverTriggerProps) -> Element {
     rsx! {
         popover::PopoverTrigger { class: "popover-trigger", attributes: props.attributes, {props.children} }
     }
 }
-
 #[component]
 pub fn PopoverContent(props: PopoverContentProps) -> Element {
     rsx! {

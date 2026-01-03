@@ -1,13 +1,14 @@
 use dioxus::prelude::*;
 use openapi::models::ApimodelTag;
-#[derive(Eq, Hash, PartialEq, Clone, Debug)]
+use serde::{Deserialize, Serialize};
+#[derive(Eq, Hash, PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct PropertyID(pub String);
 impl PropertyID {
     pub fn as_str(&self) -> &str {
         &self.0
     }
 }
-#[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub enum DateTimeFormat {
     #[default]
     DateTime,
@@ -15,14 +16,13 @@ pub enum DateTimeFormat {
     Time,
 }
 pub const NAME_PROPERTY_ID_STR: &str = "name_property_id";
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PropertyInfo {
     pub id: PropertyID,
     pub name: String,
     pub optional: OptionalInfo,
 }
-
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub enum OptionalInfo {
     Select(Vec<ApimodelTag>),
     Date,
@@ -30,24 +30,20 @@ pub enum OptionalInfo {
     #[default]
     Other,
 }
-
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct GeneralPropertySettings {
     pub width: f64,
     pub height: f64,
 }
-
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct DateSettings {
     pub general: GeneralPropertySettings,
     pub date_format: DateTimeFormat,
 }
-
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CheckboxSettings {
     pub size: f64,
 }
-
 impl Default for CheckboxSettings {
     fn default() -> Self {
         Self { size: 5.0 }
@@ -66,26 +62,20 @@ impl Default for DateSettings {
 }
 impl Default for GeneralPropertySettings {
     fn default() -> Self {
-        Self {
-            width: 15.0,
-            height: 10.0,
-        }
+        Self { width: 15.0, height: 10.0 }
     }
 }
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum PropertySettings {
     General(GeneralPropertySettings),
     Date(DateSettings),
     Checkbox(CheckboxSettings),
 }
-
 impl Default for PropertySettings {
     fn default() -> Self {
         Self::General(GeneralPropertySettings::default())
     }
 }
-
 impl PropertySettings {
     pub fn height(&self) -> f64 {
         match self {
@@ -108,7 +98,6 @@ impl PropertySettings {
             _ => {}
         }
     }
-
     pub fn set_width(&mut self, val: f64) {
         match self {
             Self::General(s) => s.width = val,
@@ -117,7 +106,6 @@ impl PropertySettings {
         }
     }
 }
-
 pub trait PropertyRenderer {
     fn render(
         &self,
@@ -127,7 +115,6 @@ pub trait PropertyRenderer {
         settings: PropertySettings,
     ) -> Element;
 }
-
 #[derive(Clone, Debug, PartialEq)]
 pub struct ViewInfo {
     pub id: String,

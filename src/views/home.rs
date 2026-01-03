@@ -15,22 +15,20 @@ pub fn Home() -> Element {
         let client = API_CLIENT.read().clone();
         async move { client.list_spaces().await }
     });
-
-    // let objects = match resp.result() {
     let resp_value = resp.read();
     let spaces = match resp_value.as_ref() {
         Some(Ok(objs)) => objs,
         Some(Err(err)) => {
             tracing::debug!("error: {:#?}", err);
             message::error("Failed to load spaces, retry later", err);
-            // nav.push(Route::Login {});
             return rsx! {
                 ActionHolder { position: Position::Left, Logout {} }
             };
         }
-        None => return rsx! { "Loading..." },
+        None => {
+            return rsx! { "Loading..." };
+        }
     };
-
     tracing::info!("Opened home");
     rsx! {
         Title { title: "Spaces" }
@@ -42,13 +40,11 @@ pub fn Home() -> Element {
         ActionHolder { position: Position::Left, Logout {} }
     }
 }
-
 #[component]
 fn SpaceButton(space: ApimodelSpace) -> Element {
     let nav = navigator();
     let space_id = space.id.unwrap_or_default();
     let space_name = space.name.unwrap_or_default();
-
     rsx! {
         Button {
             id: "{space_id}",

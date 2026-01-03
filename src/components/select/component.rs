@@ -1,9 +1,8 @@
 use dioxus::prelude::*;
 use dioxus_primitives::select::{
-    self, SelectGroupLabelProps, SelectGroupProps, SelectListProps, SelectOptionProps, SelectProps,
-    SelectTriggerProps, SelectValueProps,
+    self, SelectGroupLabelProps, SelectGroupProps, SelectListProps, SelectOptionProps,
+    SelectProps, SelectTriggerProps, SelectValueProps,
 };
-
 #[component]
 pub fn Select<T: Clone + PartialEq + 'static>(props: SelectProps<T>) -> Element {
     rsx! {
@@ -23,7 +22,6 @@ pub fn Select<T: Clone + PartialEq + 'static>(props: SelectProps<T>) -> Element 
         }
     }
 }
-
 #[component]
 pub fn SelectTrigger(props: SelectTriggerProps) -> Element {
     rsx! {
@@ -38,14 +36,12 @@ pub fn SelectTrigger(props: SelectTriggerProps) -> Element {
         }
     }
 }
-
 #[component]
 pub fn SelectValue(props: SelectValueProps) -> Element {
     rsx! {
         select::SelectValue { attributes: props.attributes }
     }
 }
-
 #[component]
 pub fn SelectList(props: SelectListProps) -> Element {
     rsx! {
@@ -57,7 +53,6 @@ pub fn SelectList(props: SelectListProps) -> Element {
         }
     }
 }
-
 #[component]
 pub fn SelectGroup(props: SelectGroupProps) -> Element {
     rsx! {
@@ -70,7 +65,6 @@ pub fn SelectGroup(props: SelectGroupProps) -> Element {
         }
     }
 }
-
 #[component]
 pub fn SelectGroupLabel(props: SelectGroupLabelProps) -> Element {
     rsx! {
@@ -82,9 +76,10 @@ pub fn SelectGroupLabel(props: SelectGroupLabelProps) -> Element {
         }
     }
 }
-
 #[component]
-pub fn SelectOption<T: Clone + PartialEq + 'static>(props: SelectOptionProps<T>) -> Element {
+pub fn SelectOption<T: Clone + PartialEq + 'static>(
+    props: SelectOptionProps<T>,
+) -> Element {
     rsx! {
         select::SelectOption::<T> {
             class: "select-option",
@@ -100,7 +95,6 @@ pub fn SelectOption<T: Clone + PartialEq + 'static>(props: SelectOptionProps<T>)
         }
     }
 }
-
 #[component]
 pub fn SelectItemIndicator() -> Element {
     rsx! {

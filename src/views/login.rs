@@ -7,13 +7,11 @@ use crate::components::input::Input;
 use crate::components::list::List;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
-
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Default)]
 pub struct AppSettings {
     pub token: String,
     pub server: String,
 }
-
 #[component]
 pub fn Logout() -> Element {
     let nav = navigator();
@@ -24,12 +22,10 @@ pub fn Logout() -> Element {
                 tracing::info!("removed the token");
                 nav.push(Route::Login {});
             },
-
             "Logout"
         }
     }
 }
-
 #[component]
 pub fn Login() -> Element {
     LoginWithCode()
@@ -40,7 +36,6 @@ pub fn LoginWithCode() -> Element {
     let mut challenge_id = use_signal(|| "".to_string());
     let mut code = use_signal(|| "".to_string());
     let mut token = use_signal(|| "settings.read().token".to_string());
-
     let _validate_settings = use_resource(move || {
         let client = API_CLIENT.read().clone();
         async move {
@@ -57,7 +52,6 @@ pub fn LoginWithCode() -> Element {
             }
         }
     });
-
     rsx! {
         List { style: "padding-top: 40vh;",
             ButtonHolder {
@@ -113,7 +107,6 @@ pub fn LoginWithCode() -> Element {
                 onclick: move |_| {
                     let mut client = API_CLIENT.cloned();
                     client.set_server(server());
-
                     let client_create_key = client.clone();
                     spawn(async move {
                         match client_create_key.create_api_key(challenge_id(), code()).await {

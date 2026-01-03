@@ -8,88 +8,91 @@ use crate::components::slider::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
 use std::vec;
-
 #[component]
-pub fn PropertiesRow(properties: Store<Vec<(PropertyInfo, PropertySettings)>>) -> Element {
+pub fn PropertiesRow(
+    properties: Store<Vec<(PropertyInfo, PropertySettings)>>,
+) -> Element {
     rsx! {
         List {
             for (index , property) in properties.read().clone().iter().enumerate() {
-                Property {
-                    // should be different (use property view hash)
-                    // key: "{property.0.id.as_str()}",
-                    index,
-                    properties,
-                }
+                Property { index, properties }
                 Separator {}
             }
         }
     }
 }
-
 #[component]
-pub fn Property(index: usize, properties: Store<Vec<(PropertyInfo, PropertySettings)>>) -> Element {
+pub fn Property(
+    index: usize,
+    properties: Store<Vec<(PropertyInfo, PropertySettings)>>,
+) -> Element {
     let property = properties.get(index).unwrap();
     let name = property().0.name;
     let edit = match property().1 {
-        PropertySettings::Date(settings) => rsx! {
-            DateSettingsEdit {
-                format: settings.date_format,
-                on_change: move |new_format: DateTimeFormat| {
-                    properties
-                        .write()
-                        .get_mut(index)
-                        .map(|(_, s)| {
-                            if let PropertySettings::Date(d) = s {
-                                d.date_format = new_format;
-                            }
-                        });
-                },
+        PropertySettings::Date(settings) => {
+            rsx! {
+                DateSettingsEdit {
+                    format: settings.date_format,
+                    on_change: move |new_format: DateTimeFormat| {
+                        properties
+                            .write()
+                            .get_mut(index)
+                            .map(|(_, s)| {
+                                if let PropertySettings::Date(d) = s {
+                                    d.date_format = new_format;
+                                }
+                            });
+                    },
+                }
+                GeneralPropertyEdit {
+                    settings: settings.general,
+                    on_change: move |new_settings: GeneralPropertySettings| {
+                        properties
+                            .write()
+                            .get_mut(index)
+                            .map(|(_, s)| {
+                                if let PropertySettings::Date(d) = s {
+                                    d.general = new_settings;
+                                }
+                            });
+                    },
+                }
             }
-            GeneralPropertyEdit {
-                settings: settings.general,
-                on_change: move |new_settings: GeneralPropertySettings| {
-                    properties
-                        .write()
-                        .get_mut(index)
-                        .map(|(_, s)| {
-                            if let PropertySettings::Date(d) = s {
-                                d.general = new_settings;
-                            }
-                        });
-                },
+        }
+        PropertySettings::General(settings) => {
+            rsx! {
+                GeneralPropertyEdit {
+                    settings,
+                    on_change: move |new_settings: GeneralPropertySettings| {
+                        properties
+                            .write()
+                            .get_mut(index)
+                            .map(|(_, s)| {
+                                if let PropertySettings::General(g) = s {
+                                    *g = new_settings;
+                                }
+                            });
+                    },
+                }
             }
-        },
-        PropertySettings::General(settings) => rsx! {
-            GeneralPropertyEdit {
-                settings,
-                on_change: move |new_settings: GeneralPropertySettings| {
-                    properties
-                        .write()
-                        .get_mut(index)
-                        .map(|(_, s)| {
-                            if let PropertySettings::General(g) = s {
-                                *g = new_settings;
-                            }
-
-                        });
-                },
+        }
+        PropertySettings::Checkbox(settings) => {
+            rsx! {
+                SizeSlider {
+                    size: settings.size,
+                    on_change: move |new_size: f64| {
+                        properties
+                            .write()
+                            .get_mut(index)
+                            .map(|(_, s)| {
+                                if let PropertySettings::Checkbox(c) = s {
+                                    c.size = new_size;
+                                }
+                            });
+                    },
+                }
             }
-        },
-        PropertySettings::Checkbox(settings) => rsx! {
-            SizeSlider {
-                size: settings.size,
-                on_change: move |new_size: f64| {
-                    properties
-                        .write()
-                        .get_mut(index)
-                        .map(|(_, s)| {
-                            if let PropertySettings::Checkbox(c) = s {
-                                c.size = new_size;
-                            }
-                        });
-                },
-            }
-        },
+        }
     };
     rsx! {
         Row {
@@ -108,9 +111,34 @@ pub fn Property(index: usize, properties: Store<Vec<(PropertyInfo, PropertySetti
             }
         }
         {edit}
+        Row { position: Position::Middle,
+            Button {
+                variant: if 0 < index { ButtonVariant::Primary } else { ButtonVariant::Ghost },
+                onclick: move |_| {
+                    properties
+                        .with_mut(|v| {
+                            if 0 < index {
+                                v.swap(index - 1, index);
+                            }
+                        });
+                },
+                "<"
+            }
+            Button {
+                variant: if index + 1 < properties.read().len() { ButtonVariant::Primary } else { ButtonVariant::Ghost },
+                onclick: move |_| {
+                    properties
+                        .with_mut(|v| {
+                            if index + 1 < v.len() {
+                                v.swap(index, index + 1);
+                            }
+                        });
+                },
+                ">"
+            }
+        }
     }
 }
-
 #[component]
 pub fn GeneralPropertyEdit(
     settings: GeneralPropertySettings,
@@ -143,7 +171,6 @@ pub fn GeneralPropertyEdit(
         }
     }
 }
-
 #[component]
 fn SizeSlider(size: f64, on_change: EventHandler<f64>) -> Element {
     rsx! {
@@ -157,7 +184,6 @@ fn SizeSlider(size: f64, on_change: EventHandler<f64>) -> Element {
         }
     }
 }
-
 #[component]
 fn PropertySlider(
     id: String,

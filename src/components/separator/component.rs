@@ -1,6 +1,5 @@
 use dioxus::prelude::*;
 use dioxus_primitives::separator::{self, SeparatorProps};
-
 #[component]
 pub fn Separator(props: SeparatorProps) -> Element {
     rsx! {

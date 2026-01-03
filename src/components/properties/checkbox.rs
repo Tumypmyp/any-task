@@ -4,7 +4,6 @@ use crate::helpers::*;
 use dioxus::prelude::*;
 use dioxus_primitives::checkbox::CheckboxState;
 use openapi::models::ApimodelCheckboxPropertyValue;
-
 impl PropertyRenderer for ApimodelCheckboxPropertyValue {
     fn render(
         &self,
@@ -14,18 +13,19 @@ impl PropertyRenderer for ApimodelCheckboxPropertyValue {
         settings: PropertySettings,
     ) -> Element {
         match settings {
-            PropertySettings::Checkbox(s) => rsx! {
-                CheckboxPropertyValue {
-                    space_id: &space_id,
-                    object_id: &object_id,
-                    prop: self.clone(),
+            PropertySettings::Checkbox(s) => {
+                rsx! {
+                    CheckboxPropertyValue {
+                        space_id: &space_id,
+                        object_id: &object_id,
+                        prop: self.clone(),
+                    }
                 }
-            },
+            }
             _ => rsx! {},
         }
     }
 }
-
 #[component]
 pub fn CheckboxPropertyValue(
     space_id: String,
@@ -47,7 +47,6 @@ pub fn CheckboxPropertyValue(
                 };
                 API_CLIENT.read().update_done_property(sp, ob, value.read().checkbox);
             },
-
             default_checked: if value().checkbox.unwrap_or_default() { CheckboxState::Checked } else { CheckboxState::Unchecked },
         }
     }

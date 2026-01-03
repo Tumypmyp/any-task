@@ -2,7 +2,6 @@ use dioxus::prelude::*;
 use dioxus_primitives::dialog::{
     self, DialogCtx, DialogDescriptionProps, DialogRootProps, DialogTitleProps,
 };
-
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub enum SheetSide {
     Top,
@@ -11,7 +10,6 @@ pub enum SheetSide {
     Bottom,
     Left,
 }
-
 impl SheetSide {
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -22,7 +20,6 @@ impl SheetSide {
         }
     }
 }
-
 #[component]
 pub fn Sheet(props: DialogRootProps) -> Element {
     rsx! {
@@ -37,7 +34,6 @@ pub fn Sheet(props: DialogRootProps) -> Element {
         }
     }
 }
-
 #[component]
 fn SheetRoot(props: DialogRootProps) -> Element {
     rsx! {
@@ -55,19 +51,19 @@ fn SheetRoot(props: DialogRootProps) -> Element {
         }
     }
 }
-
 #[component]
 pub fn SheetContent(
-    #[props(default = ReadSignal::new(Signal::new(None)))] id: ReadSignal<Option<String>>,
-    #[props(default)] side: SheetSide,
-    #[props(default)] class: Option<String>,
-    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    #[props(default = ReadSignal::new(Signal::new(None)))]
+    id: ReadSignal<Option<String>>,
+    #[props(default)]
+    side: SheetSide,
+    #[props(default)]
+    class: Option<String>,
+    #[props(extends = GlobalAttributes)]
+    attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
-    let class = class
-        .map(|c| format!("sheet {c}"))
-        .unwrap_or("sheet".to_string());
-
+    let class = class.map(|c| format!("sheet {c}")).unwrap_or("sheet".to_string());
     rsx! {
         dialog::DialogContent {
             class,
@@ -88,27 +84,26 @@ pub fn SheetContent(
         }
     }
 }
-
 #[component]
 pub fn SheetHeader(
-    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    #[props(extends = GlobalAttributes)]
+    attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
     rsx! {
         div { class: "sheet-header", "data-slot": "sheet-header", ..attributes, {children} }
     }
 }
-
 #[component]
 pub fn SheetFooter(
-    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    #[props(extends = GlobalAttributes)]
+    attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
     rsx! {
         div { class: "sheet-footer", "data-slot": "sheet-footer", ..attributes, {children} }
     }
 }
-
 #[component]
 pub fn SheetTitle(props: DialogTitleProps) -> Element {
     rsx! {
@@ -121,7 +116,6 @@ pub fn SheetTitle(props: DialogTitleProps) -> Element {
         }
     }
 }
-
 #[component]
 pub fn SheetDescription(props: DialogDescriptionProps) -> Element {
     rsx! {
@@ -134,20 +128,20 @@ pub fn SheetDescription(props: DialogDescriptionProps) -> Element {
         }
     }
 }
-
 #[component]
 pub fn SheetClose(
-    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    #[props(extends = GlobalAttributes)]
+    attributes: Vec<Attribute>,
     r#as: Option<Callback<Vec<Attribute>, Element>>,
     children: Element,
 ) -> Element {
     let ctx: DialogCtx = use_context();
-
-    let mut merged_attributes: Vec<Attribute> = vec![onclick(move |_| {
-        ctx.set_open(false);
-    })];
+    let mut merged_attributes: Vec<Attribute> = vec![
+        onclick(move |_| {
+            ctx.set_open(false);
+        }),
+    ];
     merged_attributes.extend(attributes);
-
     if let Some(dynamic) = r#as {
         dynamic.call(merged_attributes)
     } else {

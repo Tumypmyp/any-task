@@ -3,7 +3,6 @@ use crate::components::row::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
 use std::vec;
-
 #[component]
 pub fn AddProperties(
     properties: Store<Vec<(PropertyInfo, PropertySettings)>>,

@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
-
 #[component]
 pub fn List(
-    #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
+    #[props(extends = GlobalAttributes)]
+    attributes: Vec<Attribute>,
     onclick: Option<EventHandler<MouseEvent>>,
     children: Element,
 ) -> Element {

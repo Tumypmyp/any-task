@@ -1,19 +1,20 @@
-use crate::helpers::*;
 use crate::components::add_properties::*;
 use crate::components::button::*;
-use crate::components::separator::*;
 use crate::components::properties_row::PropertiesRow;
 use crate::components::scroll_area::*;
-use dioxus_primitives::scroll_area::ScrollDirection;
+use crate::components::separator::*;
 use crate::components::sheet::*;
+use crate::helpers::*;
 use dioxus::prelude::*;
+use dioxus_primitives::scroll_area::ScrollDirection;
 use std::vec;
 #[component]
 pub fn EditView(
     properties: Store<Vec<(PropertyInfo, PropertySettings)>>,
-    all_properties: Store<Vec<PropertyInfo>>, space_id: Signal<String>) -> Element {
+    all_properties: Store<Vec<PropertyInfo>>,
+    space_id: Signal<String>,
+) -> Element {
     let mut open = use_signal(|| false);
-
     rsx! {
         ButtonHolder {
             Button {

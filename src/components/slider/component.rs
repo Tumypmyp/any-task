@@ -2,7 +2,6 @@ use dioxus::prelude::*;
 pub use dioxus_primitives::slider::{
     self, SliderProps, SliderRangeProps, SliderThumbProps, SliderTrackProps, SliderValue,
 };
-
 #[component]
 pub fn Slider(props: SliderProps) -> Element {
     rsx! {
@@ -24,21 +23,18 @@ pub fn Slider(props: SliderProps) -> Element {
         }
     }
 }
-
 #[component]
 pub fn SliderTrack(props: SliderTrackProps) -> Element {
     rsx! {
         slider::SliderTrack { class: "slider-track", attributes: props.attributes, {props.children} }
     }
 }
-
 #[component]
 pub fn SliderRange(props: SliderRangeProps) -> Element {
     rsx! {
         slider::SliderRange { class: "slider-range", attributes: props.attributes, {props.children} }
     }
 }
-
 #[component]
 pub fn SliderThumb(props: SliderThumbProps) -> Element {
     rsx! {

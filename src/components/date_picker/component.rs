@@ -1,14 +1,10 @@
-use dioxus::prelude::*;
-
-use dioxus_primitives::{
-    date_picker::{self, DatePickerInputProps, DatePickerProps},
-    popover::{PopoverContentProps, PopoverTriggerProps},
-    ContentAlign,
-};
-
 use super::super::calendar::*;
 use super::super::popover::*;
-
+use dioxus::prelude::*;
+use dioxus_primitives::{
+    ContentAlign, date_picker::{self, DatePickerInputProps, DatePickerProps},
+    popover::{PopoverContentProps, PopoverTriggerProps},
+};
 #[component]
 pub fn DatePicker(props: DatePickerProps) -> Element {
     rsx! {
@@ -26,7 +22,6 @@ pub fn DatePicker(props: DatePickerProps) -> Element {
         }
     }
 }
-
 #[component]
 pub fn DatePickerInput(props: DatePickerInputProps) -> Element {
     rsx! {
@@ -53,7 +48,6 @@ pub fn DatePickerInput(props: DatePickerInputProps) -> Element {
         }
     }
 }
-
 #[component]
 pub fn DatePickerPopoverTrigger(props: PopoverTriggerProps) -> Element {
     rsx! {
@@ -67,7 +61,6 @@ pub fn DatePickerPopoverTrigger(props: PopoverTriggerProps) -> Element {
         }
     }
 }
-
 #[component]
 pub fn DatePickerPopoverContent(props: PopoverContentProps) -> Element {
     rsx! {

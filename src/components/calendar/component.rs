@@ -1,10 +1,9 @@
 use dioxus::prelude::*;
 use dioxus_primitives::calendar::{
-    self, CalendarDayProps, CalendarGridProps, CalendarHeaderProps, CalendarMonthTitleProps,
-    CalendarNavigationProps, CalendarProps, CalendarSelectMonthProps, CalendarSelectYearProps,
-    RangeCalendarProps,
+    self, CalendarDayProps, CalendarGridProps, CalendarHeaderProps,
+    CalendarMonthTitleProps, CalendarNavigationProps, CalendarProps,
+    CalendarSelectMonthProps, CalendarSelectYearProps, RangeCalendarProps,
 };
-
 #[component]
 pub fn Calendar(props: CalendarProps) -> Element {
     rsx! {
@@ -29,7 +28,6 @@ pub fn Calendar(props: CalendarProps) -> Element {
         }
     }
 }
-
 #[component]
 pub fn RangeCalendar(props: RangeCalendarProps) -> Element {
     rsx! {
@@ -54,24 +52,22 @@ pub fn RangeCalendar(props: RangeCalendarProps) -> Element {
         }
     }
 }
-
 #[component]
 pub fn CalendarHeader(props: CalendarHeaderProps) -> Element {
     rsx! {
         calendar::CalendarHeader { id: props.id, attributes: props.attributes, {props.children} }
     }
 }
-
 #[component]
 pub fn CalendarNavigation(props: CalendarNavigationProps) -> Element {
     rsx! {
         calendar::CalendarNavigation { attributes: props.attributes, {props.children} }
     }
 }
-
 #[component]
 pub fn CalendarPreviousMonthButton(
-    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    #[props(extends = GlobalAttributes)]
+    attributes: Vec<Attribute>,
 ) -> Element {
     rsx! {
         calendar::CalendarPreviousMonthButton { attributes,
@@ -84,10 +80,10 @@ pub fn CalendarPreviousMonthButton(
         }
     }
 }
-
 #[component]
 pub fn CalendarNextMonthButton(
-    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    #[props(extends = GlobalAttributes)]
+    attributes: Vec<Attribute>,
 ) -> Element {
     rsx! {
         calendar::CalendarNextMonthButton { attributes,
@@ -100,21 +96,18 @@ pub fn CalendarNextMonthButton(
         }
     }
 }
-
 #[component]
 pub fn CalendarSelectMonth(props: CalendarSelectMonthProps) -> Element {
     rsx! {
         calendar::CalendarSelectMonth { class: "calendar-month-select", attributes: props.attributes }
     }
 }
-
 #[component]
 pub fn CalendarSelectYear(props: CalendarSelectYearProps) -> Element {
     rsx! {
         calendar::CalendarSelectYear { class: "calendar-year-select", attributes: props.attributes }
     }
 }
-
 #[component]
 pub fn CalendarGrid(props: CalendarGridProps) -> Element {
     rsx! {
@@ -126,12 +119,10 @@ pub fn CalendarGrid(props: CalendarGridProps) -> Element {
         }
     }
 }
-
 #[component]
 pub fn CalendarMonthTitle(props: CalendarMonthTitleProps) -> Element {
     calendar::CalendarMonthTitle(props)
 }
-
 #[component]
 pub fn CalendarDay(props: CalendarDayProps) -> Element {
     calendar::CalendarDay(props)

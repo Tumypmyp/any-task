@@ -1,6 +1,5 @@
 use dioxus::prelude::*;
 use dioxus_primitives::switch::{self, SwitchProps, SwitchThumbProps};
-
 #[component]
 pub fn Switch(props: SwitchProps) -> Element {
     rsx! {
@@ -19,7 +18,6 @@ pub fn Switch(props: SwitchProps) -> Element {
         }
     }
 }
-
 #[component]
 pub fn SwitchThumb(props: SwitchThumbProps) -> Element {
     rsx! {

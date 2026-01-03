@@ -16,7 +16,6 @@ impl Position {
         }
     }
 }
-
 #[component]
 pub fn ActionHolder(#[props(default)] position: Position, children: Element) -> Element {
     rsx! {
@@ -24,7 +23,6 @@ pub fn ActionHolder(#[props(default)] position: Position, children: Element) -> 
         div { class: "action-holder", "data-position": position.as_str(), {children} }
     }
 }
-
 #[component]
 pub fn BaseActions() -> Element {
     let nav = navigator();

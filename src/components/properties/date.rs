@@ -10,7 +10,6 @@ use openapi::models::ApimodelDatePropertyValue;
 use time::format_description::well_known::Rfc3339;
 use time::macros::{format_description, offset};
 use time::{Date, OffsetDateTime, Time, UtcDateTime, UtcOffset};
-
 #[component]
 pub fn DateSettingsEdit(
     format: DateTimeFormat,
@@ -50,7 +49,6 @@ pub fn DateSettingsEdit(
         }
     }
 }
-
 impl PropertyRenderer for ApimodelDatePropertyValue {
     fn render(
         &self,
@@ -74,7 +72,6 @@ impl PropertyRenderer for ApimodelDatePropertyValue {
         }
     }
 }
-
 #[component]
 pub fn DateTimePropertyValues(
     space_id: String,
@@ -87,13 +84,14 @@ pub fn DateTimePropertyValues(
     let date = prop.date.unwrap_or_default();
     let space_id = use_signal(|| space_id.clone());
     let object_id = use_signal(|| object_id.clone());
-    let offset = UtcOffset::current_local_offset().unwrap_or(offset! {
-        + 0
-    });
+    let offset = UtcOffset::current_local_offset()
+        .unwrap_or(
+            offset! {
+                + 0
+            },
+        );
     let dt = use_signal(|| {
-        UtcDateTime::parse(&date, &Rfc3339)
-            .unwrap()
-            .to_offset(offset)
+        UtcDateTime::parse(&date, &Rfc3339).unwrap().to_offset(offset)
     });
     rsx! {
         if settings == DateTimeFormat::DateTime || settings == DateTimeFormat::Date {

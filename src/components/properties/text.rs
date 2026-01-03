@@ -2,7 +2,6 @@ use crate::components::button::Button;
 use crate::helpers::*;
 use dioxus::prelude::*;
 use openapi::models::ApimodelTextPropertyValue;
-
 impl PropertyRenderer for ApimodelTextPropertyValue {
     fn render(
         &self,
@@ -20,7 +19,6 @@ impl PropertyRenderer for ApimodelTextPropertyValue {
         }
     }
 }
-
 #[component]
 pub fn TextPropertyValue(
     space_id: String,

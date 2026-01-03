@@ -1,6 +1,5 @@
 use dioxus::prelude::*;
 use dioxus_primitives::label::{self, LabelProps};
-
 #[component]
 pub fn Label(props: LabelProps) -> Element {
     rsx! {

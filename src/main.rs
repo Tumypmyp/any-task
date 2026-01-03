@@ -17,7 +17,6 @@ pub const USER_SETTINGS_KEY: &str = "settings";
 use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
 use views::AppSettings;
-
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/main.css");
 const THEME_CSS: Asset = asset!("/assets/dx-components-theme.css");
@@ -43,17 +42,19 @@ fn main() {
         .with_focused(true)
         .with_inner_size(PhysicalSize::new(900, 1300));
     let cfg = if cfg!(target_os = "windows") {
-        let user_data_dir = env::var("LOCALAPPDATA").expect("env var LOCALAPPDATA not found");
+        let user_data_dir = env::var("LOCALAPPDATA")
+            .expect("env var LOCALAPPDATA not found");
         tracing::debug!("user path is {:#?}", user_data_dir);
         dioxus_sdk_storage::set_dir!();
         dioxus_desktop::Config::new()
             .with_data_directory(user_data_dir)
             .with_window(window_config)
     } else if cfg!(target_os = "linux") {
-        let user_data_dir = env::var("XDG_DATA_HOME").unwrap_or_else(|_| {
-            let home_dir = env::var("HOME").expect("env var HOME not found");
-            format!("{}/.local/share", home_dir)
-        });
+        let user_data_dir = env::var("XDG_DATA_HOME")
+            .unwrap_or_else(|_| {
+                let home_dir = env::var("HOME").expect("env var HOME not found");
+                format!("{}/.local/share", home_dir)
+            });
         dioxus_sdk_storage::set_dir!();
         Config::new()
             .with_data_directory(PathBuf::from(user_data_dir).join("AnyTasks"))
@@ -70,7 +71,6 @@ fn main() {
     tracing::info!("config is ready");
     dioxus_desktop::launch::launch(App, vec![], vec![Box::new(cfg)]);
 }
-
 #[component]
 fn App() -> Element {
     _ = document::eval("document.documentElement.setAttribute('data-theme', 'dark');");
@@ -83,16 +83,19 @@ fn App() -> Element {
         });
         tracing::info!("Background proxy task started.");
     });
-    let mut settings =
-        use_synced_storage::<LocalStorage, _>(USER_SETTINGS_KEY.into(), || AppSettings {
+    let mut settings = use_synced_storage::<
+        LocalStorage,
+        _,
+    >(
+        USER_SETTINGS_KEY.into(),
+        || AppSettings {
             token: "".to_string(),
             server: "127.0.0.1:31010".to_string(),
-        });
+        },
+    );
     use_effect(move || {
         let loaded_settings = settings.read();
-        API_CLIENT
-            .write()
-            .set_server(loaded_settings.server.clone());
+        API_CLIENT.write().set_server(loaded_settings.server.clone());
         API_CLIENT.write().set_token(loaded_settings.token.clone());
     });
     use_effect(move || {
@@ -113,9 +116,7 @@ fn App() -> Element {
             document::Link { rel: "icon", href: FAVICON }
             document::Stylesheet { href: MAIN_CSS }
             document::Stylesheet { href: THEME_CSS }
-            // todo: asset does not load by itself
             document::Stylesheet { href: asset!("/src/components/button/style.css") }
-            // document::Stylesheet { href: asset!("/src/components/action/style.css") }
             Router::<Route> {}
         }
     }
