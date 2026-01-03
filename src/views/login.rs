@@ -3,8 +3,8 @@ use crate::Route;
 use crate::components::action::*;
 use crate::components::base::message;
 use crate::components::button::{Button, ButtonHolder, ButtonVariant};
+use crate::components::column::Column;
 use crate::components::input::Input;
-use crate::components::list::List;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Default)]
@@ -53,7 +53,7 @@ pub fn LoginWithCode() -> Element {
         }
     });
     rsx! {
-        List { style: "padding-top: 40vh;",
+        Column { style: "padding-top: 40vh;",
             ButtonHolder {
                 Input {
                     r#type: "url",

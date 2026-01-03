@@ -1,6 +1,6 @@
 use crate::components::button::*;
+use crate::components::column::*;
 use crate::components::label::*;
-use crate::components::list::*;
 use crate::components::properties::*;
 use crate::components::row::*;
 use crate::components::separator::*;
@@ -9,11 +9,9 @@ use crate::helpers::*;
 use dioxus::prelude::*;
 use std::vec;
 #[component]
-pub fn PropertiesRow(
-    properties: Store<Vec<(PropertyInfo, PropertySettings)>>,
-) -> Element {
+pub fn PropertiesRow(properties: Store<Vec<(PropertyInfo, PropertySettings)>>) -> Element {
     rsx! {
-        List {
+        Column {
             for (index , property) in properties.read().clone().iter().enumerate() {
                 Property { index, properties }
                 Separator {}
@@ -22,10 +20,7 @@ pub fn PropertiesRow(
     }
 }
 #[component]
-pub fn Property(
-    index: usize,
-    properties: Store<Vec<(PropertyInfo, PropertySettings)>>,
-) -> Element {
+pub fn Property(index: usize, properties: Store<Vec<(PropertyInfo, PropertySettings)>>) -> Element {
     let property = properties.get(index).unwrap();
     let name = property().0.name;
     let edit = match property().1 {
@@ -123,6 +118,10 @@ pub fn Property(
                         });
                 },
                 "<"
+            }
+            Column {
+                Button{"^"}
+                Button{"V"}
             }
             Button {
                 variant: if index + 1 < properties.read().len() { ButtonVariant::Primary } else { ButtonVariant::Ghost },

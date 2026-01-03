@@ -11,12 +11,12 @@ let
     src = pkgs.fetchFromGitHub {
       owner = "DioxusLabs";
       repo = "dioxus";
-      rev = "f7e102a0b4868f51f35059ddacb19d78f10f0fa6";
-      hash = "sha256-xDgXHRnye88voMJ4Fuw58gmu0N6U73K5QzniMF2+b00=";
+      # to update first set rev to the commit id, hash = ""; and cargoHash = "";
+      rev = "ec8f31dece5c75371177bf080bab46dff54ffd0e";
+      hash = "sha256-M4RPKONdInkt5CjHUsWWE4QmYF87CuXEOrsafm/QOJo=";
     };
     buildAndTestSubdir = "packages/cli";
-    cargoHash = "sha256-TC9NtCoJDG8tuRgwV9psBVKqz8OQFvMAKXkCHSTqXws=";
-
+    cargoHash = "sha256-mLWTcaPj0UvK/xnoSIQzkVQMeMnHbijC1p0YRB+sB6k=";
     checkFlags = [
       "--skip=wasm_bindgen::test::test_cargo_install"
       "--skip=wasm_bindgen::test::test_github_install"
@@ -73,7 +73,6 @@ in
     pkgs.xdotool
     pkgs.openssl
     pkgs.libsoup_3
-
     pkgs.webkitgtk_4_1
 
     # bundle windows
@@ -152,7 +151,7 @@ in
       pkgs.unzip
     ];
     exec = ''
-      dx bundle --android --release --target  aarch64-linux-android --out-dir "$TEMP_DIR" || { echo "Failed to bundle AAB with dioxuss"; exit 1; }
+      dx bundle --android --release --target  aarch64-linux-android --out-dir "$TEMP_DIR" || { echo "Failed to bundle AAB with dioxus"; exit 1; }
 
       if [ -d "$OUTPUT_DIR" ]; then
           echo "Removing existing Android files: $OUTPUT_DIR"

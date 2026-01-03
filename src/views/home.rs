@@ -5,8 +5,8 @@ use crate::components::action::*;
 use crate::components::base::message;
 use crate::components::button::Button;
 use crate::components::button::ButtonVariant;
-use crate::components::header::Title;
-use crate::components::list::List;
+use crate::components::column::Column;
+use crate::components::header::{Header, Title};
 use dioxus::prelude::*;
 use openapi::models::ApimodelSpace;
 #[component]
@@ -31,8 +31,10 @@ pub fn Home() -> Element {
     };
     tracing::info!("Opened home");
     rsx! {
-        Title { title: "Spaces" }
-        List {
+        Header {
+            Title { title: "Spaces" }
+        }
+        Column {
             for space in spaces.data.clone().unwrap_or_default() {
                 SpaceButton { space }
             }

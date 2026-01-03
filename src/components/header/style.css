@@ -3,6 +3,7 @@
     flex-direction: row;
     display: flex;
     gap: 5px;
+    justify-content: center;
     /*justify-content: space-between;
  padding: 0.5rem 0;*/
 }
