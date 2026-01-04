@@ -2,10 +2,10 @@ use crate::API_CLIENT;
 use crate::ObjectRow;
 use crate::components::action::{ActionHolder, BaseActions};
 use crate::components::base::message;
-use crate::components::choose_view::ChooseView;
 use crate::components::header::{Header, Title};
 use crate::edit_view::*;
 use crate::helpers::*;
+use crate::separator::Separator;
 use dioxus::prelude::*;
 use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
@@ -18,22 +18,22 @@ pub fn List(space_id: String, list_id: String) -> Element {
     let list_id = use_signal(|| list_id);
     let view_id = use_store(|| "".to_string());
     let storage_key = format!("properties-list-view-{}", list_id());
-    let mut properties = use_synced_storage::<LocalStorage, Vec<(PropertyInfo, PropertySettings)>>(
-        storage_key,
-        || {
-            vec![(
-                PropertyInfo {
-                    id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
-                    name: "Name".to_string(),
-                    optional: OptionalInfo::Other,
-                },
-                PropertySettings::General(GeneralPropertySettings {
-                    width: 30.0,
-                    height: 10.0,
-                }),
-            )]
-        },
-    );
+    let mut properties = use_synced_storage::<
+        LocalStorage,
+        Vec<Vec<(PropertyInfo, PropertySettings)>>,
+    >(storage_key, || {
+        vec![vec![(
+            PropertyInfo {
+                id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
+                name: "Name".to_string(),
+                optional: OptionalInfo::Other,
+            },
+            PropertySettings::General(GeneralPropertySettings {
+                width: 30.0,
+                height: 10.0,
+            }),
+        )]]
+    });
     let properties_store = use_store(|| properties.read().clone());
     use_effect(move || {
         let store_value = properties_store.read().clone();
@@ -106,7 +106,7 @@ pub fn ListHeader(
     space_id: Signal<String>,
     list_id: Signal<String>,
     view_id: Store<String>,
-    properties: Store<Vec<(PropertyInfo, PropertySettings)>>,
+    properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>>,
     all_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     let mut name = use_signal(|| "".to_string());
@@ -128,8 +128,13 @@ pub fn ListHeader(
     rsx! {
         Header {
             Title { title: "{name}" }
-            ChooseView { space_id, list_id, view_id }
-            EditView { properties, all_properties, space_id }
+            EditView {
+                space_id,
+                list_id,
+                view_id,
+                properties,
+                all_properties,
+            }
         }
     }
 }
@@ -138,7 +143,7 @@ pub fn Objects(
     space_id: Signal<String>,
     list_id: Signal<String>,
     view_id: Store<String>,
-    properties: Store<Vec<(PropertyInfo, PropertySettings)>>,
+    properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>>,
 ) -> Element {
     let api_client_handle = API_CLIENT.cloned();
     let resp = use_resource(move || {
@@ -163,6 +168,11 @@ pub fn Objects(
     rsx! {
         for obj in objects.data.clone().unwrap_or_default() {
             if let Some(id) = obj.clone().id {
+                Separator {
+                    style: "margin: 2px 0; width: 95vw;",
+                    horizontal: true,
+                    decorative: true,
+                }
                 ObjectRow {
                     key: "{id}",
                     name: obj.clone().name.unwrap(),

@@ -5,7 +5,7 @@ use dioxus::prelude::*;
 use std::vec;
 #[component]
 pub fn AddProperties(
-    properties: Store<Vec<(PropertyInfo, PropertySettings)>>,
+    properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>>,
     all_properties: Store<Vec<PropertyInfo>>,
 ) -> Element {
     rsx! {
@@ -24,7 +24,7 @@ pub fn AddProperties(
 #[component]
 pub fn ShowProperty(
     property: PropertyInfo,
-    properties: Store<Vec<(PropertyInfo, PropertySettings)>>,
+    properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>>,
 ) -> Element {
     let name = property.clone().name;
     rsx! {
@@ -40,7 +40,11 @@ pub fn ShowProperty(
                 };
                 properties
                     .with_mut(|v| {
-                        v.push((property.clone(), settings));
+                        if let Some(last_row) = v.last_mut() {
+                            last_row.push((property.clone(), settings));
+                        } else {
+                            v.push(vec![(property.clone(), settings)]);
+                        }
                     });
             },
             "{name}"

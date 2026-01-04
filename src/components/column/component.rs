@@ -7,6 +7,15 @@ pub fn Column(
 ) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
-        div { class: "column", ..attributes, {children} }
+        button {
+            class: "column",
+            onclick: move |event| {
+                if let Some(f) = &onclick {
+                    f.call(event);
+                }
+            },
+            ..attributes,
+            {children}
+        }
     }
 }

@@ -9,48 +9,57 @@ use crate::helpers::*;
 use dioxus::prelude::*;
 use std::vec;
 #[component]
-pub fn PropertiesRow(properties: Store<Vec<(PropertyInfo, PropertySettings)>>) -> Element {
+pub fn PropertiesRow(properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>>) -> Element {
     rsx! {
         Column {
-            for (index , property) in properties.read().clone().iter().enumerate() {
-                Property { index, properties }
-                Separator {}
+            for (i , vec_property) in properties.read().clone().iter().enumerate() {
+                for (j , property) in vec_property.iter().enumerate() {
+                    Property { i, j, properties }
+                    Separator {}
+                }
             }
         }
     }
 }
 #[component]
-pub fn Property(index: usize, properties: Store<Vec<(PropertyInfo, PropertySettings)>>) -> Element {
-    let property = properties.get(index).unwrap();
+pub fn Property(
+    i: usize,
+    j: usize,
+    properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>>,
+) -> Element {
+    let property = properties.get(i).unwrap().get(j).unwrap();
     let name = property().0.name;
+    let mut mutate_settings = move |callback: Box<dyn FnOnce(&mut PropertySettings)>| {
+        properties.with_mut(|rows| {
+            if let Some(row) = rows.get_mut(i) {
+                if let Some((_, settings)) = row.get_mut(j) {
+                    callback(settings);
+                }
+            }
+        });
+    };
     let edit = match property().1 {
         PropertySettings::Date(settings) => {
             rsx! {
                 DateSettingsEdit {
                     format: settings.date_format,
-                    on_change: move |new_format: DateTimeFormat| {
-                        properties
-                            .write()
-                            .get_mut(index)
-                            .map(|(_, s)| {
-                                if let PropertySettings::Date(d) = s {
-                                    d.date_format = new_format;
-                                }
-                            });
-                    },
+                    on_change: move |new_format: DateTimeFormat| mutate_settings(
+                        Box::new(move |s| {
+                            if let PropertySettings::Date(d) = s {
+                                d.date_format = new_format;
+                            }
+                        }),
+                    ),
                 }
                 GeneralPropertyEdit {
                     settings: settings.general,
-                    on_change: move |new_settings: GeneralPropertySettings| {
-                        properties
-                            .write()
-                            .get_mut(index)
-                            .map(|(_, s)| {
-                                if let PropertySettings::Date(d) = s {
-                                    d.general = new_settings;
-                                }
-                            });
-                    },
+                    on_change: move |new_settings: GeneralPropertySettings| mutate_settings(
+                        Box::new(move |s| {
+                            if let PropertySettings::Date(d) = s {
+                                d.general = new_settings;
+                            }
+                        }),
+                    ),
                 }
             }
         }
@@ -58,16 +67,13 @@ pub fn Property(index: usize, properties: Store<Vec<(PropertyInfo, PropertySetti
             rsx! {
                 GeneralPropertyEdit {
                     settings,
-                    on_change: move |new_settings: GeneralPropertySettings| {
-                        properties
-                            .write()
-                            .get_mut(index)
-                            .map(|(_, s)| {
-                                if let PropertySettings::General(g) = s {
-                                    *g = new_settings;
-                                }
-                            });
-                    },
+                    on_change: move |new_settings: GeneralPropertySettings| mutate_settings(
+                        Box::new(move |s| {
+                            if let PropertySettings::General(g) = s {
+                                *g = new_settings;
+                            }
+                        }),
+                    ),
                 }
             }
         }
@@ -75,30 +81,27 @@ pub fn Property(index: usize, properties: Store<Vec<(PropertyInfo, PropertySetti
             rsx! {
                 SizeSlider {
                     size: settings.size,
-                    on_change: move |new_size: f64| {
-                        properties
-                            .write()
-                            .get_mut(index)
-                            .map(|(_, s)| {
-                                if let PropertySettings::Checkbox(c) = s {
-                                    c.size = new_size;
-                                }
-                            });
-                    },
+                    on_change: move |new_size: f64| mutate_settings(
+                        Box::new(move |s| {
+                            if let PropertySettings::Checkbox(c) = s {
+                                c.size = new_size;
+                            }
+                        }),
+                    ),
                 }
             }
         }
     };
     rsx! {
-        Row {
+        Row { position: Position::Middle,
             Button { variant: ButtonVariant::Secondary, "{name}" }
             Button {
                 variant: ButtonVariant::Destructive,
                 onclick: move |_| {
                     properties
                         .with_mut(|v| {
-                            if index < v.len() {
-                                v.remove(index);
+                            if j < v.len() {
+                                v.remove(j);
                             }
                         });
                 },
@@ -108,28 +111,77 @@ pub fn Property(index: usize, properties: Store<Vec<(PropertyInfo, PropertySetti
         {edit}
         Row { position: Position::Middle,
             Button {
-                variant: if 0 < index { ButtonVariant::Primary } else { ButtonVariant::Ghost },
+                variant: if 0 < j { ButtonVariant::Primary } else { ButtonVariant::Ghost },
                 onclick: move |_| {
                     properties
                         .with_mut(|v| {
-                            if 0 < index {
-                                v.swap(index - 1, index);
+                            if 0 < j {
+                                v[i].swap(j - 1, j);
                             }
                         });
                 },
                 "<"
             }
             Column {
-                Button{"^"}
-                Button{"V"}
+                Button {
+                    onclick: move |_| {
+                        properties
+                            .with_mut(|rows| {
+                                let item = rows
+                                    .get_mut(i)
+                                    .and_then(|row| {
+                                        if j < row.len() { Some(row.remove(j)) } else { None }
+                                    });
+                                if let Some(extracted_item) = item {
+                                    if 0 < i {
+                                        let prev_row = &mut rows[i - 1];
+                                        if j <= prev_row.len() {
+                                            prev_row.insert(j, extracted_item);
+                                        } else {
+                                            prev_row.push(extracted_item);
+                                        }
+                                    } else {
+                                        rows.push(vec![extracted_item]);
+                                    }
+                                }
+                            });
+                    },
+                    "^"
+                }
+                Button {
+                    onclick: move |_| {
+                        properties
+
+                            .with_mut(|rows| {
+                                let item = rows
+                                    .get_mut(i)
+                                    .and_then(|row| {
+                                        if j < row.len() { Some(row.remove(j)) } else { None }
+                                    });
+                                if let Some(extracted_item) = item {
+                                    if i + 1 < rows.len() {
+                                        let next_row = &mut rows[i + 1];
+                                        if j <= next_row.len() {
+                                            next_row.insert(j, extracted_item);
+                                        } else {
+                                            next_row.push(extracted_item);
+                                        }
+                                    } else {
+                                        rows.push(vec![extracted_item]);
+                                    }
+                                }
+                            });
+                    },
+                    "V"
+                }
             }
             Button {
-                variant: if index + 1 < properties.read().len() { ButtonVariant::Primary } else { ButtonVariant::Ghost },
+                variant: if j + 1 < properties.read()[i].len() { ButtonVariant::Primary } else { ButtonVariant::Ghost },
                 onclick: move |_| {
                     properties
                         .with_mut(|v| {
-                            if index + 1 < v.len() {
-                                v.swap(index, index + 1);
+                            if j + 1 < v[i].len() {
+                                v[i].swap(j, j + 1);
                             }
                         });
                 },

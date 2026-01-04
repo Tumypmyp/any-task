@@ -101,8 +101,11 @@ or
 
 ### Client API generation
 
-- copy `openapi.yaml` to `apis/`
-
+- copy `openapi-version.yaml` to `apis/`
+- build the client
+  ```bash
+  (devenv) client-api-generate
+  ```
 #### 2025-11-08 Patches
 - add view type enums (can return types outside the enum set)
   ```
@@ -115,7 +118,8 @@ or
       - calendar
       - graph
   ```
-- ```   
+- add property name mapping
+  ```   
     PropertyWithValue:
       discriminator:
         propertyName: format
@@ -131,8 +135,4 @@ or
           email: "#/components/schemas/EmailPropertyValue"
           phone: "#/components/schemas/PhonePropertyValue"
           objects: "#/components/schemas/ObjectsPropertyValue"
- ```
-
-```bash
-(devenv) client-api-generate
-```
+  ```

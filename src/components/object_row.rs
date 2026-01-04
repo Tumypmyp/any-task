@@ -1,9 +1,9 @@
 use crate::Route;
+use crate::column::Column;
 use crate::components::row::*;
 use crate::helpers::NAME_PROPERTY_ID_STR;
 use crate::helpers::*;
 use crate::properties::PropertyValue;
-use crate::separator::Separator;
 use dioxus::prelude::*;
 use openapi::models::*;
 use std::collections::HashMap;
@@ -13,7 +13,7 @@ pub struct ObjectProps {
     pub space_id: String,
     pub object_id: String,
     pub data: Object,
-    pub properties: Store<Vec<(PropertyInfo, PropertySettings)>>,
+    pub properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>>,
 }
 #[component]
 pub fn ObjectRow(props: ObjectProps) -> Element {
@@ -40,12 +40,7 @@ pub fn ObjectRow(props: ObjectProps) -> Element {
     let p = props.clone();
     let p2 = props.clone();
     rsx! {
-        Separator {
-            style: "margin: 2px 0; width: 95vw;",
-            horizontal: true,
-            decorative: true,
-        }
-        Row {
+        Column {
             onclick: move |_| {
                 if let Some(t) = p.clone().data.r#type
                     && (t.key == Some("set".to_string())
@@ -57,22 +52,38 @@ pub fn ObjectRow(props: ObjectProps) -> Element {
                     });
                 }
             },
-            for property in p2.clone().properties.read().clone() {
-                if let Some(prop) = object_properties.get(property.clone().0.id) {
-                    PropertyValue {
-                        key: "{property.0.id.as_str()}",
-                        space_id: props.space_id.clone(),
-                        object_id: props.object_id.clone(),
-                        data: prop.read().clone(),
-                        info: property,
-                    }
-                } else {
-                    PropertyValue {
-                        key: "{property.0.id.as_str()}",
-                        space_id: props.space_id.clone(),
-                        object_id: props.object_id.clone(),
-                        data: None,
-                        info: property,
+
+            for property_vec in p2.clone().properties.read().clone() {
+                Row {
+                    // onclick: move |_| {
+                    //     if let Some(t) = p.clone().data.r#type
+                    //         && (t.key == Some("set".to_string())
+                    //             || t.key == Some("collecion".to_string()))
+                    //     {
+                    //         nav.push(Route::List {
+                    //             space_id: p.clone().space_id.clone(),
+                    //             list_id: p.clone().object_id.clone(),
+                    //         });
+                    //     }
+                    // },
+                    for property in property_vec.clone() {
+                        if let Some(prop) = object_properties.get(property.clone().0.id) {
+                            PropertyValue {
+                                key: "{property.0.id.as_str()}",
+                                space_id: props.space_id.clone(),
+                                object_id: props.object_id.clone(),
+                                data: prop.read().clone(),
+                                info: property,
+                            }
+                        } else {
+                            PropertyValue {
+                                key: "{property.0.id.as_str()}",
+                                space_id: props.space_id.clone(),
+                                object_id: props.object_id.clone(),
+                                data: None,
+                                info: property,
+                            }
+                        }
                     }
                 }
             }
