@@ -1,5 +1,5 @@
 use dioxus::prelude::*;
-use openapi::models::ApimodelTag;
+use openapi::models::Tag;
 use serde::{Deserialize, Serialize};
 #[derive(Eq, Hash, PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct PropertyID(pub String);
@@ -24,7 +24,7 @@ pub struct PropertyInfo {
 }
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub enum OptionalInfo {
-    Select(Vec<ApimodelTag>),
+    Select(Vec<Tag>),
     Date,
     Checkbox,
     #[default]

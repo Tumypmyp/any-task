@@ -5,7 +5,7 @@ use openapi::models::*;
 pub fn PropertyValue(
     space_id: String,
     object_id: String,
-    data: ReadSignal<Option<ApimodelPropertyWithValue>>,
+    data: ReadSignal<Option<PropertyWithValue>>,
     info: ReadSignal<(PropertyInfo, PropertySettings)>,
 ) -> Element {
     let (p_info, settings) = info();
@@ -23,7 +23,7 @@ pub fn PropertyValue(
         }
     }
 }
-impl PropertyRenderer for ApimodelPropertyWithValue {
+impl PropertyRenderer for PropertyWithValue {
     fn render(
         &self,
         space_id: String,

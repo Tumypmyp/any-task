@@ -4,7 +4,7 @@ use openapi::apis::*;
 use openapi::models::*;
 use time::UtcDateTime;
 use time::format_description::well_known::Rfc3339;
-const API_VERSION: &str = "2025-05-20";
+const API_VERSION: &str = "2025-11-08";
 pub static API_CLIENT: GlobalSignal<Client> = Signal::global(|| Client::new());
 #[derive(Clone, Debug)]
 pub struct Client {
@@ -25,7 +25,11 @@ impl Client {
     /// Gets the current server address and port, stripping the protocol prefix.
     pub fn get_server(&self) -> String {
         let path = &self.config.base_path;
-        if path.starts_with("http://") { path[7..].to_string() } else { path.clone() }
+        if path.starts_with("http://") {
+            path[7..].to_string()
+        } else {
+            path.clone()
+        }
     }
     /// Gets the current token. Returns an empty string if no token is set.
     pub fn get_token(&self) -> String {
@@ -33,209 +37,167 @@ impl Client {
     }
     pub async fn create_auth_challenge(
         &self,
-    ) -> Result<
-        ApimodelCreateChallengeResponse,
-        Error<openapi::apis::auth_api::CreateAuthChallengeError>,
-    > {
+    ) -> Result<CreateChallengeResponse, Error<openapi::apis::auth_api::CreateAuthChallengeError>>
+    {
         openapi::apis::auth_api::create_auth_challenge(
-                &self.config,
-                API_VERSION,
-                openapi::models::ApimodelCreateChallengeRequest {
-                    app_name: Some("AnyTask".to_string()),
-                },
-            )
-            .await
+            &self.config,
+            API_VERSION,
+            openapi::models::CreateChallengeRequest {
+                app_name: Some("AnyTask".to_string()),
+            },
+        )
+        .await
     }
     pub async fn create_api_key(
         &self,
         challenge_id: String,
         code: String,
-    ) -> Result<
-        ApimodelCreateApiKeyResponse,
-        Error<openapi::apis::auth_api::CreateApiKeyError>,
-    > {
+    ) -> Result<CreateApiKeyResponse, Error<openapi::apis::auth_api::CreateApiKeyError>> {
         tracing::debug!("create_api_key: {:#?} {} {}", self, challenge_id, code);
         openapi::apis::auth_api::create_api_key(
-                &self.config,
-                API_VERSION,
-                openapi::models::ApimodelCreateApiKeyRequest {
-                    challenge_id: Some(challenge_id.to_string()),
-                    code: Some(code.to_string()),
-                },
-            )
-            .await
+            &self.config,
+            API_VERSION,
+            openapi::models::CreateApiKeyRequest {
+                challenge_id: Some(challenge_id.to_string()),
+                code: Some(code.to_string()),
+            },
+        )
+        .await
     }
     pub async fn list_spaces(
         &self,
-    ) -> Result<
-        PaginationPaginatedResponseApimodelSpace,
-        Error<openapi::apis::spaces_api::ListSpacesError>,
-    > {
-        openapi::apis::spaces_api::list_spaces(&self.config, API_VERSION, None, None)
-            .await
+    ) -> Result<PaginatedResponseSpace, Error<openapi::apis::spaces_api::ListSpacesError>> {
+        openapi::apis::spaces_api::list_spaces(&self.config, API_VERSION, None, None).await
     }
     pub async fn get_views(
         &self,
         space_id: &str,
         list_id: &str,
-    ) -> Result<
-        PaginationPaginatedResponseApimodelView,
-        Error<openapi::apis::lists_api::GetListViewsError>,
-    > {
+    ) -> Result<PaginatedResponseView, Error<openapi::apis::lists_api::GetListViewsError>> {
         openapi::apis::lists_api::get_list_views(
-                &self.config,
-                API_VERSION,
-                space_id,
-                list_id,
-                None,
-                None,
-            )
-            .await
+            &self.config,
+            API_VERSION,
+            space_id,
+            list_id,
+            None,
+            None,
+        )
+        .await
     }
     pub async fn list_properties(
         &self,
         space_id: &str,
-    ) -> Result<
-        PaginationPaginatedResponseApimodelProperty,
-        Error<openapi::apis::properties_api::ListPropertiesError>,
-    > {
+    ) -> Result<PaginatedResponseProperty, Error<openapi::apis::properties_api::ListPropertiesError>>
+    {
         openapi::apis::properties_api::list_properties(
-                &self.config,
-                API_VERSION,
-                space_id,
-                None,
-                None,
-            )
-            .await
+            &self.config,
+            API_VERSION,
+            space_id,
+            None,
+            None,
+        )
+        .await
     }
     pub async fn list_select_property_options(
         &self,
         space_id: &str,
         property_id: &str,
-    ) -> Result<
-        openapi::models::PaginationPaginatedResponseApimodelTag,
-        Error<openapi::apis::tags_api::ListTagsError>,
-    > {
-        openapi::apis::tags_api::list_tags(
-                &self.config,
-                API_VERSION,
-                space_id,
-                property_id,
-            )
-            .await
+    ) -> Result<openapi::models::PaginatedResponseTag, Error<openapi::apis::tags_api::ListTagsError>>
+    {
+        openapi::apis::tags_api::list_tags(&self.config, API_VERSION, space_id, property_id).await
     }
     pub async fn get_types(
         &self,
         space_id: &str,
         types: Vec<String>,
-    ) -> Result<
-        PaginationPaginatedResponseApimodelObject,
-        Error<openapi::apis::search_api::SearchSpaceError>,
-    > {
-        let mut req = openapi::models::ApimodelSearchRequest::new();
+    ) -> Result<PaginatedResponseObject, Error<openapi::apis::search_api::SearchSpaceError>> {
+        let mut req = openapi::models::SearchRequest::new();
         req.types = types.into();
         openapi::apis::search_api::search_space(
-                &self.config,
-                API_VERSION,
-                space_id,
-                req,
-                None,
-                None,
-            )
-            .await
+            &self.config,
+            API_VERSION,
+            space_id,
+            req,
+            None,
+            None,
+        )
+        .await
     }
     pub async fn get_space(
         &self,
         space_id: Signal<String>,
-    ) -> Result<ApimodelSpaceResponse, Error<openapi::apis::spaces_api::GetSpaceError>> {
-        openapi::apis::spaces_api::get_space(&self.config, API_VERSION, &space_id())
-            .await
+    ) -> Result<SpaceResponse, Error<openapi::apis::spaces_api::GetSpaceError>> {
+        openapi::apis::spaces_api::get_space(&self.config, API_VERSION, &space_id()).await
     }
     pub async fn get_property(
         &self,
         space_id: &str,
         property_id: String,
-    ) -> Result<
-        ApimodelPropertyResponse,
-        Error<openapi::apis::properties_api::GetPropertyError>,
-    > {
+    ) -> Result<PropertyResponse, Error<openapi::apis::properties_api::GetPropertyError>> {
         openapi::apis::properties_api::get_property(
-                &self.config,
-                API_VERSION,
-                space_id,
-                &property_id.to_string(),
-            )
-            .await
+            &self.config,
+            API_VERSION,
+            space_id,
+            &property_id.to_string(),
+        )
+        .await
     }
     pub async fn get_object(
         &self,
         space_id: Signal<String>,
         object_id: Signal<String>,
-    ) -> Result<
-        ApimodelObjectResponse,
-        Error<openapi::apis::objects_api::GetObjectError>,
-    > {
+    ) -> Result<ObjectResponse, Error<openapi::apis::objects_api::GetObjectError>> {
         openapi::apis::objects_api::get_object(
-                &self.config,
-                API_VERSION,
-                &space_id(),
-                &object_id(),
-                None,
-            )
-            .await
+            &self.config,
+            API_VERSION,
+            &space_id(),
+            &object_id(),
+            None,
+        )
+        .await
     }
     pub async fn get_list_objects(
         &self,
         space_id: Signal<String>,
         list_id: Signal<String>,
         view_id: String,
-    ) -> Result<
-        PaginationPaginatedResponseApimodelObject,
-        Error<openapi::apis::lists_api::GetListObjectsError>,
-    > {
+    ) -> Result<PaginatedResponseObject, Error<openapi::apis::lists_api::GetListObjectsError>> {
         tracing::debug!(
-            "get list objects -> space: {}, list: {}, view: {}", space_id(), list_id(),
+            "get list objects -> space: {}, list: {}, view: {}",
+            space_id(),
+            list_id(),
             view_id.clone(),
         );
         openapi::apis::lists_api::get_list_objects(
-                &self.config,
-                API_VERSION,
-                &space_id(),
-                &list_id(),
-                &view_id.clone(),
-                None,
-                None,
-            )
-            .await
+            &self.config,
+            API_VERSION,
+            &space_id(),
+            &list_id(),
+            &view_id.clone(),
+            None,
+            None,
+        )
+        .await
     }
-    pub fn update_done_property(
-        &self,
-        space_id: String,
-        object_id: String,
-        done: Option<bool>,
-    ) {
+    pub fn update_done_property(&self, space_id: String, object_id: String, done: Option<bool>) {
         let config = self.config.clone();
         spawn(async move {
-            let mut prop = ApimodelCheckboxPropertyLinkValue::new();
+            let mut prop = CheckboxPropertyLinkValue::new();
             prop.key = "done".to_string().into();
             prop.checkbox = done;
-            let mut req = ApimodelUpdateObjectRequest::new();
-            req.properties = Some(
-                vec![
-                    ApimodelPropertyLinkWithValue::ApimodelCheckboxPropertyLinkValue(
-                        Box::new(prop),
-                    ),
-                ],
-            );
+            let mut req = UpdateObjectRequest::new();
+            req.properties = Some(vec![PropertyLinkWithValue::CheckboxPropertyLinkValue(
+                Box::new(prop),
+            )]);
             tracing::debug!("{:#?}", req);
             let res = openapi::apis::objects_api::update_object(
-                    &config,
-                    API_VERSION,
-                    &space_id,
-                    &object_id,
-                    req,
-                )
-                .await;
+                &config,
+                API_VERSION,
+                &space_id,
+                &object_id,
+                req,
+            )
+            .await;
             tracing::debug!("{:#?}", res);
         });
     }
@@ -248,27 +210,23 @@ impl Client {
     ) {
         let config = self.config.clone();
         spawn(async move {
-            let mut prop = ApimodelDatePropertyLinkValue::new();
+            let mut prop = DatePropertyLinkValue::new();
             prop.key = property_key.into();
             tracing::debug!("debug {:#?}", date);
             prop.date = date.format(&Rfc3339).unwrap().into();
-            let mut req = ApimodelUpdateObjectRequest::new();
-            req.properties = Some(
-                vec![
-                    ApimodelPropertyLinkWithValue::ApimodelDatePropertyLinkValue(
-                        Box::new(prop),
-                    ),
-                ],
-            );
+            let mut req = UpdateObjectRequest::new();
+            req.properties = Some(vec![PropertyLinkWithValue::DatePropertyLinkValue(
+                Box::new(prop),
+            )]);
             tracing::debug!("{:#?}", req);
             let res = openapi::apis::objects_api::update_object(
-                    &config,
-                    API_VERSION,
-                    &space_id,
-                    &object_id,
-                    req,
-                )
-                .await;
+                &config,
+                API_VERSION,
+                &space_id,
+                &object_id,
+                req,
+            )
+            .await;
             tracing::debug!("{:#?}", res);
         });
     }
@@ -279,25 +237,21 @@ impl Client {
         property_key: String,
         option: Option<String>,
     ) {
-        let mut prop = ApimodelSelectPropertyLinkValue::new();
+        let mut prop = SelectPropertyLinkValue::new();
         prop.key = property_key.into();
         prop.select = option;
-        let mut req = ApimodelUpdateObjectRequest::new();
-        req.properties = Some(
-            vec![
-                ApimodelPropertyLinkWithValue::ApimodelSelectPropertyLinkValue(
-                    Box::new(prop),
-                ),
-            ],
-        );
+        let mut req = UpdateObjectRequest::new();
+        req.properties = Some(vec![PropertyLinkWithValue::SelectPropertyLinkValue(
+            Box::new(prop),
+        )]);
         let res = openapi::apis::objects_api::update_object(
-                &self.config,
-                API_VERSION,
-                &space_id,
-                &object_id,
-                req,
-            )
-            .await;
+            &self.config,
+            API_VERSION,
+            &space_id,
+            &object_id,
+            req,
+        )
+        .await;
         tracing::debug!("{:#?}", res);
     }
 }

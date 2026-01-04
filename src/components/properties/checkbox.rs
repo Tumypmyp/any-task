@@ -3,8 +3,8 @@ use crate::components::checkbox::Checkbox;
 use crate::helpers::*;
 use dioxus::prelude::*;
 use dioxus_primitives::checkbox::CheckboxState;
-use openapi::models::ApimodelCheckboxPropertyValue;
-impl PropertyRenderer for ApimodelCheckboxPropertyValue {
+use openapi::models::CheckboxPropertyValue;
+impl PropertyRenderer for CheckboxPropertyValue {
     fn render(
         &self,
         space_id: String,
@@ -15,7 +15,7 @@ impl PropertyRenderer for ApimodelCheckboxPropertyValue {
         match settings {
             PropertySettings::Checkbox(s) => {
                 rsx! {
-                    CheckboxPropertyValue {
+                    CheckboxValue {
                         space_id: &space_id,
                         object_id: &object_id,
                         prop: self.clone(),
@@ -27,10 +27,10 @@ impl PropertyRenderer for ApimodelCheckboxPropertyValue {
     }
 }
 #[component]
-pub fn CheckboxPropertyValue(
+pub fn CheckboxValue(
     space_id: String,
     object_id: String,
-    prop: ApimodelCheckboxPropertyValue,
+    prop: CheckboxPropertyValue,
 ) -> Element {
     let mut value = use_signal(|| prop);
     rsx! {

@@ -9,7 +9,7 @@ use crate::helpers::*;
 use dioxus::prelude::*;
 use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
-use openapi::models::ApimodelPropertyFormat as Format;
+use openapi::models::PropertyFormat as Format;
 use std::vec;
 #[component]
 pub fn List(space_id: String, list_id: String) -> Element {
@@ -18,25 +18,20 @@ pub fn List(space_id: String, list_id: String) -> Element {
     let list_id = use_signal(|| list_id);
     let view_id = use_store(|| "".to_string());
     let storage_key = format!("properties-list-view-{}", list_id());
-    let mut properties = use_synced_storage::<
-        LocalStorage,
-        Vec<(PropertyInfo, PropertySettings)>,
-    >(
+    let mut properties = use_synced_storage::<LocalStorage, Vec<(PropertyInfo, PropertySettings)>>(
         storage_key,
         || {
-            vec![
-                (
-                    PropertyInfo {
-                        id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
-                        name: "Name".to_string(),
-                        optional: OptionalInfo::Other,
-                    },
-                    PropertySettings::General(GeneralPropertySettings {
-                        width: 30.0,
-                        height: 10.0,
-                    }),
-                ),
-            ]
+            vec![(
+                PropertyInfo {
+                    id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
+                    name: "Name".to_string(),
+                    optional: OptionalInfo::Other,
+                },
+                PropertySettings::General(GeneralPropertySettings {
+                    width: 30.0,
+                    height: 10.0,
+                }),
+            )]
         },
     );
     let properties_store = use_store(|| properties.read().clone());
@@ -46,13 +41,11 @@ pub fn List(space_id: String, list_id: String) -> Element {
         *properties.write() = store_value;
     });
     let mut all_properties: Store<Vec<PropertyInfo>> = use_store(|| {
-        vec![
-            PropertyInfo {
-                id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
-                name: "Name".to_string(),
-                optional: OptionalInfo::Other,
-            },
-        ]
+        vec![PropertyInfo {
+            id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
+            name: "Name".to_string(),
+            optional: OptionalInfo::Other,
+        }]
     });
     use_effect(move || {
         let client = API_CLIENT.read();
@@ -66,10 +59,7 @@ pub fn List(space_id: String, list_id: String) -> Element {
                         let property_name = prop.name.clone().unwrap();
                         let format = prop.format.clone().unwrap();
                         let select_property_options = client
-                            .list_select_property_options(
-                                &space_id,
-                                property_id.clone().as_str(),
-                            )
+                            .list_select_property_options(&space_id, property_id.clone().as_str())
                             .await;
                         let options = match select_property_options {
                             Ok(o) => o.data.unwrap(),
@@ -81,13 +71,11 @@ pub fn List(space_id: String, list_id: String) -> Element {
                             Format::PropertyFormatCheckbox => OptionalInfo::Checkbox,
                             _ => OptionalInfo::Other,
                         };
-                        all_properties
-                            .write()
-                            .push(PropertyInfo {
-                                id: property_id.clone(),
-                                name: property_name,
-                                optional: optional_info,
-                            });
+                        all_properties.write().push(PropertyInfo {
+                            id: property_id.clone(),
+                            name: property_name,
+                            optional: optional_info,
+                        });
                     }
                 }
                 Err(e) => {
@@ -160,7 +148,10 @@ pub fn Objects(
     });
     let resp_value = resp.read();
     let objects = match resp_value.as_ref() {
-        Some(Ok(objs)) => objs,
+        Some(Ok(objs)) => {
+            // tracing::debug!("object: {:#?}", objs);
+            objs
+        }
         Some(Err(err)) => {
             message::error("Failed to fetch objects", err);
             return rsx! {};

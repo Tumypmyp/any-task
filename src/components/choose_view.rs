@@ -17,34 +17,29 @@ pub fn ChooseView(
             match views {
                 Ok(view) => {
                     for v in view.data.unwrap() {
-                        all_views
-                            .write()
-                            .push(ViewInfo {
-                                id: v.id.clone().unwrap(),
-                                name: v.name.unwrap(),
-                            });
+                        all_views.write().push(ViewInfo {
+                            id: v.id.clone().unwrap(),
+                            name: v.name.unwrap(),
+                        });
                         if view_id.read().is_empty() {
                             view_id.set(v.id.clone().unwrap());
                         }
                     }
                 }
                 Err(e) => {
-                    tracing::error!("error loading property list: {:#?}", e);
+                    tracing::error!("error loading views list: {:#?}", e);
                 }
             }
         });
     });
-    let views = all_views
-        .iter()
-        .enumerate()
-        .map(|(i, f)| {
-            rsx! {
-                SelectOption::<String> { index: i, value: f().id, text_value: f().name,
-                    "{f().name}"
-                    SelectItemIndicator {}
-                }
+    let views = all_views.iter().enumerate().map(|(i, f)| {
+        rsx! {
+            SelectOption::<String> { index: i, value: f().id, text_value: f().name,
+                "{f().name}"
+                SelectItemIndicator {}
             }
-        });
+        }
+    });
     let mut view_id_setter = use_signal(|| view_id().clone());
     let select_value = use_memo(move || {
         let current_view_id = view_id_setter.read();

@@ -115,17 +115,18 @@ in
   # https://devenv.sh/git-hooks/
   # git-hooks.hooks.shellcheck.enable = true;
 
-  env.API_DIR = "${config.env.DEVENV_ROOT}/apis/2025-05-20";
+  env.API_DIR = "${config.env.DEVENV_ROOT}/apis/";
   scripts.client-api-generate = {
     packages = [
       pkgs.openapi-generator-cli
     ];
     exec = ''
       openapi-generator-cli generate \
-        -i "''${API_DIR}/openapi.yaml" \
+        -i "''${API_DIR}/openapi-2025-11-08.yaml" \
         -g rust \
-        -o "''${API_DIR}/openapi" \
-        --skip-validate-spec
+        -o "''${API_DIR}/openapi-2025-11-08" \
+        --skip-validate-spec \
+        --additional-properties=packageVersion=0.0.1
     '';
   };
 

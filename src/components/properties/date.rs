@@ -6,7 +6,7 @@ use crate::components::select::*;
 use crate::helpers::models::DateTimeFormat;
 use crate::helpers::*;
 use dioxus::prelude::*;
-use openapi::models::ApimodelDatePropertyValue;
+use openapi::models::DatePropertyValue;
 use time::format_description::well_known::Rfc3339;
 use time::macros::{format_description, offset};
 use time::{Date, OffsetDateTime, Time, UtcDateTime, UtcOffset};
@@ -49,7 +49,7 @@ pub fn DateSettingsEdit(
         }
     }
 }
-impl PropertyRenderer for ApimodelDatePropertyValue {
+impl PropertyRenderer for DatePropertyValue {
     fn render(
         &self,
         space_id: String,
@@ -60,7 +60,7 @@ impl PropertyRenderer for ApimodelDatePropertyValue {
         match settings {
             PropertySettings::Date(s) => {
                 rsx! {
-                    DateTimePropertyValues {
+                    DateTimeValues {
                         space_id: &space_id,
                         object_id: &object_id,
                         prop: self.clone(),
@@ -73,10 +73,10 @@ impl PropertyRenderer for ApimodelDatePropertyValue {
     }
 }
 #[component]
-pub fn DateTimePropertyValues(
+pub fn DateTimeValues(
     space_id: String,
     object_id: String,
-    prop: ApimodelDatePropertyValue,
+    prop: DatePropertyValue,
     settings: DateTimeFormat,
 ) -> Element {
     let property_name = use_signal(|| prop.name.unwrap());
@@ -84,18 +84,17 @@ pub fn DateTimePropertyValues(
     let date = prop.date.unwrap_or_default();
     let space_id = use_signal(|| space_id.clone());
     let object_id = use_signal(|| object_id.clone());
-    let offset = UtcOffset::current_local_offset()
-        .unwrap_or(
-            offset! {
-                + 0
-            },
-        );
+    let offset = UtcOffset::current_local_offset().unwrap_or(offset! {
+        + 0
+    });
     let dt = use_signal(|| {
-        UtcDateTime::parse(&date, &Rfc3339).unwrap().to_offset(offset)
+        UtcDateTime::parse(&date, &Rfc3339)
+            .unwrap()
+            .to_offset(offset)
     });
     rsx! {
         if settings == DateTimeFormat::DateTime || settings == DateTimeFormat::Date {
-            DatePropertyValue {
+            DateValue {
                 space_id,
                 object_id,
                 property_key,
@@ -104,7 +103,7 @@ pub fn DateTimePropertyValues(
             }
         }
         if settings == DateTimeFormat::DateTime || settings == DateTimeFormat::Time {
-            TimePropertyValue {
+            TimeValue {
                 space_id,
                 object_id,
                 property_key,
@@ -115,7 +114,7 @@ pub fn DateTimePropertyValues(
     }
 }
 #[component]
-pub fn DatePropertyValue(
+pub fn DateValue(
     space_id: Signal<String>,
     object_id: Signal<String>,
     property_key: Signal<String>,
@@ -185,7 +184,7 @@ pub fn DatePropertyValue(
     }
 }
 #[component]
-pub fn TimePropertyValue(
+pub fn TimeValue(
     space_id: Signal<String>,
     object_id: Signal<String>,
     property_key: Signal<String>,

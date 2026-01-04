@@ -8,7 +8,7 @@ use crate::components::button::ButtonVariant;
 use crate::components::column::Column;
 use crate::components::header::{Header, Title};
 use dioxus::prelude::*;
-use openapi::models::ApimodelSpace;
+use openapi::models::Space;
 #[component]
 pub fn Home() -> Element {
     let resp = use_resource(move || {
@@ -43,7 +43,7 @@ pub fn Home() -> Element {
     }
 }
 #[component]
-fn SpaceButton(space: ApimodelSpace) -> Element {
+fn SpaceButton(space: Space) -> Element {
     let nav = navigator();
     let space_id = space.id.unwrap_or_default();
     let space_name = space.name.unwrap_or_default();

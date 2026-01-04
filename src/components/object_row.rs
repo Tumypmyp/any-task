@@ -12,21 +12,20 @@ pub struct ObjectProps {
     pub name: String,
     pub space_id: String,
     pub object_id: String,
-    pub data: ApimodelObject,
+    pub data: Object,
     pub properties: Store<Vec<(PropertyInfo, PropertySettings)>>,
 }
 #[component]
 pub fn ObjectRow(props: ObjectProps) -> Element {
     let nav = navigator();
-    let mut object_properties = use_store(|| HashMap::<
-        PropertyID,
-        ApimodelPropertyWithValue,
-    >::new());
+    let mut object_properties = use_store(|| HashMap::<PropertyID, PropertyWithValue>::new());
     for property in props.data.properties.clone().unwrap().iter() {
         let property_id = get_property_id(property.clone());
-        object_properties.write().insert(property_id, property.clone());
+        object_properties
+            .write()
+            .insert(property_id, property.clone());
     }
-    let text_property_value = ApimodelTextPropertyValue {
+    let text_property_value = TextPropertyValue {
         format: None,
         text: props.data.name.clone(),
         key: None,
@@ -34,12 +33,10 @@ pub fn ObjectRow(props: ObjectProps) -> Element {
         id: None,
         object: None,
     };
-    object_properties
-        .write()
-        .insert(
-            PropertyID(NAME_PROPERTY_ID_STR.to_string()),
-            ApimodelPropertyWithValue::Text(Box::new(text_property_value)),
-        );
+    object_properties.write().insert(
+        PropertyID(NAME_PROPERTY_ID_STR.to_string()),
+        PropertyWithValue::Text(Box::new(text_property_value)),
+    );
     let p = props.clone();
     let p2 = props.clone();
     rsx! {
@@ -82,20 +79,18 @@ pub fn ObjectRow(props: ObjectProps) -> Element {
         }
     }
 }
-fn get_property_id(prop: ApimodelPropertyWithValue) -> PropertyID {
-    return PropertyID(
-        match prop.clone() {
-            ApimodelPropertyWithValue::Text(p) => p.id.clone().unwrap(),
-            ApimodelPropertyWithValue::Number(p) => p.id.clone().unwrap(),
-            ApimodelPropertyWithValue::Select(p) => p.id.clone().unwrap(),
-            ApimodelPropertyWithValue::MultiSelect(p) => p.id.clone().unwrap(),
-            ApimodelPropertyWithValue::Date(p) => p.id.clone().unwrap(),
-            ApimodelPropertyWithValue::Files(p) => p.id.clone().unwrap(),
-            ApimodelPropertyWithValue::Checkbox(p) => p.id.clone().unwrap(),
-            ApimodelPropertyWithValue::Url(p) => p.id.clone().unwrap(),
-            ApimodelPropertyWithValue::Email(p) => p.id.clone().unwrap(),
-            ApimodelPropertyWithValue::Phone(p) => p.id.clone().unwrap(),
-            ApimodelPropertyWithValue::Objects(p) => p.id.clone().unwrap(),
-        },
-    );
+fn get_property_id(prop: PropertyWithValue) -> PropertyID {
+    return PropertyID(match prop.clone() {
+        PropertyWithValue::Text(p) => p.id.clone().unwrap(),
+        PropertyWithValue::Number(p) => p.id.clone().unwrap(),
+        PropertyWithValue::Select(p) => p.id.clone().unwrap(),
+        PropertyWithValue::MultiSelect(p) => p.id.clone().unwrap(),
+        PropertyWithValue::Date(p) => p.id.clone().unwrap(),
+        PropertyWithValue::Files(p) => p.id.clone().unwrap(),
+        PropertyWithValue::Checkbox(p) => p.id.clone().unwrap(),
+        PropertyWithValue::Url(p) => p.id.clone().unwrap(),
+        PropertyWithValue::Email(p) => p.id.clone().unwrap(),
+        PropertyWithValue::Phone(p) => p.id.clone().unwrap(),
+        PropertyWithValue::Objects(p) => p.id.clone().unwrap(),
+    });
 }

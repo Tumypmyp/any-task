@@ -103,25 +103,34 @@ or
 
 - copy `openapi.yaml` to `apis/`
 
-#### 2025-05-20 Patches
-- change version to `0.0.0` (version format is not supported in Rust)
-- remove view type enums (can return types outside the enum set)
+#### 2025-11-08 Patches
+- add view type enums (can return types outside the enum set)
+  ```
+    enum:
+      - grid
+      - table
+      - list
+      - galery
+      - kanban
+      - calendar
+      - graph
+  ```
 - ```   
-    apimodel.PropertyWithValue:
+    PropertyWithValue:
       discriminator:
         propertyName: format
         mapping:
-          text: "#/components/schemas/apimodel.TextPropertyValue"
-          number: "#/components/schemas/apimodel.NumberPropertyValue"
-          select: "#/components/schemas/apimodel.SelectPropertyValue"
-          multi_select: "#/components/schemas/apimodel.MultiSelectPropertyValue"
-          date: "#/components/schemas/apimodel.DatePropertyValue"
-          files: "#/components/schemas/apimodel.FilesPropertyValue"
-          checkbox: "#/components/schemas/apimodel.CheckboxPropertyValue"
-          url: "#/components/schemas/apimodel.URLPropertyValue"
-          email: "#/components/schemas/apimodel.EmailPropertyValue"
-          phone: "#/components/schemas/apimodel.PhonePropertyValue"
-          objects: "#/components/schemas/apimodel.ObjectsPropertyValue"
+          text: "#/components/schemas/TextPropertyValue"
+          number: "#/components/schemas/NumberPropertyValue"
+          select: "#/components/schemas/SelectPropertyValue"
+          multi_select: "#/components/schemas/MultiSelectPropertyValue"
+          date: "#/components/schemas/DatePropertyValue"
+          files: "#/components/schemas/FilesPropertyValue"
+          checkbox: "#/components/schemas/CheckboxPropertyValue"
+          url: "#/components/schemas/UrlPropertyValue"
+          email: "#/components/schemas/EmailPropertyValue"
+          phone: "#/components/schemas/PhonePropertyValue"
+          objects: "#/components/schemas/ObjectsPropertyValue"
  ```
 
 ```bash

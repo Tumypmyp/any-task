@@ -3,9 +3,9 @@ use crate::components::button::ButtonHolder;
 use crate::components::select::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
-use openapi::models::ApimodelTag;
-use openapi::models::*;
-impl PropertyRenderer for ApimodelSelectPropertyValue {
+use openapi::models::SelectPropertyValue;
+use openapi::models::Tag;
+impl PropertyRenderer for SelectPropertyValue {
     fn render(
         &self,
         space_id: String,
@@ -15,7 +15,7 @@ impl PropertyRenderer for ApimodelSelectPropertyValue {
     ) -> Element {
         rsx! {
             if let OptionalInfo::Select(options) = info.optional {
-                SelectPropertyValue {
+                SelectPValue {
                     space_id: &space_id,
                     object_id: &object_id,
                     prop: self.clone(),
@@ -26,11 +26,11 @@ impl PropertyRenderer for ApimodelSelectPropertyValue {
     }
 }
 #[component]
-pub fn SelectPropertyValue(
+pub fn SelectPValue(
     space_id: String,
     object_id: String,
-    prop: ApimodelSelectPropertyValue,
-    options: Vec<ApimodelTag>,
+    prop: SelectPropertyValue,
+    options: Vec<Tag>,
 ) -> Element {
     let space_id_clone = use_signal(|| space_id.clone());
     let object_id_clone = use_signal(|| object_id.clone());
@@ -63,7 +63,7 @@ pub fn SelectPropertyValue(
     }
 }
 #[component]
-pub fn SelectPropertySelectList(options: Vec<ApimodelTag>) -> Element {
+pub fn SelectPropertySelectList(options: Vec<Tag>) -> Element {
     rsx! {
         SelectList {
             SelectGroup {
