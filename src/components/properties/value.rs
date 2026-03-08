@@ -12,8 +12,8 @@ pub fn PropertyValue(
     rsx! {
         div {
             style: "display: flex; align-items: center; justify-content: center;",
-            width: "{info().1.width()}vw",
-            height: "{info().1.height()}vw",
+            width: "{info().1.width()}px",
+            height: "{info().1.height()}px",
             match data() {
                 Some(v) => v.render(space_id, object_id, p_info, settings),
                 _ => rsx! {

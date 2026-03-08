@@ -42,8 +42,8 @@ pub fn Search(space_id: Signal<String>, types: Vec<String>) -> Element {
                 optional: OptionalInfo::Other,
             },
             PropertySettings::General(GeneralPropertySettings {
-                width: 30.0,
-                height: 10.0,
+                width: 100.0,
+                height: 40.0,
             }),
         )]]
     });

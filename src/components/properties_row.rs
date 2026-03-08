@@ -7,6 +7,7 @@ use crate::components::separator::*;
 use crate::components::slider::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
+use dioxus_desktop::use_window;
 use std::vec;
 #[component]
 pub fn PropertiesRow(properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>>) -> Element {
@@ -195,13 +196,17 @@ pub fn GeneralPropertyEdit(
     settings: GeneralPropertySettings,
     on_change: EventHandler<GeneralPropertySettings>,
 ) -> Element {
+    let window = use_window();
+
+    let window_width = window.inner_size().width as f64;
+    let window_height = window.inner_size().height as f64;
     rsx! {
         PropertySlider {
             id: "width_slider",
             label: "Width",
             value: settings.width,
-            min: 5.0,
-            max: 100.0,
+            min: 10.0,
+            max: window_width,
             on_change: move |v| {
                 let mut new_settings = settings.clone();
                 new_settings.width = v;
@@ -212,8 +217,8 @@ pub fn GeneralPropertyEdit(
             id: "height_slider",
             label: "Height",
             value: settings.height,
-            min: 5.0,
-            max: 100.0,
+            min: 10.0,
+            max: window_height,
             on_change: move |v| {
                 let mut new_settings = settings.clone();
                 new_settings.height = v;

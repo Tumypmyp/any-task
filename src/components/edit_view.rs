@@ -4,6 +4,7 @@ use crate::components::choose_view::ChooseView;
 use crate::components::properties_row::PropertiesRow;
 use crate::components::row::*;
 use crate::components::scroll_area::*;
+use crate::components::separator::Separator;
 use crate::components::sheet::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
@@ -33,6 +34,7 @@ pub fn EditView(
                     Row { position: Position::Middle,
                         ChooseView { space_id, list_id, view_id }
                     }
+                    Separator {}
                     PropertiesRow { properties }
                     AddProperties { properties, all_properties }
                 }

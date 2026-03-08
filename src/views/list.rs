@@ -29,8 +29,8 @@ pub fn List(space_id: String, list_id: String) -> Element {
                 optional: OptionalInfo::Other,
             },
             PropertySettings::General(GeneralPropertySettings {
-                width: 30.0,
-                height: 10.0,
+                width: 100.0,
+                height: 40.0,
             }),
         )]]
     });

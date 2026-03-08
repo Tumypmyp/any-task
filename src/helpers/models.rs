@@ -46,7 +46,7 @@ pub struct CheckboxSettings {
 }
 impl Default for CheckboxSettings {
     fn default() -> Self {
-        Self { size: 5.0 }
+        Self { size: 40.0 }
     }
 }
 impl Default for DateSettings {
@@ -54,15 +54,18 @@ impl Default for DateSettings {
         Self {
             date_format: DateTimeFormat::Date,
             general: GeneralPropertySettings {
-                width: 10.0,
-                height: 10.0,
+                width: 70.0,
+                height: 50.0,
             },
         }
     }
 }
 impl Default for GeneralPropertySettings {
     fn default() -> Self {
-        Self { width: 15.0, height: 10.0 }
+        Self {
+            width: 60.0,
+            height: 40.0,
+        }
     }
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
