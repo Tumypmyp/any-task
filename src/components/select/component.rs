@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 use dioxus_primitives::select::{
-    self, SelectGroupLabelProps, SelectGroupProps, SelectListProps, SelectOptionProps,
-    SelectProps, SelectTriggerProps, SelectValueProps,
+    self, SelectGroupLabelProps, SelectGroupProps, SelectListProps, SelectOptionProps, SelectProps,
+    SelectTriggerProps, SelectValueProps,
 };
 #[component]
 pub fn Select<T: Clone + PartialEq + 'static>(props: SelectProps<T>) -> Element {
@@ -77,9 +77,7 @@ pub fn SelectGroupLabel(props: SelectGroupLabelProps) -> Element {
     }
 }
 #[component]
-pub fn SelectOption<T: Clone + PartialEq + 'static>(
-    props: SelectOptionProps<T>,
-) -> Element {
+pub fn SelectOption<T: Clone + PartialEq + 'static>(props: SelectOptionProps<T>) -> Element {
     rsx! {
         select::SelectOption::<T> {
             class: "select-option",

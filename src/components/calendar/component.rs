@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
 use dioxus_primitives::calendar::{
-    self, CalendarDayProps, CalendarGridProps, CalendarHeaderProps,
-    CalendarMonthTitleProps, CalendarNavigationProps, CalendarProps,
-    CalendarSelectMonthProps, CalendarSelectYearProps, RangeCalendarProps,
+    self, CalendarDayProps, CalendarGridProps, CalendarHeaderProps, CalendarMonthTitleProps,
+    CalendarNavigationProps, CalendarProps, CalendarSelectMonthProps, CalendarSelectYearProps,
+    RangeCalendarProps,
 };
 #[component]
 pub fn Calendar(props: CalendarProps) -> Element {
@@ -66,8 +66,7 @@ pub fn CalendarNavigation(props: CalendarNavigationProps) -> Element {
 }
 #[component]
 pub fn CalendarPreviousMonthButton(
-    #[props(extends = GlobalAttributes)]
-    attributes: Vec<Attribute>,
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
     rsx! {
         calendar::CalendarPreviousMonthButton { attributes,
@@ -82,8 +81,7 @@ pub fn CalendarPreviousMonthButton(
 }
 #[component]
 pub fn CalendarNextMonthButton(
-    #[props(extends = GlobalAttributes)]
-    attributes: Vec<Attribute>,
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
 ) -> Element {
     rsx! {
         calendar::CalendarNextMonthButton { attributes,

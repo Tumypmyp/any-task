@@ -2,7 +2,8 @@ use super::super::calendar::*;
 use super::super::popover::*;
 use dioxus::prelude::*;
 use dioxus_primitives::{
-    ContentAlign, date_picker::{self, DatePickerInputProps, DatePickerProps},
+    ContentAlign,
+    date_picker::{self, DatePickerInputProps, DatePickerProps},
     popover::{PopoverContentProps, PopoverTriggerProps},
 };
 #[component]

@@ -6,27 +6,42 @@ use dioxus::prelude::*;
 #[component]
 pub fn Space(space_id: String) -> Element {
     tracing::info!("loading space {space_id}");
-    let space_id = use_signal(|| space_id.clone());
     rsx! {
-        SpaceTitle { space_id }
-        Search { space_id, types: vec!["set".to_string()] }
-        Search { space_id, types: vec!["collection".to_string()] }
+        SpaceTitle { space_id: space_id.clone() }
+        Collections { space_id: space_id.clone() }
         ActionHolder { BaseActions {} }
     }
 }
+
 #[component]
-pub fn SpaceTitle(space_id: Signal<String>) -> Element {
-    let mut name = use_signal(|| "".to_string());
+pub fn Collections(space_id: String) -> Element {
+    rsx! {
+        Search { space_id: space_id.clone(), types: vec!["set".to_string()] }
+        Search { space_id: space_id.clone(), types: vec!["collection".to_string()] }
+    }
+}
+#[component]
+pub fn SpaceTitle(space_id: String) -> Element {
     let resp = use_resource(move || {
         let client = API_CLIENT.read().clone();
+        let space_id = space_id.clone();
         async move { client.get_space(space_id).await }
     });
-    match &*resp.read() {
-        Some(Ok(p)) => {
-            name.set(p.clone().space.unwrap_or_default().name.unwrap_or_default());
+    let Some(result) = &*resp.read() else {
+        return rsx! { "Loading..." };
+    };
+    let name = match result {
+        Ok(obj) => obj
+            .space
+            .clone()
+            .unwrap_or_default()
+            .name
+            .unwrap_or_default(),
+        Err(err) => {
+            tracing::debug!("Got error loading the space: {:#?}", err);
+            return rsx! { "Error: {err}" };
         }
-        _ => {}
-    }
+    };
     rsx! {
         Header {
             Title { title: "{name}" }

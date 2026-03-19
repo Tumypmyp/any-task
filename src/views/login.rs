@@ -12,6 +12,7 @@ pub struct AppSettings {
     pub token: String,
     pub server: String,
 }
+
 #[component]
 pub fn Logout() -> Element {
     let nav = navigator();

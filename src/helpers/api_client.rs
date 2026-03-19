@@ -108,7 +108,7 @@ impl Client {
     }
     pub async fn get_types(
         &self,
-        space_id: &str,
+        space_id: String,
         types: Vec<String>,
     ) -> Result<PaginatedResponseObject, Error<openapi::apis::search_api::SearchSpaceError>> {
         let mut req = openapi::models::SearchRequest::new();
@@ -116,7 +116,7 @@ impl Client {
         openapi::apis::search_api::search_space(
             &self.config,
             API_VERSION,
-            space_id,
+            &space_id,
             req,
             None,
             None,
@@ -125,9 +125,9 @@ impl Client {
     }
     pub async fn get_space(
         &self,
-        space_id: Signal<String>,
+        space_id: String,
     ) -> Result<SpaceResponse, Error<openapi::apis::spaces_api::GetSpaceError>> {
-        openapi::apis::spaces_api::get_space(&self.config, API_VERSION, &space_id()).await
+        openapi::apis::spaces_api::get_space(&self.config, API_VERSION, &space_id).await
     }
     pub async fn get_property(
         &self,

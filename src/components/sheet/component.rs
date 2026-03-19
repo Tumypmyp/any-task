@@ -53,17 +53,15 @@ fn SheetRoot(props: DialogRootProps) -> Element {
 }
 #[component]
 pub fn SheetContent(
-    #[props(default = ReadSignal::new(Signal::new(None)))]
-    id: ReadSignal<Option<String>>,
-    #[props(default)]
-    side: SheetSide,
-    #[props(default)]
-    class: Option<String>,
-    #[props(extends = GlobalAttributes)]
-    attributes: Vec<Attribute>,
+    #[props(default = ReadSignal::new(Signal::new(None)))] id: ReadSignal<Option<String>>,
+    #[props(default)] side: SheetSide,
+    #[props(default)] class: Option<String>,
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
-    let class = class.map(|c| format!("sheet {c}")).unwrap_or("sheet".to_string());
+    let class = class
+        .map(|c| format!("sheet {c}"))
+        .unwrap_or("sheet".to_string());
     rsx! {
         dialog::DialogContent {
             class,
@@ -86,8 +84,7 @@ pub fn SheetContent(
 }
 #[component]
 pub fn SheetHeader(
-    #[props(extends = GlobalAttributes)]
-    attributes: Vec<Attribute>,
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
     rsx! {
@@ -96,8 +93,7 @@ pub fn SheetHeader(
 }
 #[component]
 pub fn SheetFooter(
-    #[props(extends = GlobalAttributes)]
-    attributes: Vec<Attribute>,
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
     rsx! {
@@ -130,17 +126,14 @@ pub fn SheetDescription(props: DialogDescriptionProps) -> Element {
 }
 #[component]
 pub fn SheetClose(
-    #[props(extends = GlobalAttributes)]
-    attributes: Vec<Attribute>,
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
     r#as: Option<Callback<Vec<Attribute>, Element>>,
     children: Element,
 ) -> Element {
     let ctx: DialogCtx = use_context();
-    let mut merged_attributes: Vec<Attribute> = vec![
-        onclick(move |_| {
-            ctx.set_open(false);
-        }),
-    ];
+    let mut merged_attributes: Vec<Attribute> = vec![onclick(move |_| {
+        ctx.set_open(false);
+    })];
     merged_attributes.extend(attributes);
     if let Some(dynamic) = r#as {
         dynamic.call(merged_attributes)

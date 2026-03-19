@@ -72,19 +72,23 @@ fn host_addr(uri: &http::Uri) -> Option<String> {
     uri.authority().map(|auth| auth.to_string())
 }
 fn empty() -> BoxBody<Bytes, hyper::Error> {
-    Empty::<Bytes>::new().map_err(|never| match never {}).boxed()
+    Empty::<Bytes>::new()
+        .map_err(|never| match never {})
+        .boxed()
 }
 fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
-    Full::new(chunk.into()).map_err(|never| match never {}).boxed()
+    Full::new(chunk.into())
+        .map_err(|never| match never {})
+        .boxed()
 }
 async fn tunnel(upgraded: Upgraded, addr: String) -> std::io::Result<()> {
     let mut server = TcpStream::connect(addr).await?;
     let mut upgraded = TokioIo::new(upgraded);
-    let (from_client, from_server) = tokio::io::copy_bidirectional(
-            &mut upgraded,
-            &mut server,
-        )
-        .await?;
-    println!("client wrote {} bytes and received {} bytes", from_client, from_server);
+    let (from_client, from_server) =
+        tokio::io::copy_bidirectional(&mut upgraded, &mut server).await?;
+    println!(
+        "client wrote {} bytes and received {} bytes",
+        from_client, from_server
+    );
     Ok(())
 }

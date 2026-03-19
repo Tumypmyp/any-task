@@ -3,14 +3,20 @@ use dioxus::prelude::*;
 use dioxus_desktop;
 use dioxus_desktop::wry::dpi::PhysicalSize;
 use dioxus_desktop::{Config, WindowBuilder};
+use dioxus_history::{History, MemoryHistory};
+use dioxus_router::RouterConfig;
+use dioxus_router::components::{HistoryProvider, Router};
+
+use std::rc::Rc;
+
 use std::env;
 use std::path::PathBuf;
 use views::*;
 mod views;
 use components::*;
 mod components;
-mod helpers;
 use helpers::*;
+mod helpers;
 mod proxy;
 use proxy::*;
 pub const USER_SETTINGS_KEY: &str = "settings";
@@ -24,7 +30,7 @@ const THEME_CSS: Asset = asset!("/assets/dx-components-theme.css");
 #[rustfmt::skip]
 enum Route {
     #[route("/")]
-    #[redirect("/:.._s", |_s:Vec<String>|Route::Login{})]
+    #[redirect("/:.._s", |_s:Vec<String>|Route::Home{})]
     Home {},
     #[route("/spaces/:space_id")]
     Space { space_id: String },
@@ -42,19 +48,17 @@ fn main() {
         .with_focused(true)
         .with_inner_size(PhysicalSize::new(900, 1300));
     let cfg = if cfg!(target_os = "windows") {
-        let user_data_dir = env::var("LOCALAPPDATA")
-            .expect("env var LOCALAPPDATA not found");
+        let user_data_dir = env::var("LOCALAPPDATA").expect("env var LOCALAPPDATA not found");
         tracing::debug!("user path is {:#?}", user_data_dir);
         dioxus_sdk_storage::set_dir!();
         dioxus_desktop::Config::new()
             .with_data_directory(user_data_dir)
             .with_window(window_config)
     } else if cfg!(target_os = "linux") {
-        let user_data_dir = env::var("XDG_DATA_HOME")
-            .unwrap_or_else(|_| {
-                let home_dir = env::var("HOME").expect("env var HOME not found");
-                format!("{}/.local/share", home_dir)
-            });
+        let user_data_dir = env::var("XDG_DATA_HOME").unwrap_or_else(|_| {
+            let home_dir = env::var("HOME").expect("env var HOME not found");
+            format!("{}/.local/share", home_dir)
+        });
         dioxus_sdk_storage::set_dir!();
         Config::new()
             .with_data_directory(PathBuf::from(user_data_dir).join("AnyTasks"))
@@ -75,6 +79,8 @@ fn main() {
 fn App() -> Element {
     _ = document::eval("document.documentElement.setAttribute('data-theme', 'dark');");
     tracing::info!("App is started");
+
+    // start Reverse proxy server
     use_effect(|| {
         tokio::task::spawn(async move {
             if let Err(e) = run_proxy_server().await {
@@ -83,21 +89,20 @@ fn App() -> Element {
         });
         tracing::info!("Background proxy task started.");
     });
-    let mut settings = use_synced_storage::<
-        LocalStorage,
-        _,
-    >(
-        USER_SETTINGS_KEY.into(),
-        || AppSettings {
+    // load app local settings
+    let mut settings =
+        use_synced_storage::<LocalStorage, _>(USER_SETTINGS_KEY.into(), || AppSettings {
             token: "".to_string(),
             server: "127.0.0.1:31010".to_string(),
-        },
-    );
+        });
     use_effect(move || {
         let loaded_settings = settings.read();
-        API_CLIENT.write().set_server(loaded_settings.server.clone());
+        API_CLIENT
+            .write()
+            .set_server(loaded_settings.server.clone());
         API_CLIENT.write().set_token(loaded_settings.token.clone());
     });
+
     use_effect(move || {
         let client_token = API_CLIENT.read().get_token();
         let client_server = API_CLIENT.read().get_server();
@@ -110,6 +115,7 @@ fn App() -> Element {
         };
         tracing::debug!("Saved settings locally: {:#?}", settings());
     });
+
     tracing::debug!("Client loaded: {:#?}", API_CLIENT.read().config);
     rsx! {
         ToastProvider {
@@ -117,7 +123,8 @@ fn App() -> Element {
             document::Stylesheet { href: MAIN_CSS }
             document::Stylesheet { href: THEME_CSS }
             document::Stylesheet { href: asset!("/src/components/button/style.css") }
-            Router::<Route> {}
+            Router::<Route> {
+            }
         }
     }
 }
