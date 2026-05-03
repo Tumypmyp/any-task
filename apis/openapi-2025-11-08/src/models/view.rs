@@ -46,12 +46,10 @@ impl View {
 pub enum Layout {
     #[serde(rename = "grid")]
     Grid,
-    #[serde(rename = "table")]
-    Table,
     #[serde(rename = "list")]
     List,
-    #[serde(rename = "galery")]
-    Galery,
+    #[serde(rename = "gallery")]
+    Gallery,
     #[serde(rename = "kanban")]
     Kanban,
     #[serde(rename = "calendar")]

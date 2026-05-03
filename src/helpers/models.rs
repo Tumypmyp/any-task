@@ -79,6 +79,11 @@ impl Default for PropertySettings {
         Self::General(GeneralPropertySettings::default())
     }
 }
+pub const NAME_PROPERTY_SETTINGS: PropertySettings =
+    PropertySettings::General(GeneralPropertySettings {
+        width: 100.0,
+        height: 40.0,
+    });
 impl PropertySettings {
     pub fn height(&self) -> f64 {
         match self {

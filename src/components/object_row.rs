@@ -46,7 +46,7 @@ pub fn ObjectRow(props: ObjectProps) -> Element {
                     && (t.key == Some("set".to_string())
                         || t.key == Some("collecion".to_string()))
                 {
-                    nav.push(Route::List {
+                    nav.push(Route::ObjectList {
                         space_id: p.clone().space_id.clone(),
                         list_id: p.clone().object_id.clone(),
                     });

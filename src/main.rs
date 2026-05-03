@@ -3,12 +3,7 @@ use dioxus::prelude::*;
 use dioxus_desktop;
 use dioxus_desktop::wry::dpi::PhysicalSize;
 use dioxus_desktop::{Config, WindowBuilder};
-use dioxus_history::{History, MemoryHistory};
-use dioxus_router::RouterConfig;
 use dioxus_router::components::{HistoryProvider, Router};
-
-use std::rc::Rc;
-
 use std::env;
 use std::path::PathBuf;
 use views::*;
@@ -19,6 +14,9 @@ use helpers::*;
 mod helpers;
 mod proxy;
 use proxy::*;
+mod persistent_history;
+use persistent_history::*;
+use std::rc::Rc;
 pub const USER_SETTINGS_KEY: &str = "settings";
 use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
@@ -35,7 +33,7 @@ enum Route {
     #[route("/spaces/:space_id")]
     Space { space_id: String },
     #[route("/spaces/:space_id/lists/:list_id")]
-    List { space_id: String, list_id: String },
+    ObjectList { space_id: String, list_id: String },
     #[route("/login")]
     Login {},
 }
@@ -75,12 +73,27 @@ fn main() {
     tracing::info!("config is ready");
     dioxus_desktop::launch::launch(App, vec![], vec![Box::new(cfg)]);
 }
+
 #[component]
 fn App() -> Element {
-    _ = document::eval("document.documentElement.setAttribute('data-theme', 'dark');");
     tracing::info!("App is started");
+    let settings =
+        use_synced_storage::<LocalStorage, AppSettings>(USER_SETTINGS_KEY.into(), || AppSettings {
+            token: "".to_string(),
+            server: "127.0.0.1:31010".to_string(),
+        });
 
-    // start Reverse proxy server
+    use_context_provider(|| settings);
+    {
+        let s = settings.read();
+        let mut client = API_CLIENT.write();
+        if client.get_token() != s.token || client.get_server() != s.server {
+            client.set_token(s.token.clone());
+            client.set_server(s.server.clone());
+        }
+    }
+
+    // start the proxy server
     use_effect(|| {
         tokio::task::spawn(async move {
             if let Err(e) = run_proxy_server().await {
@@ -89,41 +102,26 @@ fn App() -> Element {
         });
         tracing::info!("Background proxy task started.");
     });
-    // load app local settings
-    let mut settings =
-        use_synced_storage::<LocalStorage, _>(USER_SETTINGS_KEY.into(), || AppSettings {
-            token: "".to_string(),
-            server: "127.0.0.1:31010".to_string(),
-        });
+
+    // update client on settings change
     use_effect(move || {
-        let loaded_settings = settings.read();
-        API_CLIENT
-            .write()
-            .set_server(loaded_settings.server.clone());
-        API_CLIENT.write().set_token(loaded_settings.token.clone());
+        let s = settings.read();
+        let mut client = API_CLIENT.write();
+        client.set_token(s.token.clone());
+        client.set_server(s.server.clone());
     });
 
-    use_effect(move || {
-        let client_token = API_CLIENT.read().get_token();
-        let client_server = API_CLIENT.read().get_server();
-        if settings.read().token == client_token {
-            return;
-        }
-        *settings.write() = AppSettings {
-            token: client_token.clone(),
-            server: client_server.clone(),
-        };
-        tracing::debug!("Saved settings locally: {:#?}", settings());
-    });
-
-    tracing::debug!("Client loaded: {:#?}", API_CLIENT.read().config);
     rsx! {
         ToastProvider {
             document::Link { rel: "icon", href: FAVICON }
             document::Stylesheet { href: MAIN_CSS }
             document::Stylesheet { href: THEME_CSS }
             document::Stylesheet { href: asset!("/src/components/button/style.css") }
-            Router::<Route> {
+            HistoryProvider {
+                history: move |_| {
+                    Rc::new(PersistentHistory::default().with_prefix("/any-task")) as Rc<dyn History>
+                },
+                Router::<Route> {}
             }
         }
     }

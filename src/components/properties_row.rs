@@ -13,8 +13,8 @@ use std::vec;
 pub fn PropertiesRow(properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>>) -> Element {
     rsx! {
         Column {
-            for (i , vec_property) in properties.read().clone().iter().enumerate() {
-                for (j , property) in vec_property.iter().enumerate() {
+            for (i, vec_property) in properties.read().clone().iter().enumerate() {
+                for (j, property) in vec_property.iter().enumerate() {
                     Property { i, j, properties }
                     Separator {}
                 }
@@ -259,10 +259,9 @@ fn PropertySlider(
             min,
             max,
             step: 1.0,
-            default_value: SliderValue::Single(value),
-            on_value_change: move |val: SliderValue| {
-                let SliderValue::Single(v) = val;
-                on_change.call(v);
+            default_value: value,
+            on_value_change: move |val: f64| {
+                on_change.call(val);
             },
             SliderTrack {
                 SliderRange {}

@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 pub use dioxus_primitives::slider::{
-    self, SliderProps, SliderRangeProps, SliderThumbProps, SliderTrackProps, SliderValue,
+    self, SliderProps, SliderRangeProps, SliderThumbProps, SliderTrackProps,
 };
 #[component]
 pub fn Slider(props: SliderProps) -> Element {

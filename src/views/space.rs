@@ -16,8 +16,10 @@ pub fn Space(space_id: String) -> Element {
 #[component]
 pub fn Collections(space_id: String) -> Element {
     rsx! {
-        Search { space_id: space_id.clone(), types: vec!["set".to_string()] }
-        Search { space_id: space_id.clone(), types: vec!["collection".to_string()] }
+        Search {
+            space_id: space_id.clone(),
+            types: vec!["set".to_string(), "collection".to_string()],
+        }
     }
 }
 #[component]

@@ -52,7 +52,7 @@ pub fn ChooseView(
     });
     rsx! {
         Select::<String> {
-            placeholder: "Select a view",
+            aria_placeholder: "Select a view",
             on_value_change: move |v: Option<String>| {
                 view_id_setter.set(v.unwrap());
             },

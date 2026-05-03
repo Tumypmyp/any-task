@@ -14,7 +14,7 @@ pub fn Select<T: Clone + PartialEq + 'static>(props: SelectProps<T>) -> Element 
             on_value_change: props.on_value_change,
             disabled: props.disabled,
             name: props.name,
-            placeholder: props.placeholder,
+            // aria_placeholder: props.placeholder,
             roving_loop: props.roving_loop,
             typeahead_timeout: props.typeahead_timeout,
             attributes: props.attributes,

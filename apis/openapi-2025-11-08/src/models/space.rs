@@ -53,15 +53,15 @@ impl Space {
 /// The data model of the object
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub enum Object {
-    #[serde(rename = "space")]
-    Space,
-    #[serde(rename = "chat")]
-    Chat,
+    #[serde(rename = "anytype.space")]
+    AnytypeSpace,
+    #[serde(rename = "anytype.chat")]
+    AnytypeChat,
 }
 
 impl Default for Object {
     fn default() -> Object {
-        Self::Space
+        Self::AnytypeSpace
     }
 }
 

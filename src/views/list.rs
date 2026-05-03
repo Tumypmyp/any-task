@@ -12,7 +12,7 @@ use dioxus_sdk_storage::use_synced_storage;
 use openapi::models::PropertyFormat as Format;
 use std::vec;
 #[component]
-pub fn List(space_id: String, list_id: String) -> Element {
+pub fn ObjectList(space_id: String, list_id: String) -> Element {
     tracing::info!("loading space {space_id}, list {list_id}");
     let space_id = use_signal(|| space_id);
     let list_id = use_signal(|| list_id);
@@ -28,10 +28,7 @@ pub fn List(space_id: String, list_id: String) -> Element {
                 name: "Name".to_string(),
                 optional: OptionalInfo::Other,
             },
-            PropertySettings::General(GeneralPropertySettings {
-                width: 100.0,
-                height: 40.0,
-            }),
+            NAME_PROPERTY_SETTINGS,
         )]]
     });
     let properties_store = use_store(|| properties.read().clone());

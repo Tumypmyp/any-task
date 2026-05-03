@@ -38,7 +38,7 @@ pub fn SelectPValue(
         Select::<Option<String>> {
             width: "100%",
             height: "100%",
-            placeholder: "{prop.clone().select.unwrap_or_default().name.clone().unwrap_or_default()}",
+            aria_placeholder: "{prop.clone().select.unwrap_or_default().name.clone().unwrap_or_default()}",
             default_value: prop.clone().select.unwrap_or_default().name.clone(),
             on_value_change: move |v: Option<Option<String>>| {
                 let prop = prop.clone();
@@ -67,7 +67,7 @@ pub fn SelectPropertySelectList(options: Vec<Tag>) -> Element {
     rsx! {
         SelectList {
             SelectGroup {
-                for (i , option) in options.clone().iter().enumerate() {
+                for (i, option) in options.clone().iter().enumerate() {
                     if let Some(name) = &option.name {
                         SelectOption::<Option<String>> {
                             index: i,

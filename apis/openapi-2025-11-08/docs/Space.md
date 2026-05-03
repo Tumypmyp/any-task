@@ -10,7 +10,7 @@ Name | Type | Description | Notes
 **id** | Option<**String**> | The id of the space | [optional]
 **name** | Option<**String**> | The name of the space | [optional]
 **network_id** | Option<**String**> | The network id of the space | [optional]
-**object** | Option<**String**> | The data model of the object | [optional]
+**object** | Option<**Object**> | The data model of the object (enum: anytype.space, anytype.chat) | [optional]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

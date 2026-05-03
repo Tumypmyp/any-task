@@ -12,11 +12,13 @@ let
       owner = "DioxusLabs";
       repo = "dioxus";
       # to update first set rev to the commit id, hash = ""; and cargoHash = "";
-      rev = "ec8f31dece5c75371177bf080bab46dff54ffd0e";
-      hash = "sha256-M4RPKONdInkt5CjHUsWWE4QmYF87CuXEOrsafm/QOJo=";
+      rev = "a626d609c1995601215f780431d315cf7c063d1e";
+      hash = "sha256-xjna/0dfucFM50lVcjZvCmIBkg/09KHOAKOBHvF1MEs=";
+      # hash = "sha256-M4RPKONdInkt5CjHUsWWE4QmYF87CuXEOrsafm/QOJo=";
     };
     buildAndTestSubdir = "packages/cli";
-    cargoHash = "sha256-mLWTcaPj0UvK/xnoSIQzkVQMeMnHbijC1p0YRB+sB6k=";
+    # cargoHash = "sha256-mLWTcaPj0UvK/xnoSIQzkVQMeMnHbijC1p0YRB+sB6k=";
+    cargoHash = "sha256-bSnadNN3j13k+rzeCqsiu97UD4LwNqOhx5pngUIfD08=";
     checkFlags = [
       "--skip=wasm_bindgen::test::test_cargo_install"
       "--skip=wasm_bindgen::test::test_github_install"

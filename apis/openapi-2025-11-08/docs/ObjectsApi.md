@@ -91,7 +91,7 @@ Name | Type | Description  | Required | Notes
 **anytype_version** | **String** | The version of the API to use | [required] |[default to 2025-11-08]
 **space_id** | **String** | The ID of the space in which the object exists; must be retrieved from ListSpaces endpoint | [required] |
 **object_id** | **String** | The ID of the object to retrieve; must be retrieved from ListObjects, SearchSpace or GlobalSearch endpoints or obtained from response context | [required] |
-**format** | Option<**String**> | The format to return the object body in |  |[default to "md"]
+**format** | Option<**String**> | The format to return the object body in |  |[default to md]
 
 ### Return type
 

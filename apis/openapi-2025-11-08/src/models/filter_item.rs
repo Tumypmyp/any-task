@@ -11,6 +11,8 @@
 use crate::models;
 use serde::{Deserialize, Serialize};
 
+/// FilterItem : A filter condition that matches a specific property format (text, number, select, date, etc.). Each filter item contains a property_key, condition, and a value field specific to the property format.
+/// A filter condition that matches a specific property format (text, number, select, date, etc.). Each filter item contains a property_key, condition, and a value field specific to the property format.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum FilterItem {

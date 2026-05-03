@@ -11,7 +11,7 @@
 use crate::models;
 use serde::{Deserialize, Serialize};
 
-/// FilterExpression : Expression filter with nested AND/OR conditions
+/// FilterExpression : Expression filter with nested AND/OR conditions. Supports recursive nesting for complex queries. The 'filters' array can contain nested FilterExpression objects, creating a tree structure for complex logic.  Example: (status=\"done\" AND priority=\"high\") OR (created_date > \"2024-01-01\")  ``` { \"operator\": \"or\", \"filters\": [ { \"operator\": \"and\", \"conditions\": [ {\"property_key\": \"status\", \"condition\": \"eq\", \"select\": \"done_tag_id\"}, {\"property_key\": \"priority\", \"condition\": \"eq\", \"select\": \"high_tag_id\"} ] }, { \"operator\": \"and\", \"conditions\": [ {\"property_key\": \"created_date\", \"condition\": \"gt\", \"date\": \"2024-01-01\"} ] } ] } ```
 #[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct FilterExpression {
     /// List of format-specific filter conditions
@@ -25,7 +25,7 @@ pub struct FilterExpression {
 }
 
 impl FilterExpression {
-    /// Expression filter with nested AND/OR conditions
+    /// Expression filter with nested AND/OR conditions. Supports recursive nesting for complex queries. The 'filters' array can contain nested FilterExpression objects, creating a tree structure for complex logic.  Example: (status=\"done\" AND priority=\"high\") OR (created_date > \"2024-01-01\")  ``` { \"operator\": \"or\", \"filters\": [ { \"operator\": \"and\", \"conditions\": [ {\"property_key\": \"status\", \"condition\": \"eq\", \"select\": \"done_tag_id\"}, {\"property_key\": \"priority\", \"condition\": \"eq\", \"select\": \"high_tag_id\"} ] }, { \"operator\": \"and\", \"conditions\": [ {\"property_key\": \"created_date\", \"condition\": \"gt\", \"date\": \"2024-01-01\"} ] } ] } ```
     pub fn new() -> FilterExpression {
         FilterExpression {
             conditions: None,

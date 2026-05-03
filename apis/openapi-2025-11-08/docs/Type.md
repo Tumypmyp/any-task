@@ -8,7 +8,7 @@ Name | Type | Description | Notes
 **icon** | Option<[**models::Icon**](Icon.md)> |  | [optional]
 **id** | Option<**String**> | The id of the type (which is unique across spaces) | [optional]
 **key** | Option<**String**> | The key of the type (can be the same across spaces for known types) | [optional]
-**layout** | Option<**String**> | The layout of the object | [optional]
+**layout** | Option<**Layout**> | The layout of the object (enum: basic, profile, action, note, bookmark, set, collection, participant) | [optional]
 **name** | Option<**String**> | The name of the type | [optional]
 **object** | Option<**String**> | The data model of the object | [optional]
 **plural_name** | Option<**String**> | The plural name of the type | [optional]

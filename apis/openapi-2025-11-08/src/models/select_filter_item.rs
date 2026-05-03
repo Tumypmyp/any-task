@@ -18,7 +18,7 @@ pub struct SelectFilterItem {
     /// The property key to filter on
     #[serde(rename = "property_key", skip_serializing_if = "Option::is_none")]
     pub property_key: Option<String>,
-    /// Tag Id - for eq/ne conditions (single selection)
+    /// Tag Id - for eq/ne/in conditions (single selection)
     #[serde(rename = "select", skip_serializing_if = "Option::is_none")]
     pub select: Option<String>,
 }

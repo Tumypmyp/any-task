@@ -444,8 +444,6 @@ components:
       type: object
     FilterCondition:
       description: The filter condition
-      type: string
-      example: eq
       enum:
         - eq
         - ne
@@ -460,20 +458,22 @@ components:
         - all
         - empty
         - nempty
+      example: empty
+      type: string
       x-enum-comments:
+        FilterConditionAll: Contains all specified values
+        FilterConditionContains: Contains substring
+        FilterConditionEmpty: Property value is empty
         FilterConditionEq: Equal to value
-        FilterConditionNe: Not equal to value
         FilterConditionGt: Greater than value
         FilterConditionGte: Greater than or equal to value
+        FilterConditionIn: Value is in the specified array
         FilterConditionLt: Less than value
         FilterConditionLte: Less than or equal to value
-        FilterConditionContains: Contains substring
         FilterConditionNContains: Does not contain substring
-        FilterConditionIn: Value is in the specified array
-        FilterConditionNin: Value is not in the specified array
-        FilterConditionAll: Contains all specified values
-        FilterConditionEmpty: Property value is empty
         FilterConditionNEmpty: Property value is not empty
+        FilterConditionNe: Not equal to value
+        FilterConditionNin: Value is not in the specified array
       x-enum-varnames:
         - FilterConditionEq
         - FilterConditionNe
@@ -489,7 +489,16 @@ components:
         - FilterConditionEmpty
         - FilterConditionNEmpty
     FilterExpression:
-      description: Expression filter with nested AND/OR conditions
+      description:
+        'Expression filter with nested AND/OR conditions. Supports recursive
+        nesting for complex queries. The ''filters'' array can contain nested FilterExpression
+        objects, creating a tree structure for complex logic.  Example: (status="done"
+        AND priority="high") OR (created_date > "2024-01-01")  ``` { "operator": "or",
+        "filters": [ { "operator": "and", "conditions": [ {"property_key": "status",
+        "condition": "eq", "select": "done_tag_id"}, {"property_key": "priority",
+        "condition": "eq", "select": "high_tag_id"} ] }, { "operator": "and", "conditions":
+        [ {"property_key": "created_date", "condition": "gt", "date": "2024-01-01"}
+        ] } ] } ```'
       properties:
         conditions:
           description: List of format-specific filter conditions
@@ -507,6 +516,10 @@ components:
           $ref: "#/components/schemas/FilterOperator"
       type: object
     FilterItem:
+      description:
+        A filter condition that matches a specific property format (text,
+        number, select, date, etc.). Each filter item contains a property_key, condition,
+        and a value field specific to the property format.
       oneOf:
         - $ref: "#/components/schemas/TextFilterItem"
         - $ref: "#/components/schemas/NumberFilterItem"
@@ -1879,7 +1892,7 @@ components:
           example: status
           type: string
         select:
-          description: Tag Id - for eq/ne conditions (single selection)
+          description: Tag Id - for eq/ne/in conditions (single selection)
           example: tag_id
           type: string
       type: object
@@ -1999,8 +2012,8 @@ components:
         object:
           description: The data model of the object
           enum:
-            - space
-            - chat
+            - anytype.space
+            - anytype.chat
           example: space
           type: string
       type: object
@@ -2324,13 +2337,12 @@ components:
           description: The layout of the view
           enum:
             - grid
-            - table
             - list
-            - galery
+            - gallery
             - kanban
             - calendar
             - graph
-          example: table
+          example: grid
           type: string
         name:
           description: The name of the view
@@ -3680,7 +3692,7 @@ paths:
           in: query
           name: format
           schema:
-            default: '"md"'
+            default: md
             enum:
               - md
             type: string

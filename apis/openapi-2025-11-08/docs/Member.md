@@ -10,8 +10,8 @@ Name | Type | Description | Notes
 **identity** | Option<**String**> | The identity of the member in the network | [optional]
 **name** | Option<**String**> | The name of the member | [optional]
 **object** | Option<**String**> | The data model of the object | [optional]
-**role** | Option<**String**> | The role of the member | [optional]
-**status** | Option<**String**> | The status of the member | [optional]
+**role** | Option<**Role**> | The role of the member (enum: viewer, editor, owner, no_permission) | [optional]
+**status** | Option<**Status**> | The status of the member (enum: joining, active, removed, declined, removing, canceled) | [optional]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 
