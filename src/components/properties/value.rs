@@ -36,6 +36,7 @@ impl PropertyRenderer for PropertyWithValue {
             Self::Checkbox(v) => v.render(space_id, object_id, p_info, settings),
             Self::Select(v) => v.render(space_id, object_id, p_info, settings),
             Self::Date(v) => v.render(space_id, object_id, p_info, settings),
+            Self::Number(v) => v.render(space_id, object_id, p_info, settings),
             _ => rsx!(),
         }
     }

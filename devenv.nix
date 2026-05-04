@@ -14,10 +14,10 @@ let
       # to update first set rev to the commit id, hash = ""; and cargoHash = "";
       rev = "a626d609c1995601215f780431d315cf7c063d1e";
       hash = "sha256-xjna/0dfucFM50lVcjZvCmIBkg/09KHOAKOBHvF1MEs=";
-      # hash = "sha256-M4RPKONdInkt5CjHUsWWE4QmYF87CuXEOrsafm/QOJo=";
+      # hash = "";
     };
     buildAndTestSubdir = "packages/cli";
-    # cargoHash = "sha256-mLWTcaPj0UvK/xnoSIQzkVQMeMnHbijC1p0YRB+sB6k=";
+    # cargoHash = "";
     cargoHash = "sha256-bSnadNN3j13k+rzeCqsiu97UD4LwNqOhx5pngUIfD08=";
     checkFlags = [
       "--skip=wasm_bindgen::test::test_cargo_install"
@@ -46,7 +46,15 @@ in
 {
   android = {
     enable = true;
-    platforms.version = [ "33" ];
+    ndk = {
+        enable = true;
+        version = [ "29.0.14206865" ];
+      };
+      # buildTools.version = [ "36.0.0" ];
+      buildTools.version = [ "34.0.0" ];
+
+    platforms.version = [ "37" "36" "35" "34" ];
+    abis = [ "x86_64" "arm64-v8a" ];
   };
 
   languages.rust = {
@@ -59,15 +67,15 @@ in
       "armv7-linux-androideabi"
       "i686-linux-android"
       "i686-pc-windows-msvc"
-      "x86_64-linux-android"
       "x86_64-unknown-linux-gnu"
+      "x86_64-linux-android"
       "x86_64-apple-darwin"
       "x86_64-pc-windows-msvc"
+      "x86_64-pc-windows-gnu"
     ];
   };
 
   packages = [
-    # dx
     dioxus-cli
     pkgs.glib
     pkgs.gdk-pixbuf
@@ -76,10 +84,10 @@ in
     pkgs.openssl
     pkgs.libsoup_3
     pkgs.webkitgtk_4_1
+    pkgs.openjdk
 
     # bundle windows
     # https://github.com/euphemism/dirtywave-updater-releases-mirror/blob/main/devenv.nix
-    # pkgs.pkgsCross.mingwW64.stdenv.cc
     # pkgs.pkgsCross.mingwW64.stdenv
     # pkgs.pkgsCross.mingwW64.pkgsStatic.stdenv.targetPlatform.config
     # pkgs.pkgsCross.mingwW64.stdenv.targetPlatform.config
@@ -95,15 +103,11 @@ in
     # pkgs.mingwW64.pkg-config
 
     # pkgs.pkgsCross.mingwW64.stdenv
-    # pkgs.pkgsCross.mingwW64.windows.pthreads
     # pkgs.pkgsCross.mingwW64.libxcrypt
   ];
   # https://wiki.nixos.org/wiki/Tauri
   # https://devenv.sh/processes/
   # processes.dev.exec = "${lib.getExe pkgs.watchexec} -n -- ls -la";
-
-  # https://devenv.sh/services/
-  # services.postgres.enable = true;
 
   # https://devenv.sh/basics/
   enterShell = '''';
@@ -133,35 +137,88 @@ in
   };
 
   scripts.bundle-windows = {
+    packages = [
+        pkgs.pkgsCross.mingwW64.stdenv.cc
+        pkgs.pkgsCross.mingwW64.windows.pthreads
+      ];
     exec = ''
-      dx bundle --windows --target x86_64-pc-windows-msvc
+      export LIBRARY_PATH="$LIBRARY_PATH:${pkgs.pkgsCross.mingwW64.windows.pthreads}/lib"
+      dx bundle --release --windows --target x86_64-pc-windows-gnu --features bundle
     '';
   };
 
+  dotenv.enable = true;
+  dotenv.filename = ".env.devenv";
   # env.TEMP_DIR = "${config.devenv.runtime}/bundle-android";
-  env.TEMP_DIR = "${config.devenv.root}/.tmp";
+  env.TEMP_DIR = "${config.devenv.root}/TEMP_DIR";
   env = {
     APP_NAME = "AnyTask";
     OUTPUT_DIR = "${config.devenv.root}/dist/android";
     OUTPUT_AAB = "${config.env.TEMP_DIR}/AnyTask-aarch64-linux-android.aab";
+    # OUTPUT_AAB = "${config.env.TEMP_DIR}/AnyTask-x86_64-linux-android.aab";
     OUTPUT_APKS = "${config.env.OUTPUT_DIR}/${config.env.APP_NAME}-dev.apks";
     OUTPUT_APK = "${config.env.OUTPUT_DIR}/${config.env.APP_NAME}-universal.apk";
+    AAPT2 = "${pkgs.android-tools}/bin/aapt2";
   };
+  scripts.create-emulator.exec = ''
+      avdmanager create avd -n android-simple -k "system-images;android-34;google_apis_playstore;x86_64" --device "pixel_6_pro"
+    '';
+    scripts.run-android = {
+      packages = [
+        pkgs.bundletool
+        pkgs.unzip
+        pkgs.steam-run
+      ];
+      exec = ''
+        dx serve --android --device
+  '';};
 
-  scripts.bundle-android-apk = {
+  scripts.bundle-android = {
     packages = [
       pkgs.bundletool
       pkgs.unzip
+      pkgs.steam-run
     ];
     exec = ''
-      dx bundle --android --release --target  aarch64-linux-android --out-dir "$TEMP_DIR" || { echo "Failed to bundle AAB with dioxus"; exit 1; }
+      dx bundle --android --release --debug-symbols=false --target  aarch64-linux-android --out-dir "$TEMP_DIR" || { echo "Failed to bundle AAB with dioxus"; exit 1; }
 
       if [ -d "$OUTPUT_DIR" ]; then
           echo "Removing existing Android files: $OUTPUT_DIR"
           rm -rf "$OUTPUT_DIR"
       fi
 
-      bundletool build-apks --bundle="$OUTPUT_AAB" --output="$OUTPUT_APKS" --mode=universal || { echo "Failed to build APKS."; exit 1; }
+      steam-run bundletool build-apks --bundle="$OUTPUT_AAB" --output="$OUTPUT_APKS" --mode=universal \
+          --ks="$HOME/.keys/upload-keystore.jks" \
+          --ks-pass=pass:"$KS_PASS" \
+          --ks-key-alias=upload \
+          --overwrite \
+          || { echo "Failed to build APKS."; exit 1; }
+      unzip "$OUTPUT_APKS" -d "$TEMP_DIR"
+      mv "$TEMP_DIR/universal.apk" "$OUTPUT_APK" || { echo "Failed to find universal.apk in APKS."; rm -rf "$TEMP_DIR"; exit 1; }
+      rm -rf "$TEMP_DIR"
+      echo "Universal APK extracted to $OUTPUT_APK"
+    '';
+  };
+  scripts.unzip-bundle-android = {
+    packages = [
+      pkgs.bundletool
+      pkgs.unzip
+      pkgs.steam-run
+    ];
+    exec = ''
+
+      if [ -d "$OUTPUT_DIR" ]; then
+          echo "Removing existing Android files: $OUTPUT_DIR"
+          rm -rf "$OUTPUT_DIR"
+      fi
+
+      steam-run bundletool build-apks --bundle="$OUTPUT_AAB" --output="$OUTPUT_APKS" --mode=universal \
+          --ks="$HOME/.keys/upload-keystore.jks" \
+          --ks-pass=pass:"$KS_PASS" \
+          --ks-key-alias=app-key \
+          --overwrite \
+          || { echo "Failed to build APKS."; exit 1; }
+
       unzip "$OUTPUT_APKS" -d "$TEMP_DIR"
       mv "$TEMP_DIR/universal.apk" "$OUTPUT_APK" || { echo "Failed to find universal.apk in APKS."; rm -rf "$TEMP_DIR"; exit 1; }
       rm -rf "$TEMP_DIR"

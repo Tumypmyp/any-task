@@ -4,7 +4,7 @@
 
 [Anytype](https://github.com/anyproto/) has a great desktop, Android and iOS clients. This project focuses on cross-platform compatibility between clients using [Dioxus](https://github.com/DioxusLabs/dioxus), a modern Rust framework.
 
-**⚠️ AnyTask is currently in active development.**
+**⚠️ AnyTask is currently in early development stage.**
 
 <div align="center">
   <img src="./notes/ui.png" width="1000">

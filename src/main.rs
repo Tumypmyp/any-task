@@ -37,6 +37,8 @@ enum Route {
     #[route("/login")]
     Login {},
 }
+
+#[cfg_attr(feature = "bundle", windows_subsystem = "windows")]
 fn main() {
     dioxus::logger::initialize_default();
     tracing::info!("starting app");
