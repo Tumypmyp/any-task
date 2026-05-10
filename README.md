@@ -10,6 +10,18 @@
   <img src="./notes/ui.png" width="1000">
 </div>
 
+## Customizable Object Views
+
+<div align="center">
+  <img src="./notes/android_demo.webp" width="500">
+</div>
+
+## Real-time Property Management
+
+<div align="center">
+  <img src="./notes/windows_demo.webp" width="700">
+</div>
+
 ## Features
 
 - [x] Login/Logout with 4-digit code
@@ -17,7 +29,7 @@
 - [x] Properties: Text, Checkbox, Select, Date
 - [x] Add/edit viewed properties
 - [x] Choose query views
-- [ ] Timeline view
+<!--- [ ] Timeline view-->
 
 ## How to use
 

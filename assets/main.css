@@ -6,8 +6,3 @@ body {
     align-items: center;
     -webkit-tap-highlight-color: transparent;
 }
-
-html[data-theme="dark"] {
-    --dark: initial;
-    --light: ;
-}

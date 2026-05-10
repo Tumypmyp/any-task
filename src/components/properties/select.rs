@@ -1,5 +1,4 @@
 use crate::API_CLIENT;
-use crate::components::button::ButtonHolder;
 use crate::components::select::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
@@ -34,12 +33,13 @@ pub fn SelectPValue(
 ) -> Element {
     let space_id_clone = use_signal(|| space_id.clone());
     let object_id_clone = use_signal(|| object_id.clone());
+    tracing::debug!("{:#?}", prop.clone().select.unwrap_or_default());
     rsx! {
         Select::<Option<String>> {
             width: "100%",
             height: "100%",
-            aria_placeholder: "{prop.clone().select.unwrap_or_default().name.clone().unwrap_or_default()}",
-            default_value: prop.clone().select.unwrap_or_default().name.clone(),
+            // aria_placeholder: "{prop.clone().select.unwrap_or_default().name.clone().unwrap_or_default()}",
+            default_value: prop.clone().select.unwrap_or_default().id.clone(),
             on_value_change: move |v: Option<Option<String>>| {
                 let prop = prop.clone();
                 spawn(async move {

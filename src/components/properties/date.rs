@@ -1,15 +1,18 @@
 use crate::API_CLIENT;
 use crate::components::button::*;
-use crate::components::calendar::*;
+use crate::components::date_picker::*;
 use crate::components::popover::*;
 use crate::components::select::*;
 use crate::helpers::models::DateTimeFormat;
 use crate::helpers::*;
 use dioxus::prelude::*;
+// use dioxus_primitives::date_picker::DatePicker;
 use openapi::models::DatePropertyValue;
 use time::format_description::well_known::Rfc3339;
 use time::macros::{format_description, offset};
 use time::{Date, OffsetDateTime, Time, UtcDateTime, UtcOffset};
+
+// use dioxus_i18n::tid;
 #[component]
 pub fn DateSettingsEdit(
     format: DateTimeFormat,
@@ -121,65 +124,29 @@ pub fn DateValue(
     property_name: Signal<String>,
     dt: Signal<OffsetDateTime>,
 ) -> Element {
-    let format = format_description!("[year]-[month]-[day]");
-    let mut date = use_signal(|| dt().format(format).unwrap());
-    let mut date_set = use_signal(|| date());
-    let mut open = use_signal(|| false);
-    let mut selected_date = use_signal(|| None::<Date>);
-    let mut view_date = use_signal(|| UtcDateTime::now().date());
+    let mut selected_date = use_signal(|| dt().date());
+    tracing::debug!("{:#?}", selected_date().clone());
     rsx! {
-        PopoverRoot {
-            open: open(),
-            on_open_change: move |v| {
-                if v == true {
-                    date_set.set(date());
+        DatePicker {
+            selected_date: selected_date(),
+            on_value_change: move |v| {
+                if let Some(d) = v {
+
+                    tracing::info!("Selected date changed: {:?}", v);
+                    dt.set(dt().replace_date(d));
+                    tracing::debug!("change date to: {:?}", dt);
+                    API_CLIENT
+                        .read()
+                        .update_datetime_property(
+                            space_id(),
+                            object_id(),
+                            property_key(),
+                            dt().to_utc(),
+                        );
+                    selected_date.set(d);
+
                 }
-                open.set(v);
             },
-            PopoverTrigger { "{date}" }
-            PopoverContent {
-                PopoverHeader { text: "{property_name}" }
-                Calendar {
-                    selected_date: selected_date(),
-                    on_date_change: move |date: Option<Date>| {
-                        selected_date.set(date);
-                    },
-                    view_date: view_date(),
-                    on_view_change: move |new_view: Date| {
-                        view_date.set(new_view);
-                    },
-                    CalendarHeader {
-                        CalendarNavigation {
-                            CalendarPreviousMonthButton {}
-                            CalendarMonthTitle {}
-                            CalendarNextMonthButton {}
-                        }
-                    }
-                    CalendarGrid {}
-                }
-                Button {
-                    variant: ButtonVariant::Outline,
-                    onclick: move |_| {
-                        if let Some(d) = selected_date() {
-                            dt.set(dt().replace_date(d));
-                            tracing::debug!("change date to: {:?}", dt);
-                            API_CLIENT
-                                .read()
-                                .update_datetime_property(
-                                    space_id(),
-                                    object_id(),
-                                    property_key(),
-                                    dt().to_utc(),
-                                );
-                            date_set.set(d.format(format).unwrap());
-                            date.set(date_set());
-                        }
-                        open.set(false);
-                    },
-                    "Confirm"
-                }
-                CancelPopoverButton { open }
-            }
         }
     }
 }

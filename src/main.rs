@@ -43,7 +43,7 @@ fn main() {
     dioxus::logger::initialize_default();
     tracing::info!("starting app");
     let window_config = WindowBuilder::new()
-        .with_title("AnyTasks")
+        .with_title("AnyTask")
         .with_visible(true)
         .with_focused(true)
         .with_inner_size(PhysicalSize::new(900, 1300));
@@ -61,7 +61,7 @@ fn main() {
         });
         dioxus_sdk_storage::set_dir!();
         Config::new()
-            .with_data_directory(PathBuf::from(user_data_dir).join("AnyTasks"))
+            .with_data_directory(PathBuf::from(user_data_dir).join("AnyTask"))
             .with_window(window_config)
     } else if cfg!(target_os = "android") {
         let app_files_dir = PathBuf::from("/data/user/0/com.Tumypmyp.AnyTask/files");
@@ -71,7 +71,7 @@ fn main() {
     } else {
         Config::new()
     };
-    let cfg = cfg.with_background_color((0, 0, 0, 0));
+    let cfg = cfg.with_background_color((0, 0, 0, 255));
     tracing::info!("config is ready");
     dioxus_desktop::launch::launch(App, vec![], vec![Box::new(cfg)]);
 }
