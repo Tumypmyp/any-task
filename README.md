@@ -6,14 +6,16 @@
 
 **⚠️ AnyTask is currently in early development stage.**
 
+<!--
 <div align="center">
   <img src="./notes/ui.png" width="1000">
 </div>
+-->
 
 ## Customizable Object Views
 
 <div align="center">
-  <img src="./notes/android_demo.webp" width="500">
+  <img src="./notes/android_demo.webp" height="500">
 </div>
 
 ## Real-time Property Management
