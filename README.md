@@ -2,9 +2,9 @@
 
 **A modern, lightweight client for Anytype built with Rust and Dioxus.**
 
-[Anytype](https://github.com/anyproto/) has a great desktop, Android and iOS clients. This project focuses on cross-platform compatibility between clients using [Dioxus](https://github.com/DioxusLabs/dioxus), a modern Rust framework.
+[Anytype](https://github.com/anyproto/) has a great desktop, Android and iOS clients. This project focuses on cross-platform implementation of the client using [Dioxus](https://github.com/DioxusLabs/dioxus), a modern Rust framework. The goal is to raise phone and tablet experience to the level of the Anytype desktop app.
 
-**⚠️ AnyTask is currently in early development stage.**
+**⚠️ AnyTask is currently in early development.**
 
 <!--
 <div align="center">
@@ -12,40 +12,48 @@
 </div>
 -->
 
-## Customizable Object Views
-
-<div align="center">
-  <img src="./notes/android_demo.webp" height="500">
-</div>
-
 ## Real-time Property Management
 
 <div align="center">
   <img src="./notes/windows_demo.webp" width="700">
 </div>
 
+## Customizable Object Views
+
+<div align="center">
+  <img src="./notes/android_demo.webp" height="500">
+</div>
+
 ## Features
 
-- [x] Login/Logout with 4-digit code
-- [x] Views: Spaces, Queries, Objects
-- [x] Properties: Text, Checkbox, Select, Date
-- [x] Add/edit viewed properties
-- [x] Choose query views
-<!--- [ ] Timeline view-->
+- [x] Login with 4-digit code
+- [x] Views: Spaces, Lists, Objects
+- [x] Properties: Text, Checkbox, Select, Date, etc.
+- [x] Customize properties appearence in Lists
+- [x] Live property update on value change
+- [x] Use different List views
+- [x] Open last visited view after app reload
+- [ ] Timeline/Calendar view
+- [ ] ...
 
 ## How to use
 
 **⚠️ Requirement:** The current version of AnyTask requires a **running official Anytype desktop client** on the local network to function.
 
+### Windows
+
+- Open Anytype app
+- Set server IP to 127.0.0.1:31009
+- Request one-time code
+- Enter your account
+
 ### Android
 
-To use Android app you should first install AnyTask on device with a desktop Anytype installed.
-Then connect to the same Private network (Wi-Fi) and enter the desktop ip in the app (example: 10.0.0.45:31010).
-
-- Request 4-digit code
-- Enter the code in the app
-
-### Windows
+- Run Anytype and AnyTask apps on desktop device
+- Set server IP to your desktop device IP, with port 31010 (example: 10.0.0.45:31010)
+  - both devices should be connected to the same network
+- Request one-time code
+- Enter your account
 
 ## Developing
 
@@ -62,6 +70,8 @@ cargo install --git https://github.com/DioxusLabs/dioxus dioxus-cli --locked
 ```
 
 #### NixOS
+
+You can install development environment with all dependencies using [devenv](https://devenv.sh/).
 
 ```bash
 devenv shell -v
@@ -114,32 +124,3 @@ or
 ```bash
 (devenv) bundle-android-apk
 ```
-
-### Client API generation
-
-- copy `openapi-version.yaml` to `apis/`
-- build the client
-  ```bash
-  (devenv) client-api-generate
-  ```
-
-#### 2025-11-08 Patches
-
-- add property name mapping
-  ```
-    PropertyWithValue:
-      discriminator:
-        propertyName: format
-        mapping:
-          text: "#/components/schemas/TextPropertyValue"
-          number: "#/components/schemas/NumberPropertyValue"
-          select: "#/components/schemas/SelectPropertyValue"
-          multi_select: "#/components/schemas/MultiSelectPropertyValue"
-          date: "#/components/schemas/DatePropertyValue"
-          files: "#/components/schemas/FilesPropertyValue"
-          checkbox: "#/components/schemas/CheckboxPropertyValue"
-          url: "#/components/schemas/UrlPropertyValue"
-          email: "#/components/schemas/EmailPropertyValue"
-          phone: "#/components/schemas/PhonePropertyValue"
-          objects: "#/components/schemas/ObjectsPropertyValue"
-  ```
