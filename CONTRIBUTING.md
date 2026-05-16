@@ -1,5 +1,20 @@
 # Contributing to AnyTask
 
+## Anytype CLI
+
+### Useful commands
+
+```
+cd anytype-binaries
+./anytype-x86_64-pc-windows-msvc auth create test-bot
+./anytype-x86_64-pc-windows-msvc auth login
+./anytype-x86_64-pc-windows-msvc space list
+./anytype-x86_64-pc-windows-msvc space join [invite link]
+./anytype-x86_64-pc-windows-msvc auth apikey create test-key
+
+
+```
+
 ## Client API generation
 
 - copy `openapi-version.yaml` to `apis/`

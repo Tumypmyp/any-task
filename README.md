@@ -33,8 +33,8 @@
 - [x] Live property update on value change
 - [x] Use different List views
 - [x] Open last visited view after app reload
-- [ ] Timeline/Calendar view
-- [ ] ...
+- [ ] Standalone app (independent of Anytype desktop)
+<!--- [ ] Timeline/Calendar view-->
 
 ## How to use
 

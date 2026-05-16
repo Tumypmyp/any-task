@@ -1,6 +1,6 @@
 use crate::API_CLIENT;
 use crate::Route;
-use crate::components::action::*;
+use crate::anytype_cli::*;
 use crate::components::base::message;
 use crate::components::button::{Button, ButtonHolder, ButtonVariant};
 use crate::components::column::Column;
@@ -9,7 +9,8 @@ use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Default)]
 pub struct AppSettings {
-    pub token: String,
+    pub api_key: String,
+    pub account_key: String,
     pub server: String,
 }
 
@@ -19,7 +20,7 @@ pub fn Logout() -> Element {
     rsx! {
         Button {
             onclick: move |_| {
-                API_CLIENT.write().set_token("token".to_string());
+                API_CLIENT.write().set_api_key("token".to_string());
                 tracing::info!("removed the token");
                 nav.push(Route::Login {});
             },
@@ -27,18 +28,187 @@ pub fn Logout() -> Element {
         }
     }
 }
+
+#[derive(Clone, Copy, PartialEq)]
+enum LoginMethod {
+    RemoteCode,
+    RemoteToken,
+    LocalCli,
+}
+
 #[component]
 pub fn Login() -> Element {
-    LoginWithCode()
+    let mut active_method = use_signal(|| LoginMethod::LocalCli);
+
+    rsx! {
+        div { class: "login-container",
+            div { style: "display: flex; justify-content: center; gap: 15px; padding-top: 20px; flex-wrap: wrap;",
+                Button {
+                    variant: if active_method() == LoginMethod::RemoteCode { ButtonVariant::Primary } else { ButtonVariant::Secondary },
+                    onclick: move |_| active_method.set(LoginMethod::RemoteCode),
+                    "Login with Code"
+                }
+                Button {
+                    variant: if active_method() == LoginMethod::RemoteToken { ButtonVariant::Primary } else { ButtonVariant::Secondary },
+                    onclick: move |_| active_method.set(LoginMethod::RemoteToken),
+                    "Login with API Key"
+                }
+                Button {
+                    variant: if active_method() == LoginMethod::LocalCli { ButtonVariant::Primary } else { ButtonVariant::Secondary },
+                    onclick: move |_| active_method.set(LoginMethod::LocalCli),
+                    "Embedded Node"
+                }
+            }
+            match active_method() {
+                LoginMethod::RemoteCode => rsx! {
+                    LoginWithCode {}
+                },
+                LoginMethod::RemoteToken => rsx! {
+                    LoginWithToken {}
+                },
+                LoginMethod::LocalCli => rsx! {
+                    LoginToLocalCli {}
+                },
+            }
+        }
+    }
 }
+
+#[component]
+pub fn LoginToLocalCli() -> Element {
+    let mut settings = use_context::<Signal<AppSettings>>();
+    // let server = use_signal(|| settings.read().server.clone());
+    let server = use_signal(|| "127.0.0.1:31020".to_string());
+    let mut account_key = use_signal(|| settings.read().account_key.clone());
+    let mut api_key = use_signal(|| settings.read().api_key.clone());
+    let mut is_loading = use_signal(|| false);
+
+    rsx! {
+        Column { style: "padding-top: 30vh;",
+            ButtonHolder {
+                Input {
+                    r#type: "password",
+                    value: "{account_key}",
+                    oninput: move |e: FormEvent| account_key.set(e.value()),
+                    placeholder: "Enter account key",
+                }
+            }
+            ButtonHolder {
+                Input {
+                    r#type: "password",
+                    value: "{api_key}",
+                    oninput: move |e: FormEvent| api_key.set(e.value()),
+                    placeholder: "Enter api key",
+                }
+            }
+            Button {
+                variant: ButtonVariant::Primary,
+                disabled: is_loading() || account_key().is_empty() || api_key().is_empty(),
+                onclick: move |_| {
+                    is_loading.set(true);
+                    let key = account_key();
+                    spawn(async move {
+                       match login_to_account(key).await {
+                            Ok(_) => {
+                                tracing::info!("CLI authenticated successfully.");
+
+                                settings.write().server = server();
+                                settings.write().account_key = account_key();
+
+                                let mut client = API_CLIENT.cloned();
+                                client.set_server(server());
+                                client.set_api_key(api_key());
+
+                                let api_key_val = api_key();
+                                spawn(async move {
+                                    match client.list_spaces().await {
+                                        Ok(_) => {
+                                            settings.write().api_key = api_key_val;
+                                            *API_CLIENT.write() = client;
+                                            navigator().push(Route::Home {});
+                                        }
+                                        Err(e) => message::error("Invalid API Key or Server", &e),
+                                    }
+                                });
+                            }
+                            Err(login_err) => {
+                                message::error_with_description(
+                                    "Local CLI login failed",
+                                    &login_err,
+                                );
+                            }
+                        }
+                       is_loading.set(false);
+                    });
+                },
+                if is_loading() {
+                    "Authenticating..."
+                } else {
+                    "Initialize Local Node"
+                }
+            }
+        }
+    }
+}
+#[component]
+pub fn LoginWithToken() -> Element {
+    let mut settings = use_context::<Signal<AppSettings>>();
+    let mut server = use_signal(|| settings.read().server.clone());
+    let mut api_key = use_signal(|| settings.read().api_key.clone());
+
+    rsx! {
+        Column { style: "padding-top: 30vh;",
+            ButtonHolder {
+                Input {
+                    r#type: "url",
+                    value: "{server}",
+                    oninput: move |e: FormEvent| server.set(e.value()),
+                    placeholder: "Anytype API server (e.g. 127.0.0.1:31009)",
+                }
+            }
+            ButtonHolder {
+                Input {
+                    r#type: "password",
+                    value: "{api_key}",
+                    oninput: move |e: FormEvent| api_key.set(e.value()),
+                    placeholder: "API Key",
+                }
+            }
+            Button {
+                variant: ButtonVariant::Primary,
+                onclick: move |_| {
+                    let mut client = API_CLIENT.cloned();
+                    client.set_server(server());
+                    client.set_api_key(api_key());
+
+                    let token_val = api_key();
+                    let server_val = server();
+
+                    spawn(async move {
+                        match client.list_spaces().await {
+                            Ok(_) => {
+                                settings.write().api_key = token_val;
+                                settings.write().server = server_val;
+                                *API_CLIENT.write() = client;
+                                navigator().push(Route::Home {});
+                            }
+                            Err(e) => message::error("Invalid API Key or Server", &e),
+                        }
+                    });
+                },
+                "Connect"
+            }
+        }
+    }
+}
+
 #[component]
 pub fn LoginWithCode() -> Element {
     let mut settings = use_context::<Signal<AppSettings>>();
 
-    let mut server = use_signal(|| "127.0.0.1:31009".to_string());
+    let mut server = use_signal(|| "127.0.0.1:31012".to_string());
     let mut challenge_id = use_signal(|| "".to_string());
     let mut code = use_signal(|| "".to_string());
-    let mut token = use_signal(|| "settings.read().token".to_string());
     let _validate_settings = use_resource(move || async move {
         let client = API_CLIENT.read().clone();
         if client.get_token().is_empty() {
@@ -99,9 +269,9 @@ pub fn LoginWithCode() -> Element {
                         match client.create_api_key(challenge_id(), code()).await {
                             Ok(r) => {
                                 if let Some(key) = r.api_key {
-                                    settings.write().token = key.clone();
+                                    settings.write().api_key = key.clone();
                                     settings.write().server = server();
-                                    client.set_token(key);
+                                    client.set_api_key(key);
                                     *API_CLIENT.write() = client;
                                     navigator().push(Route::Home {});
                                 }
@@ -114,91 +284,4 @@ pub fn LoginWithCode() -> Element {
             }
         }
     }
-    // rsx! {
-    //     Column { style: "padding-top: 40vh;",
-    //         ButtonHolder {
-    //             Input {
-    //                 r#type: "url",
-    //                 placeholder: "Anytype API server",
-    //                 style: "width: 50vw",
-    //                 value: "{server.read()}",
-    //                 oninput: move |event: FormEvent| {
-    //                     *server.write() = event.value();
-    //                 },
-    //             }
-    //         }
-    //         ButtonHolder {
-    //             Input {
-    //                 r#type: "number",
-    //                 placeholder: "Anytype code",
-    //                 style: "width: 30vw",
-    //                 value: "{code.read()}",
-    //                 oninput: move |event: FormEvent| {
-    //                     *code.write() = event.value();
-    //                 },
-    //             }
-    //         }
-    //         Button {
-    //             variant: ButtonVariant::Secondary,
-    //             onclick: move |_| {
-    //                 let mut client = API_CLIENT.cloned();
-    //                 client.set_server(server());
-    //                 spawn(async move {
-    //                     match client.create_auth_challenge().await {
-    //                         Ok(r) => {
-    //                             match r.challenge_id {
-    //                                 Some(id) => challenge_id.set(id),
-    //                                 _ => {
-    //                                     message::info(
-    //                                         "got empty challange_id".to_string(),
-    //                                         "maybe wrong server/port?".to_string(),
-    //                                     )
-    //                                 }
-    //                             }
-    //                         }
-    //                         Err(e) => {
-    //                             message::error("Challenge request failed", &e);
-    //                         }
-    //                     };
-    //                 });
-    //             },
-    //             "Request Code"
-    //         }
-    //         Button {
-    //             variant: ButtonVariant::Secondary,
-    //             onclick: move |_| {
-    //                 let mut client = API_CLIENT.cloned();
-    //                 client.set_server(server());
-    //                 let client_create_key = client.clone();
-    //                 spawn(async move {
-    //                     match client_create_key.create_api_key(challenge_id(), code()).await {
-    //                         Ok(r) => {
-    //                             match r.api_key {
-    //                                 Some(key) => {
-    //                                     token.set(key);
-    //                                     tracing::debug!("token: {}", token());
-    //                                     client.set_token(token());
-    //                                     *API_CLIENT.write() = client;
-    //                                     tracing::debug!("api_client: {:#?}", API_CLIENT.read());
-    //                                     let nav = navigator();
-    //                                     nav.push(Route::Home {});
-    //                                 }
-    //                                 _ => {
-    //                                     message::info(
-    //                                         "got empty key".to_string(),
-    //                                         "maybe wrong server/port?".to_string(),
-    //                                     )
-    //                                 }
-    //                             }
-    //                         }
-    //                         Err(e) => {
-    //                             message::error("Challenge failed", &e);
-    //                         }
-    //                     };
-    //                 });
-    //             },
-    //             "Enter"
-    //         }
-    //     }
-    // }
 }

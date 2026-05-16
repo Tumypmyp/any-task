@@ -16,6 +16,8 @@ mod proxy;
 use proxy::*;
 mod persistent_history;
 use persistent_history::*;
+mod anytype_cli;
+use anytype_cli::*;
 use std::rc::Rc;
 pub const USER_SETTINGS_KEY: &str = "settings";
 use dioxus_sdk_storage::LocalStorage;
@@ -79,18 +81,32 @@ fn main() {
 #[component]
 fn App() -> Element {
     tracing::info!("App is started");
+    let server_status = use_resource(move || async move {
+        if let Err(e) = start_anytype_server().await {
+            tracing::error!("Failed to start background Anytype node process: {:?}", e);
+            return Err(e.to_string());
+        }
+        tracing::info!("Anytype background server started successfully.");
+        Ok(())
+    });
+
+    use_drop(move || {
+        tracing::info!("Root layout dropped. Halting sidecar service...");
+        stop_anytype_server();
+    });
     let settings =
         use_synced_storage::<LocalStorage, AppSettings>(USER_SETTINGS_KEY.into(), || AppSettings {
-            token: "".to_string(),
-            server: "127.0.0.1:31010".to_string(),
+            api_key: "".to_string(),
+            server: "127.0.0.1:31009".to_string(),
+            account_key: "".to_string(),
         });
 
     use_context_provider(|| settings);
     {
         let s = settings.read();
         let mut client = API_CLIENT.write();
-        if client.get_token() != s.token || client.get_server() != s.server {
-            client.set_token(s.token.clone());
+        if client.get_token() != s.api_key || client.get_server() != s.server {
+            client.set_api_key(s.api_key.clone());
             client.set_server(s.server.clone());
         }
     }
@@ -109,7 +125,7 @@ fn App() -> Element {
     use_effect(move || {
         let s = settings.read();
         let mut client = API_CLIENT.write();
-        client.set_token(s.token.clone());
+        client.set_api_key(s.api_key.clone());
         client.set_server(s.server.clone());
     });
 
@@ -119,11 +135,23 @@ fn App() -> Element {
             document::Stylesheet { href: MAIN_CSS }
             document::Stylesheet { href: THEME_CSS }
             document::Stylesheet { href: asset!("/src/components/button/style.css") }
-            HistoryProvider {
-                history: move |_| {
-                    Rc::new(PersistentHistory::default().with_prefix("/any-task")) as Rc<dyn History>
-                },
-                Router::<Route> {}
+            {
+                match &*server_status.read() {
+                    None => rsx! {
+                        Login{}
+                    },
+                    Some(Err(_)) => rsx! {
+                        Login{}
+                    },
+                    Some(Ok(_)) => rsx! {
+                        HistoryProvider {
+                            history: move |_| {
+                                Rc::new(PersistentHistory::default().with_prefix("/any-task")) as Rc<dyn History>
+                            },
+                            Router::<Route> {}
+                       }
+                    },
+                }
             }
         }
     }

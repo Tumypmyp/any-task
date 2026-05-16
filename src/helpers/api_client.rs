@@ -16,7 +16,7 @@ impl Client {
             config: Configuration::new(),
         }
     }
-    pub fn set_token(&mut self, token: String) {
+    pub fn set_api_key(&mut self, token: String) {
         self.config.bearer_access_token = Some(token);
     }
     pub fn set_server(&mut self, server: String) {
