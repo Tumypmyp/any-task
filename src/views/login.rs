@@ -1,6 +1,7 @@
 use crate::API_CLIENT;
 use crate::Route;
-use crate::anytype_cli::*;
+use crate::engine;
+// use crate::anytype_cli::*;
 use crate::components::base::message;
 use crate::components::button::{Button, ButtonHolder, ButtonVariant};
 use crate::components::column::Column;
@@ -77,7 +78,6 @@ pub fn Login() -> Element {
 #[component]
 pub fn LoginToLocalCli() -> Element {
     let mut settings = use_context::<Signal<AppSettings>>();
-    // let server = use_signal(|| settings.read().server.clone());
     let server = use_signal(|| "127.0.0.1:31020".to_string());
     let mut account_key = use_signal(|| settings.read().account_key.clone());
     let mut api_key = use_signal(|| settings.read().api_key.clone());
@@ -107,39 +107,40 @@ pub fn LoginToLocalCli() -> Element {
                 onclick: move |_| {
                     is_loading.set(true);
                     let key = account_key();
-                    spawn(async move {
-                       match login_to_account(key).await {
-                            Ok(_) => {
-                                tracing::info!("CLI authenticated successfully.");
+                    // spawn(async move {
+                    //    match engine::login_to_account(key).await {
+                    //         Ok(_) => {
+                    //             tracing::info!("CLI authenticated successfully.");
 
-                                settings.write().server = server();
-                                settings.write().account_key = account_key();
+                    //             settings.write().server = server();
+                    //             settings.write().account_key = account_key();
 
-                                let mut client = API_CLIENT.cloned();
-                                client.set_server(server());
-                                client.set_api_key(api_key());
+                    //             let mut client = API_CLIENT.cloned();
+                    //             client.set_server(server());
+                    //             client.set_api_key(api_key());
 
-                                let api_key_val = api_key();
-                                spawn(async move {
-                                    match client.list_spaces().await {
-                                        Ok(_) => {
-                                            settings.write().api_key = api_key_val;
-                                            *API_CLIENT.write() = client;
-                                            navigator().push(Route::Home {});
-                                        }
-                                        Err(e) => message::error("Invalid API Key or Server", &e),
-                                    }
-                                });
-                            }
-                            Err(login_err) => {
-                                message::error_with_description(
-                                    "Local CLI login failed",
-                                    &login_err,
-                                );
-                            }
-                        }
-                       is_loading.set(false);
-                    });
+                    //             let api_key_val = api_key();
+                    //             spawn(async move {
+                    //                 match client.list_spaces().await {
+                    //                     Ok(_) => {
+                    //                         settings.write().api_key = api_key_val;
+                    //                         *API_CLIENT.write() = client;
+                    //                         navigator().push(Route::Home {});
+                    //                     }
+                    //                     Err(e) => message::error("Invalid API Key or Server", &e),
+                    //                 }
+                    //             });
+                    //         }
+                    //         Err(err) => {
+                    //             message::error_with_description(
+                    //                 "Local CLI login failed",
+                    //                 &err,
+                    //             );
+                    //             tracing::error!("CLI login failed: {}", err);
+                    //         }
+                    //     }
+                    //    is_loading.set(false);
+                    // });
                 },
                 if is_loading() {
                     "Authenticating..."

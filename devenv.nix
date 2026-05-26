@@ -2,61 +2,40 @@
   pkgs,
   lib,
   config,
+  inputs,
   ...
 }:
-
 let
+  dioxus-src = pkgs.fetchFromGitHub {
+    owner = "DioxusLabs";
+    repo = "dioxus";
+    rev = "v0.7.9";
+    hash = "sha256-4XkV/gkytFefvliaK/JMERFqWIp6LycM/O/Dm294xS4=";
+  };
   dioxus-cli = pkgs.rustPlatform.buildRustPackage {
     name = "dioxus-cli";
-    src = pkgs.fetchFromGitHub {
-      owner = "DioxusLabs";
-      repo = "dioxus";
-      # to update first set rev to the commit id, hash = ""; and cargoHash = "";
-      rev = "a626d609c1995601215f780431d315cf7c063d1e";
-      hash = "sha256-xjna/0dfucFM50lVcjZvCmIBkg/09KHOAKOBHvF1MEs=";
-      # hash = "";
-    };
+    src = dioxus-src;
     buildAndTestSubdir = "packages/cli";
-    # cargoHash = "";
-    cargoHash = "sha256-bSnadNN3j13k+rzeCqsiu97UD4LwNqOhx5pngUIfD08=";
-    checkFlags = [
-      "--skip=wasm_bindgen::test::test_cargo_install"
-      "--skip=wasm_bindgen::test::test_github_install"
-      "--skip=cli::autoformat::test_auto_fmt"
-      "--skip=test_harnesses::run_harness"
-    ];
-
-    buildFeatures = [
-      "no-downloads"
-    ];
-
+    cargoLock.lockFile = "${dioxus-src}/Cargo.lock";
+    buildFeatures = [ "no-downloads" ];
+    doCheck = false;
     OPENSSL_NO_VENDOR = 1;
-    nativeBuildInputs = [
-      pkgs.pkg-config
-      pkgs.cacert
-    ];
-    buildInputs =
-      with pkgs;
-      [ openssl ]
-      ++ lib.optionals stdenv.isDarwin [
-        darwin.apple_sdk.frameworks.CoreServices
-      ];
+    nativeBuildInputs = [ pkgs.pkg-config pkgs.cacert ];
+    buildInputs = with pkgs; [ openssl ]
+      ++ lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.CoreServices ];
   };
 in
 {
   android = {
     enable = true;
     ndk = {
-        enable = true;
-        version = [ "29.0.14206865" ];
-      };
-      # buildTools.version = [ "36.0.0" ];
-      buildTools.version = [ "34.0.0" ];
-
-    platforms.version = [ "37" "36" "35" "34" ];
+      enable = true;
+      version = [ "29.0.14206865" ];
+    };
+    buildTools.version = [ "34.0.0" ];
+    platforms.version = [ "34" ];
     abis = [ "x86_64" "arm64-v8a" ];
   };
-
   languages.rust = {
     enable = true;
     channel = "nightly";
@@ -75,6 +54,9 @@ in
     ];
   };
 
+  languages.go = {
+    enable = true;
+  };
   packages = [
     dioxus-cli
     pkgs.glib
@@ -85,6 +67,7 @@ in
     pkgs.libsoup_3
     pkgs.webkitgtk_4_1
     pkgs.openjdk
+    pkgs.protobuf
 
     # bundle windows
     # https://github.com/euphemism/dirtywave-updater-releases-mirror/blob/main/devenv.nix
@@ -112,29 +95,59 @@ in
   # https://devenv.sh/basics/
   enterShell = '''';
 
-  # https://devenv.sh/tasks/
-  # tasks = {
-  #   "myproj:setup".exec = "mytool build";
-  #   "devenv:enterShell".after = [ "myproj:setup" ];
-  # };
-
-  # https://devenv.sh/git-hooks/
-  # git-hooks.hooks.shellcheck.enable = true;
-
-  env.API_DIR = "${config.env.DEVENV_ROOT}/apis/";
-  scripts.client-api-generate = {
-    packages = [
-      pkgs.openapi-generator-cli
-    ];
+  tasks."proto:load" = {
+    env = {
+      BASE = "https://raw.githubusercontent.com/anyproto/anytype-heart/main";
+      DEST = "./protos";
+    };
     exec = ''
+      mkdir -p $DEST/pb/protos/service
+      mkdir -p $DEST/pb/protos
+      mkdir -p $DEST/pkg/lib/pb/model/protos
+
+      curl -sL $BASE/pb/protos/service/service.proto   -o $DEST/pb/protos/service/service.proto
+      curl -sL $BASE/pb/protos/commands.proto          -o $DEST/pb/protos/commands.proto
+      curl -sL $BASE/pb/protos/events.proto            -o $DEST/pb/protos/events.proto
+      curl -sL $BASE/pkg/lib/pb/model/protos/models.proto            -o $DEST/pkg/lib/pb/model/protos/models.proto
+      curl -sL $BASE/pkg/lib/pb/model/protos/localstore.proto -o $DEST/pkg/lib/pb/model/protos/localstore.proto
+    '';
+  };
+
+  tasks."api:generate" = {
+    cwd = "${config.env.DEVENV_ROOT}/apis";
+    env = {
+      INPUT_SPEC = "openapi-2025-11-08.yaml";
+      OUTPUT_DIR = "openapi-2025-11-08";
+    };
+
+    exec = ''
+      mkdir -p "$OUTPUT_DIR"
+
       openapi-generator-cli generate \
-        -i "''${API_DIR}/openapi-2025-11-08.yaml" \
+        -i "$INPUT_SPEC" \
         -g rust \
-        -o "''${API_DIR}/openapi-2025-11-08" \
+        -o "$OUTPUT_DIR" \
         --skip-validate-spec \
         --additional-properties=packageVersion=0.0.1
     '';
+
+    execIfModified = [ "openapi-2025-11-08.yaml" ];
+    showOutput = true;
   };
+  # env.API_DIR = "${config.env.DEVENV_ROOT}/apis/";
+  # scripts.client-api-generate = {
+  #   packages = [
+  #     pkgs.openapi-generator-cli
+  #   ];
+  #   exec = ''
+  #     openapi-generator-cli generate \
+  #       -i "''${API_DIR}/openapi-2025-11-08.yaml" \
+  #       -g rust \
+  #       -o "''${API_DIR}/openapi-2025-11-08" \
+  #       --skip-validate-spec \
+  #       --additional-properties=packageVersion=0.0.1
+  #   '';
+  # };
 
   scripts.bundle-windows = {
     packages = [
@@ -225,4 +238,103 @@ in
       echo "Universal APK extracted to $OUTPUT_APK"
     '';
   };
+
+  # tasks = {
+  #   "engine:build-linux" = {
+  #     cwd = engineCwd;
+  #     env = {
+  #       OUTPUT_DIR = "${targetLibsDir}/linux";
+  #       OUTPUT_FILE = "libanytype_engine.so";
+  #     };
+  #     exec = ''
+  #       CGO_ENABLED=1 \
+  #       GOOS=linux \
+  #       GOARCH=amd64 \
+  #       go build -buildmode=c-shared -o $OUTPUT_DIR/$OUTPUT_FILE main.go
+  #     '';
+  #     execIfModified = [ "go.mod" "go.sum" "**/*.go" ];
+  #     showOutput = true;
+  #   };
+
+  #   "engine:build-macos" = {
+  #     cwd = engineCwd;
+  #     env = {
+  #       OUTPUT_DIR = "${targetLibsDir}/darwin";
+  #       OUTPUT_FILE = "libanytype_engine.dylib";
+  #     };
+  #     exec = ''
+  #       CGO_ENABLED=1 \
+  #       GOOS=darwin \
+  #       GOARCH=arm64 \
+  #       go build -buildmode=c-shared -o $OUTPUT_DIR/$OUTPUT_FILE main.go
+  #     '';
+  #     execIfModified = [ "go.mod" "go.sum" "**/*.go" ];
+  #     showOutput = true;
+  #   };
+
+  #   "engine:build-windows" = {
+  #     cwd = engineCwd;
+  #     env = {
+  #       OUTPUT_DIR = "${targetLibsDir}/windows";
+  #       OUTPUT_FILE = "libanytype_engine.dll";
+  #     };
+  #     exec = ''
+  #       CGO_ENABLED=1 \
+  #       GOOS=windows \
+  #       GOARCH=amd64 \
+  #       go build -buildmode=c-shared -o $OUTPUT_DIR/$OUTPUT_FILE main.go
+  #     '';
+  #     execIfModified = [ "go.mod" "go.sum" "**/*.go" ];
+  #     showOutput = true;
+  #   };
+
+  #   "engine:build-android" = {
+  #     cwd = engineCwd;
+  #     env = {
+  #       OUTPUT_DIR = "${targetLibsDir}/android";
+  #       OUTPUT_FILE = "libanytype_engine.so";
+  #     };
+  #     exec = ''
+  #       # Replace this path with your actual Android NDK toolchain location
+  #       export TOOLCHAIN=$(echo $ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/*/bin)
+
+  #       CGO_ENABLED=1 \
+  #       GOOS=android \
+  #       GOARCH=arm64 \
+  #       CC=$TOOLCHAIN/aarch64-linux-android34-clang \
+  #       go build -buildmode=c-shared -o $OUTPUT_DIR/$OUTPUT_FILE main.go
+  #     '';
+  #     execIfModified = [ "go.mod" "go.sum" "**/*.go" ];
+  #     showOutput = true;
+  #   };
+
+  #   "engine:build-ios" = {
+  #     cwd = engineCwd;
+  #     env = {
+  #       OUTPUT_DIR = "${targetLibsDir}/ios";
+  #       OUTPUT_FILE = "libanytype_engine.a";
+  #     };
+  #     exec = ''
+  #       SDK=iphoneos
+  #       CGO_ENABLED=1 \
+  #       GOOS=ios \
+  #       GOARCH=arm64 \
+  #       CC=$(xcrun --sdk $SDK --find clang) \
+  #       CGO_CFLAGS="-arch arm64 -miphoneos-version-min=14.0" \
+  #       go build -buildmode=c-archive -o $OUTPUT_DIR/$OUTPUT_FILE main.go
+  #     '';
+  #     execIfModified = [ "go.mod" "go.sum" "**/*.go" ];
+  #     showOutput = true;
+  #   };
+  #   "engine:build-all" = {
+  #     exec = "echo '✅ All platform targets successfully evaluated.'";
+  #     after = [
+  #       "engine:build-linux"
+  #       "engine:build-macos"
+  #       "engine:build-windows"
+  #       "engine:build-android"
+  #       "engine:build-ios"
+  #     ];
+  #   };
+  # };
 }

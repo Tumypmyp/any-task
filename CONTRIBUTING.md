@@ -1,5 +1,20 @@
 # Contributing to AnyTask
 
+```
+.
+├── build.rs                      # build script to add compiled engine inside the app
+├── go-engine/                    # Go layer on top of anytype-heart (compiled to lib)
+├── src/                          # Dioxus app
+│   ├── anytype_cli.rs
+│   ├── components/
+│   ├── engine.rs
+│   ├── helpers
+│   ├── main.rs
+│   ├── persistent_history.rs
+│   ├── proxy.rs
+│   └── views/
+```
+
 ## Anytype CLI
 
 ### Useful commands

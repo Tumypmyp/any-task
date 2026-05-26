@@ -8,7 +8,7 @@ bundle-android:
     @echo "Using NDK from: {{ NDK_HOME }}"
     dx bundle --platform android --release --verbose --out-dir ./dist/android
 
-run-android:
+serve-android:
     @echo "Running on android device..."
     dx serve --verbose --android --device
 
