@@ -10,7 +10,49 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("cargo:rustc-link-search=native={output_base}/windows");
             println!("cargo:rustc-link-lib=dylib=anytype_engine");
             println!("cargo:rerun-if-env-changed=OUTPUT_BASE");
-            println!("cargo:rerun-if-changed={output_base}/windows/libanytype_engine.ddl");
+            println!("cargo:rerun-if-changed={output_base}/windows/libanytype_engine.dll");
+            let src_dll = std::path::PathBuf::from(&output_base)
+                .join("windows")
+                .join("anytype_engine.dll");
+
+            if src_dll.exists() {
+                // 1. Copy to the project manifest root directory
+                if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
+                    let p_root = std::path::PathBuf::from(manifest_dir);
+                    let _ = std::fs::copy(&src_dll, p_root.join("anytype_engine.dll"));
+
+                    // 2. Explicitly target Dioxus's custom development layout directory
+                    let dx_windows_dir = p_root
+                        .join("target")
+                        .join("dx")
+                        .join("any-task")
+                        .join("debug")
+                        .join("windows");
+
+                    if !dx_windows_dir.exists() {
+                        let _ = std::fs::create_dir_all(&dx_windows_dir);
+                    }
+                    let _ = std::fs::copy(&src_dll, dx_windows_dir.join("anytype_engine.dll"));
+                }
+
+                // 3. Copy to traditional cargo profile paths as a fallback
+                if let Ok(out_dir) = std::env::var("OUT_DIR") {
+                    let mut profile_dir = std::path::PathBuf::from(out_dir);
+                    profile_dir.pop(); // pop "out"
+                    profile_dir.pop(); // pop "any-task-[hash]"
+                    profile_dir.pop(); // pop "build"
+
+                    let _ = std::fs::copy(&src_dll, profile_dir.join("anytype_engine.dll"));
+                    let _ = std::fs::copy(
+                        &src_dll,
+                        profile_dir.join("deps").join("anytype_engine.dll"),
+                    );
+                }
+            } else {
+                println!(
+                    "cargo:warning=anytype_engine.dll was not found at the expected source path!"
+                );
+            }
         }
 
         "linux" => {

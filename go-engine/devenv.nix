@@ -93,7 +93,7 @@ in
           export CC="zig cc -target x86_64-windows-gnu"
           export CXX="zig c++ -target x86_64-windows-gnu"
 
-          export CGO_LDFLAGS="-L$LIBS_DIR/windows-amd64 -ltantivy_go"
+          export CGO_LDFLAGS="-L$LIBS_DIR/windows-amd64 -ltantivy_go -Wl,--out-implib,$OUTPUT_BASE/windows/anytype_engine.lib"
 
           mkdir -p $OUTPUT_BASE/windows
           go build -buildmode=c-shared -o $OUTPUT_BASE/windows/anytype_engine.dll main.go

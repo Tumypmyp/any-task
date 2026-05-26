@@ -8,12 +8,6 @@ use crate::components::column::Column;
 use crate::components::input::Input;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Default)]
-pub struct AppSettings {
-    pub api_key: String,
-    pub account_key: String,
-    pub server: String,
-}
 
 #[component]
 pub fn Logout() -> Element {
@@ -111,14 +105,11 @@ pub fn LoginToLocalCli() -> Element {
                     //    match engine::login_to_account(key).await {
                     //         Ok(_) => {
                     //             tracing::info!("CLI authenticated successfully.");
-
                     //             settings.write().server = server();
                     //             settings.write().account_key = account_key();
-
                     //             let mut client = API_CLIENT.cloned();
                     //             client.set_server(server());
                     //             client.set_api_key(api_key());
-
                     //             let api_key_val = api_key();
                     //             spawn(async move {
                     //                 match client.list_spaces().await {
