@@ -11,13 +11,12 @@ use dioxus_router::components::{HistoryProvider, Router};
 use engine::*;
 use std::env;
 use std::path::PathBuf;
-// use views::*;
-// mod views;
+use views::*;
+mod views;
 // use components::*;
-// mod components;
-// use helpers::*;
-// mod helpers;
-//
+mod components;
+use helpers::*;
+mod helpers;
 use serde::{Deserialize, Serialize};
 mod persistent_history;
 use persistent_history::*;
@@ -25,6 +24,8 @@ use std::rc::Rc;
 pub const USER_SETTINGS_KEY: &str = "settings";
 use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
+
+use crate::helpers::api_client::Client;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Default)]
 pub struct AppSettings {
@@ -39,19 +40,19 @@ pub struct AppSettings {
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/main.css");
 const THEME_CSS: Asset = asset!("/assets/dx-components-theme.css");
-// #[derive(Clone, Routable)]
-// #[rustfmt::skip]
-// enum Route {
-// #[route("/")]
-// #[redirect("/:.._s", |_s:Vec<String>|Route::Home{})]
-// Home {},
+#[derive(Clone, Routable)]
+#[rustfmt::skip]
+enum Route {
+#[route("/")]
+#[redirect("/:.._s", |_s:Vec<String>|Route::Home{})]
+Home {},
 // #[route("/spaces/:space_id")]
 // Space { space_id: String },
 // #[route("/spaces/:space_id/lists/:list_id")]
 // ObjectList { space_id: String, list_id: String },
 // #[route("/login")]
 // Login {},
-// }
+}
 
 #[cfg_attr(feature = "bundle", windows_subsystem = "windows")]
 fn main() {
@@ -105,11 +106,8 @@ pub fn get_app_data_dir() -> PathBuf {
 pub enum AppState {
     StartingEngine,
     NeedsAccount,
-    Processing(String), // Displays loading messages
-    Ready {
-        account_id: String,
-        spaces: Vec<String>,
-    },
+    Processing(String),
+    Ready,
     Error(String),
 }
 
@@ -123,40 +121,16 @@ fn App() -> Element {
             mnemonic: "".to_string(),
         });
 
-    // Track the current state of our authentication and engine
     let mut app_state = use_signal(|| AppState::StartingEngine);
 
-    // 1. App Load: Start Engine and check Settings
     use_future(move || async move {
         let addr = "127.0.0.1:31020";
         tracing::info!("Initializing Anytype Engine...");
-
         if let Err(e) = start_engine(addr) {
             app_state.set(AppState::Error(format!("Engine failed to start: {}", e)));
             return;
         }
 
-        let mut client = match ClientCommandsClient::connect(format!("http://{}", addr)).await {
-            Ok(c) => c,
-            Err(e) => {
-                app_state.set(AppState::Error(e.to_string()));
-                return;
-            }
-        };
-
-        let root_path_str = get_app_data_dir().to_string_lossy().to_string();
-
-        // Initialize Parameters
-        let _ = client
-            .initial_set_parameters(protos::anytype::rpc::initial::set_parameters::Request {
-                platform: "rust".to_string(),
-                version: "0.0.1".to_string(),
-                workdir: root_path_str.clone(),
-                ..Default::default()
-            })
-            .await;
-
-        // Check for existing mnemonic
         let mnemonic = settings.read().mnemonic.clone();
         let account_id = settings.read().account_id.clone();
 
@@ -166,9 +140,12 @@ fn App() -> Element {
             app_state.set(AppState::Processing(
                 "Recovering existing account...".to_string(),
             ));
-            match recover_existing_account(client, mnemonic, account_id, root_path_str).await {
-                Ok((account_id, spaces)) => {
-                    app_state.set(AppState::Ready { account_id, spaces });
+
+            let root_path_str = get_app_data_dir().to_string_lossy().to_string();
+            match Client::init_from_mnemonic(mnemonic, account_id, root_path_str).await {
+                Ok(client) => {
+                    *API_CLIENT.write() = client;
+                    app_state.set(AppState::Ready);
                 }
                 Err(e) => app_state.set(AppState::Error(e)),
             }
@@ -180,28 +157,21 @@ fn App() -> Element {
         stop_engine();
     });
 
-    // 3. Button Click Handler: Create New Account
     let handle_create_account = move |_| {
         app_state.set(AppState::Processing(
             "Creating new wallet and account...".to_string(),
         ));
 
-        // Spawn a background task for the gRPC calls so we don't block the UI
         spawn(async move {
-            let addr = "127.0.0.1:31020";
-            let client = ClientCommandsClient::connect(format!("http://{}", addr))
-                .await
-                .unwrap();
             let root_path_str = get_app_data_dir().to_string_lossy().to_string();
 
-            match create_new_account_flow(client, root_path_str).await {
-                Ok((mnemonic, account_id, spaces)) => {
+            match Client::init_new_account(root_path_str).await {
+                Ok((mnemonic, client)) => {
                     settings.write().mnemonic = mnemonic;
-                    settings.write().account_id = account_id.clone();
-                    app_state.set(AppState::Ready {
-                        account_id: account_id.clone(),
-                        spaces,
-                    });
+                    settings.write().account_id =
+                        client.account_id.clone().expect("account id was not saved");
+                    *API_CLIENT.write() = client;
+                    app_state.set(AppState::Ready);
                 }
                 Err(e) => {
                     app_state.set(AppState::Error(e));
@@ -210,7 +180,6 @@ fn App() -> Element {
         });
     };
 
-    // 4. Render the UI based on AppState
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
         document::Stylesheet { href: MAIN_CSS }
@@ -234,35 +203,16 @@ fn App() -> Element {
                     p { style: "margin-bottom: 20px;", "No existing account found." }
                     button {
                         onclick: handle_create_account,
-                        style: "padding: 10px 20px; cursor: pointer; font-size: 16px;", // Add your custom classes here
                         "Create New Account"
                     }
                 }
             },
-            AppState::Ready { account_id, spaces } => rsx! {
-                div { style: "padding: 20px; font-family: sans-serif; color: white;",
-                    h2 { "Account Ready" }
-                    p {
-                        "Your Account ID is: "
-                        strong { "{account_id}" }
-                    }
-
-                    h3 { style: "margin-top: 20px;", "Your Spaces:" }
-                    if spaces.is_empty() {
-                        p { style: "color: #aaa;", "No spaces found." }
-                    } else {
-                        ul { style: "background: #222; padding: 15px; border-radius: 8px;",
-                            for space_id in spaces {
-                                li { style: "margin-bottom: 8px;", "📦 Space ID: {space_id}" }
-                            }
-                        }
-                    }
-                    button {
-                        onclick: handle_create_account,
-                        style: "padding: 10px 20px; cursor: pointer; font-size: 16px;", // Add your custom classes here
-                        "Create New Account"
-                    }
-
+            AppState::Ready => rsx! {
+                HistoryProvider {
+                    history: move |_| {
+                        Rc::new(PersistentHistory::default().with_prefix("/any-task")) as Rc<dyn History>
+                    },
+                    Router::<Route> {}
                 }
             },
         }
@@ -495,113 +445,3 @@ fn App() -> Element {
 //         // }
 //     }
 // }
-async fn create_new_account_flow(
-    mut client: ClientCommandsClient<tonic::transport::Channel>,
-    root_path_str: String,
-) -> Result<(String, String, Vec<String>), String> {
-    // 1. Create Wallet
-    let wallet_res = client
-        .wallet_create(protos::anytype::rpc::wallet::create::Request {
-            root_path: root_path_str.clone(),
-            ..Default::default()
-        })
-        .await
-        .map_err(|e| e.to_string())?
-        .into_inner();
-    let mnemonic = wallet_res.mnemonic;
-
-    let account_res = client
-        .account_create(protos::anytype::rpc::account::create::Request {
-            name: "My New Account".into(),
-            store_path: root_path_str,
-            network_mode: 1,
-            ..Default::default()
-        })
-        .await
-        .map_err(|e| e.to_string())?
-        .into_inner();
-
-    let account = account_res.account.ok_or("Account data missing")?;
-    let account_id = account.id;
-    let tech_space_id = account.info.unwrap_or_default().tech_space_id;
-
-    let spaces = fetch_spaces(&mut client, tech_space_id).await?;
-
-    Ok((mnemonic, account_id, spaces))
-}
-
-async fn recover_existing_account(
-    mut client: ClientCommandsClient<tonic::transport::Channel>,
-    mnemonic: String,
-    account_id: String,
-    _root_path_str: String, // May be needed depending on your protos
-) -> Result<(String, Vec<String>), String> {
-    client
-        .wallet_recover(protos::anytype::rpc::wallet::recover::Request {
-            root_path: _root_path_str.clone(),
-            mnemonic: mnemonic,
-            ..Default::default()
-        })
-        .await
-        .map_err(|e| e.to_string())?;
-
-    // 2. Fetch Existing Account Details
-    // NOTE: Replace `account_recover` with whatever gRPC method Anytype uses to fetch the active account.
-    // E.g., `client.account_get(...)` or `client.account_recover(...)`
-
-    let account_res = client
-        .account_select(protos::anytype::rpc::account::select::Request {
-            id: account_id,
-            root_path: _root_path_str.clone(),
-            ..Default::default()
-        })
-        .await
-        .map_err(|e| e.to_string())?
-        .into_inner();
-
-    let account = account_res.account.ok_or("Account data missing")?;
-    let account_id = account.id;
-    let tech_space_id = account.info.unwrap_or_default().tech_space_id;
-
-    // Placeholder so it compiles. Replace with actual gRPC call above.
-    // let account_id = "Recovered_Account_ID".to_string();
-    // let tech_space_id = "Recovered_TechSpace_ID".to_string();
-
-    // 3. Fetch Spaces
-    let spaces = fetch_spaces(&mut client, tech_space_id).await?;
-
-    Ok((account_id, spaces))
-}
-
-// Reusable space fetching logic
-async fn fetch_spaces(
-    client: &mut ClientCommandsClient<tonic::transport::Channel>,
-    tech_space_id: String,
-) -> Result<Vec<String>, String> {
-    let list_sub_res = client
-        .object_search_subscribe(protos::anytype::rpc::object::search_subscribe::Request {
-            space_id: tech_space_id,
-            sub_id: "space".to_string(),
-            keys: vec!["targetSpaceId".to_string()],
-            ..Default::default()
-        })
-        .await
-        .map_err(|e| e.to_string())?;
-
-    let response = list_sub_res.into_inner();
-    let mut spaces = Vec::new();
-
-    for record in response.records {
-        let id_field = record
-            .fields
-            .get("id")
-            .or_else(|| record.fields.get("targetSpaceId"));
-        if let Some(id_val) = id_field {
-            if let Some(prost_types::value::Kind::StringValue(id_str)) = &id_val.kind {
-                spaces.push(id_str.clone());
-            }
-        }
-    }
-
-    Ok(spaces)
-}

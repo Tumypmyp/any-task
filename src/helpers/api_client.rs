@@ -1,10 +1,162 @@
 use dioxus::prelude::*;
-use time::UtcDateTime;
-use time::format_description::well_known::Rfc3339;
-const API_VERSION: &str = "2025-11-08";
-pub static API_CLIENT: GlobalSignal<Client> = Signal::global(|| Client::new());
+// const API_VERSION: &str = "2025-11-08";
+use crate::protos::anytype::client_commands_client::ClientCommandsClient;
+use crate::protos::anytype::rpc::*;
+use tonic::transport::Channel;
+
 #[derive(Clone, Debug)]
-pub struct Client {}
+pub struct Client {
+    pub inner: Option<ClientCommandsClient<tonic::transport::Channel>>,
+    pub account_id: Option<String>,
+    pub tech_space_id: Option<String>,
+}
+
+impl Client {
+    pub fn new() -> Self {
+        Self {
+            inner: None,
+            account_id: None,
+            tech_space_id: None,
+        }
+    }
+    pub async fn init_new_account(root_path_str: String) -> Result<(String, Client), String> {
+        let addr = "127.0.0.1:31020";
+        let mut client = ClientCommandsClient::connect(format!("http://{}", addr))
+            .await
+            .unwrap();
+
+        client
+            .initial_set_parameters(initial::set_parameters::Request {
+                platform: "rust".to_string(),
+                version: "0.0.1".to_string(),
+                workdir: root_path_str.clone(),
+                ..Default::default()
+            })
+            .await;
+
+        let wallet_res = client
+            .wallet_create(wallet::create::Request {
+                root_path: root_path_str.clone(),
+                ..Default::default()
+            })
+            .await
+            .map_err(|e| e.to_string())?
+            .into_inner();
+        let mnemonic = wallet_res.mnemonic;
+
+        let account_res = client
+            .account_create(account::create::Request {
+                name: "My New Account".into(),
+                store_path: root_path_str,
+                network_mode: 1,
+                ..Default::default()
+            })
+            .await
+            .map_err(|e| e.to_string())?
+            .into_inner();
+
+        let account = account_res.account.ok_or("Account data missing")?;
+        let tech_space_id = account.info.unwrap_or_default().tech_space_id;
+        Ok((
+            mnemonic,
+            Self {
+                inner: Some(client),
+                account_id: Some(account.id),
+                tech_space_id: Some(tech_space_id),
+            },
+        ))
+    }
+    /// Bootstraps the application from a saved mnemonic,
+    /// populating the global API_CLIENT state along the way.
+    pub async fn init_from_mnemonic(
+        mnemonic: String,
+        account_id: String,
+        root_path_str: String,
+    ) -> Result<Client, String> {
+        let addr = "127.0.0.1:31020";
+
+        let mut client = ClientCommandsClient::connect(format!("http://{}", addr))
+            .await
+            .map_err(|e| format!("Failed to connect to engine: {}", e))?;
+        client
+            .initial_set_parameters(initial::set_parameters::Request {
+                platform: "rust".to_string(),
+                version: "0.0.1".to_string(),
+                workdir: root_path_str.clone(),
+                ..Default::default()
+            })
+            .await;
+
+        client
+            .wallet_recover(wallet::recover::Request {
+                root_path: root_path_str.clone(),
+                mnemonic: mnemonic.clone(),
+                ..Default::default()
+            })
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let account_res = client
+            .account_select(account::select::Request {
+                root_path: root_path_str.clone(),
+                id: account_id,
+                ..Default::default()
+            })
+            .await
+            .map_err(|e| e.to_string())?
+            .into_inner();
+
+        let account = account_res.account.ok_or("Account data missing")?;
+        let tech_space_id = account.info.unwrap_or_default().tech_space_id;
+        Ok(Self {
+            inner: Some(client),
+            account_id: Some(account.id),
+            tech_space_id: Some(tech_space_id),
+        })
+    }
+    /// Subscribes to the object search and parses out the target space IDs.
+    pub async fn fetch_spaces(&self) -> Result<Vec<String>, String> {
+        let Some(mut grpc_client) = self.inner.clone() else {
+            return Err("Client is not connected yet!".to_string());
+        };
+
+        let Some(tech_space_id) = self.tech_space_id.clone() else {
+            return Err("Tech space ID is missing. User is not fully logged in.".to_string());
+        };
+
+        // 2. Fetch Spaces using the stored tech_space_id
+        let list_sub_res = grpc_client
+            .object_search_subscribe(object::search_subscribe::Request {
+                space_id: tech_space_id, // Passed automatically!
+                sub_id: "space".to_string(),
+                keys: vec!["targetSpaceId".to_string()],
+                ..Default::default()
+            })
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let response = list_sub_res.into_inner();
+        let mut spaces = Vec::new();
+        tracing::debug!("spaces found: {:#?}", response);
+
+        for record in response.records {
+            let id_field = record
+                .fields
+                .get("id")
+                .or_else(|| record.fields.get("targetSpaceId"));
+
+            if let Some(id_val) = id_field {
+                if let Some(prost_types::value::Kind::StringValue(id_str)) = &id_val.kind {
+                    spaces.push(id_str.clone());
+                }
+            }
+        }
+
+        Ok(spaces)
+    }
+}
+
+pub static API_CLIENT: GlobalSignal<Client> = Signal::global(|| Client::new());
 // impl Client {
 //     fn new() -> Self {
 //         Self {

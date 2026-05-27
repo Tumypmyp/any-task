@@ -20,9 +20,6 @@ in
   packages = [
     pkgs.curl
     pkgs.gnutar
-    # pkgs.pkgsCross.mingwW64.stdenv.cc
-    # pkgs.pkgsCross.mingwW64.buildPackages.gcc
-    # pkgs.pkgsCross.mingwW64.windows.pthreads
     pkgs.zig
   ];
 
@@ -68,22 +65,8 @@ in
           rm -rf $TMP_DIR
         '';
       };
-      # "engine:build-windows" = {
-      #   cwd = goEngineDir;
-      #   env = {
-      #     CGO_ENABLED = "1";
-      #     GOOS = "windows";
-      #     GOARCH = "amd64";
-      #     CGO_LDFLAGS = "-L${pkgs.pkgsCross.mingwW64.windows.pthreads}/lib";
-      #     CC = "x86_64-w64-mingw32-gcc";
-      #     CXX = "x86_64-w64-mingw32-g++";
-      #   };
-      #   exec = ''
-      #     mkdir -p $OUTPUT_BASE/windows
-      #     go build -buildmode=c-shared -o $OUTPUT_BASE/windows/anytype_engine.dll main.go
-      #   '';
-      # };
       "engine:build-windows" = {
+        description = "Build anytype-heart lib for Windows";
         cwd = goEngineDir;
         exec = ''
           export CGO_ENABLED=1
@@ -99,31 +82,8 @@ in
           go build -buildmode=c-shared -o $OUTPUT_BASE/windows/anytype_engine.dll main.go
         '';
       };
-      # "engine:build-windows" = {
-      #         cwd = goEngineDir;
-      #         # We completely removed the 'env' block to kill the Nix evaluation error.
-      #         exec = ''
-      #           export CGO_ENABLED=1
-      #           export GOOS=windows
-      #           export GOARCH=amd64
-      #           export CC=x86_64-w64-mingw32-gcc
-      #           export CXX=x86_64-w64-mingw32-g++
-
-      #           # 1. Ask the MinGW compiler where its internal winpthread library is
-      #           WIN_PTHREAD=$(x86_64-w64-mingw32-gcc -print-file-name=libwinpthread.a)
-
-      #           # 2. Make sure the libs folder exists, then symlink it as libpthread.a
-      #           mkdir -p "$LIBS_DIR/windows-amd64"
-      #           ln -sf "$WIN_PTHREAD" "$LIBS_DIR/windows-amd64/libpthread.a"
-
-      #           # 3. Pass your standard libs folder to CGO
-      #           export CGO_LDFLAGS="-L$LIBS_DIR/windows-amd64 -ltantivy_go"
-
-      #           mkdir -p $OUTPUT_BASE/windows
-      #           go build -buildmode=c-shared -o $OUTPUT_BASE/windows/anytype_engine.dll main.go
-      #         '';
-      #       };
       "engine:build-linux" = {
+        description = "Build anytype-heart lib for Linux";
         cwd = goEngineDir;
         exec = ''
           export CGO_ENABLED=1
@@ -137,8 +97,8 @@ in
       };
 
       "engine:build-android" = {
+        description = "Build anytype-heart lib for Android";
         cwd = goEngineDir;
-        description = "Build the Go engine for all standard Android architectures (aarch64, x86_64, armv7, i686).";
         exec = ''
           NDK_BIN="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
           export CGO_ENABLED=1
@@ -194,11 +154,12 @@ in
       };
 
 
-    "engine:build-all" = {
+    "engine:build" = {
+      description = "Build anytype-heart lib for Windows, Linux and Android";
       exec = "echo '✅ All platform targets successfully evaluated.'";
       after = [
         "engine:build-linux"
-        # "engine:build-windows"
+        "engine:build-windows"
         "engine:build-android"
       ];
     };
