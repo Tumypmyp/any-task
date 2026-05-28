@@ -1,4 +1,6 @@
 use dioxus::prelude::*;
+use tonic::Request;
+use tonic::metadata::MetadataValue;
 // const API_VERSION: &str = "2025-11-08";
 use crate::protos::anytype::client_commands_client::ClientCommandsClient;
 use crate::protos::anytype::rpc::*;
@@ -9,6 +11,7 @@ pub struct Client {
     pub inner: Option<ClientCommandsClient<tonic::transport::Channel>>,
     pub account_id: Option<String>,
     pub tech_space_id: Option<String>,
+    pub token: Option<String>,
 }
 
 impl Client {
@@ -17,6 +20,7 @@ impl Client {
             inner: None,
             account_id: None,
             tech_space_id: None,
+            token: None,
         }
     }
     pub async fn init_new_account(root_path_str: String) -> Result<(String, Client), String> {
@@ -24,15 +28,9 @@ impl Client {
         let mut client = ClientCommandsClient::connect(format!("http://{}", addr))
             .await
             .unwrap();
+        let _ = client.app_shutdown(app::shutdown::Request::default()).await;
 
-        client
-            .initial_set_parameters(initial::set_parameters::Request {
-                platform: "rust".to_string(),
-                version: "0.0.1".to_string(),
-                workdir: root_path_str.clone(),
-                ..Default::default()
-            })
-            .await;
+        tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
 
         let wallet_res = client
             .wallet_create(wallet::create::Request {
@@ -43,6 +41,15 @@ impl Client {
             .map_err(|e| e.to_string())?
             .into_inner();
         let mnemonic = wallet_res.mnemonic;
+
+        _ = client
+            .initial_set_parameters(initial::set_parameters::Request {
+                platform: "android".to_string(),
+                version: "0.0.1".to_string(),
+                workdir: root_path_str.clone(),
+                ..Default::default()
+            })
+            .await;
 
         let account_res = client
             .account_create(account::create::Request {
@@ -57,12 +64,22 @@ impl Client {
 
         let account = account_res.account.ok_or("Account data missing")?;
         let tech_space_id = account.info.unwrap_or_default().tech_space_id;
+        let session_res = client
+            .wallet_create_session(wallet::create_session::Request {
+                auth: Some(wallet::create_session::request::Auth::Mnemonic(
+                    mnemonic.clone(),
+                )),
+            })
+            .await
+            .map_err(|e| format!("Failed to create wallet session: {}", e))?
+            .into_inner();
         Ok((
             mnemonic,
             Self {
                 inner: Some(client),
                 account_id: Some(account.id),
                 tech_space_id: Some(tech_space_id),
+                token: Some(session_res.token), // <-- Saved token
             },
         ))
     }
@@ -79,15 +96,6 @@ impl Client {
             .await
             .map_err(|e| format!("Failed to connect to engine: {}", e))?;
         client
-            .initial_set_parameters(initial::set_parameters::Request {
-                platform: "rust".to_string(),
-                version: "0.0.1".to_string(),
-                workdir: root_path_str.clone(),
-                ..Default::default()
-            })
-            .await;
-
-        client
             .wallet_recover(wallet::recover::Request {
                 root_path: root_path_str.clone(),
                 mnemonic: mnemonic.clone(),
@@ -95,6 +103,15 @@ impl Client {
             })
             .await
             .map_err(|e| e.to_string())?;
+
+        _ = client
+            .initial_set_parameters(initial::set_parameters::Request {
+                platform: "android".to_string(),
+                version: "0.0.1".to_string(),
+                workdir: root_path_str.clone(),
+                ..Default::default()
+            })
+            .await;
 
         let account_res = client
             .account_select(account::select::Request {
@@ -108,10 +125,20 @@ impl Client {
 
         let account = account_res.account.ok_or("Account data missing")?;
         let tech_space_id = account.info.unwrap_or_default().tech_space_id;
+        let session_res = client
+            .wallet_create_session(wallet::create_session::Request {
+                auth: Some(wallet::create_session::request::Auth::Mnemonic(
+                    mnemonic.clone(),
+                )),
+            })
+            .await
+            .map_err(|e| format!("Failed to create wallet session: {}", e))?
+            .into_inner();
         Ok(Self {
             inner: Some(client),
             account_id: Some(account.id),
             tech_space_id: Some(tech_space_id),
+            token: Some(session_res.token), // <-- Saved token
         })
     }
     /// Subscribes to the object search and parses out the target space IDs.
@@ -123,19 +150,56 @@ impl Client {
         let Some(tech_space_id) = self.tech_space_id.clone() else {
             return Err("Tech space ID is missing. User is not fully logged in.".to_string());
         };
+        let mut req = Request::new(object::search_subscribe::Request {
+            space_id: tech_space_id,
+            sub_id: "space".to_string(),
+            keys: vec!["targetSpaceId".to_string()],
 
+            ..Default::default()
+        });
+
+        // 2. Inject raw token into lowercase "token" metadata key
+        let meta_val = MetadataValue::try_from(&self.token.clone().unwrap())
+            .map_err(|_| "Failed to parse token into metadata value".to_string())?;
+        req.metadata_mut().insert("token", meta_val);
         // 2. Fetch Spaces using the stored tech_space_id
+        // let list_sub_res = grpc_client
+        //     .object_search_subscribe(object::search_subscribe::Request {
+        //         space_id: tech_space_id, // Passed automatically!
+        //         sub_id: "space".to_string(),
+        //         // filters: vec![
+        //         //     // resolvedLayout == spaceView (58)
+        //         //     anytype::model::block::content::dataview::Filter {
+        //         //         operator: 0,          // No
+        //         //         relation_key: "resolvedLayout".to_string(),
+        //         //         condition: 1,         // Equal
+        //         //         value: Some(prost_types::Value {
+        //         //             kind: Some(prost_types::value::Kind::NumberValue(58.0)),
+        //         //         }),
+        //         //         ..Default::default()
+        //         //     },
+        //         //     // spaceLocalStatus == Ok (0)
+        //         //     anytype::model::block::content::dataview::Filter {
+        //         //         operator: 0,
+        //         //         relation_key: "spaceLocalStatus".to_string(),
+        //         //         condition: 1,
+        //         //         value: Some(prost_types::Value {
+        //         //             kind: Some(prost_types::value::Kind::NumberValue(0.0)),
+        //         //         }),
+        //         //         ..Default::default()
+        //         //     },
+        //         // ],
+        //         keys: vec!["targetSpaceId".to_string()],
+        //         ..Default::default()
+        //     })
+        //     .await
+        //     .map_err(|e| e.to_string())?;
         let list_sub_res = grpc_client
-            .object_search_subscribe(object::search_subscribe::Request {
-                space_id: tech_space_id, // Passed automatically!
-                sub_id: "space".to_string(),
-                keys: vec!["targetSpaceId".to_string()],
-                ..Default::default()
-            })
+            .object_search_subscribe(req)
             .await
-            .map_err(|e| e.to_string())?;
-
-        let response = list_sub_res.into_inner();
+            .map_err(|e| format!("Search subscribe error: {}", e))?
+            .into_inner();
+        let response = list_sub_res;
         let mut spaces = Vec::new();
         tracing::debug!("spaces found: {:#?}", response);
 

@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 mod persistent_history;
 use persistent_history::*;
 use std::rc::Rc;
-pub const USER_SETTINGS_KEY: &str = "settings";
+pub const USER_SETTINGS_KEY: &str = "settings-~aaabbcccdee";
 use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
 
@@ -63,6 +63,13 @@ fn main() {
         .with_visible(true)
         .with_focused(true)
         .with_inner_size(PhysicalSize::new(900, 1300));
+
+    let addr = "127.0.0.1:31020";
+    tracing::info!("Initializing Anytype Engine...");
+    if let Err(e) = start_engine(addr) {
+        tracing::error!("Failed to start Anytype Engine: {}", e);
+        return;
+    }
 
     let data_dir = get_app_data_dir();
     std::fs::create_dir_all(&data_dir).expect("Failed to create application data directory");
@@ -124,21 +131,14 @@ fn App() -> Element {
     let mut app_state = use_signal(|| AppState::StartingEngine);
 
     use_future(move || async move {
-        let addr = "127.0.0.1:31020";
-        tracing::info!("Initializing Anytype Engine...");
-        if let Err(e) = start_engine(addr) {
-            app_state.set(AppState::Error(format!("Engine failed to start: {}", e)));
-            return;
-        }
-
-        let mnemonic = settings.read().mnemonic.clone();
-        let account_id = settings.read().account_id.clone();
+        let mnemonic = settings.peek().mnemonic.clone();
+        let account_id = settings.peek().account_id.clone();
 
         if mnemonic.is_empty() {
             app_state.set(AppState::NeedsAccount);
         } else {
             app_state.set(AppState::Processing(
-                "Recovering existing account...".to_string(),
+                format!("mnemonic is {}.", mnemonic).to_string() + "Recovering existing account...",
             ));
 
             let root_path_str = get_app_data_dir().to_string_lossy().to_string();
@@ -158,10 +158,12 @@ fn App() -> Element {
     });
 
     let handle_create_account = move |_| {
+        if matches!(*app_state.read(), AppState::Processing(_)) {
+            return;
+        }
         app_state.set(AppState::Processing(
             "Creating new wallet and account...".to_string(),
         ));
-
         spawn(async move {
             let root_path_str = get_app_data_dir().to_string_lossy().to_string();
 
@@ -203,6 +205,7 @@ fn App() -> Element {
                     p { style: "margin-bottom: 20px;", "No existing account found." }
                     button {
                         onclick: handle_create_account,
+                        style: "padding: 10px 20px; cursor: pointer; font-size: 16px;", // Add your custom classes here
                         "Create New Account"
                     }
                 }

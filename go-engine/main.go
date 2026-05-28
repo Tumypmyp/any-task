@@ -1,9 +1,10 @@
-/*package main
+package main
 
 import "C"
 
 import (
 	"context"
+	"errors"
 	"net"
 	"os"
 	"sync"
@@ -14,6 +15,8 @@ import (
 
 	"github.com/anyproto/anytype-heart/core"
 	"github.com/anyproto/anytype-heart/core/event"
+	"github.com/anyproto/anytype-heart/metrics"
+	"github.com/anyproto/anytype-heart/pb"
 	"github.com/anyproto/anytype-heart/pb/service"
 	"github.com/anyproto/anytype-heart/pkg/lib/logging"
 )
@@ -33,6 +36,12 @@ type Server struct {
 
 //export StartAnytypeEngine
 func StartAnytypeEngine(cGrpcAddr *C.char) C.int {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorf("Recovered from panic in StartAnytypeEngine: %v", r)
+		}
+	}()
+
 	grpcAddr := C.GoString(cGrpcAddr)
 
 	serverMutex.Lock()
@@ -42,6 +51,9 @@ func StartAnytypeEngine(cGrpcAddr *C.char) C.int {
 		log.Info("Engine is already running")
 		return 0
 	}
+
+	// Fix 6: Initialize metrics before creating middleware
+	metrics.Service.InitWithKeys(metrics.DefaultInHouseKey)
 
 	app.StartWarningAfter = time.Second * 5
 	os.Setenv("ANYTYPE_LOG_LEVEL", "ERROR")
@@ -53,13 +65,58 @@ func StartAnytypeEngine(cGrpcAddr *C.char) C.int {
 	}
 
 	mw := core.New()
+	if mw == nil {
+		log.Error("core.New() returned nil!")
+		listener.Close()
+		return 1
+	}
+
+	// Fix 5: Ensure compilation does NOT use '-tags nogrpcserver'
 	mw.SetEventSender(event.NewGrpcSender())
 
+	// Fix 3 & 4: Rebuild the exact Interceptor Pipeline used by the real server
+	var interceptors []grpc.UnaryServerInterceptor
+
+	// Add Authorize & Panic Recovery interceptor
+	interceptors = append(interceptors, func(
+		ctx context.Context,
+		req interface{},
+		info *grpc.UnaryServerInfo,
+		handler grpc.UnaryHandler,
+	) (resp interface{}, err error) {
+		// Panic Recovery wrapper
+		defer func() {
+			if r := recover(); r != nil {
+				if rerr, ok := r.(error); ok && errors.Is(rerr, core.ErrNotLoggedIn) {
+					log.Warnf("Unauthorized access attempt caught: %v", rerr)
+				} else {
+					log.Errorf("gRPC handler panic recovered: %v", r)
+				}
+			}
+		}()
+
+		switch info.FullMethod {
+		case "/service.ClientCommands/AppShutdown",
+			"/service.ClientCommands/InitialSetParameters",
+			"/service.ClientCommands/AccountCreate",
+			"/service.ClientCommands/AccountSelect":
+			// Bypass authorization validation for these setup calls
+			return handler(ctx, req)
+		}
+		// Authorize wraps the handler execution
+		resp, err = mw.Authorize(ctx, req, info, handler)
+		if err != nil {
+			log.Errorf("authorize failure: %s", err)
+		}
+		return resp, err
+	})
+
 	grpcServer := grpc.NewServer(
-		grpc.MaxRecvMsgSize(20 * 1024 * 1024),
+		grpc.MaxRecvMsgSize(20*1024*1024),
+		grpc.ChainUnaryInterceptor(interceptors...),
 	)
 
-	// Register the Anytype middleware endpoints to the gRPC server
+	// Register endpoints
 	service.RegisterClientCommandsServer(grpcServer, mw)
 
 	globalServer = &Server{
@@ -68,10 +125,9 @@ func StartAnytypeEngine(cGrpcAddr *C.char) C.int {
 		listener:   listener,
 	}
 
-	// Start serving in the background so we don't block Rust
 	go func() {
 		log.Infof("Starting gRPC server on %s", listener.Addr())
-		if err := grpcServer.Serve(listener); err != nil {
+		if err := grpcServer.Serve(listener); err != nil && !errors.Is(err, grpc.ErrServerStopped) {
 			log.Errorf("gRPC server error: %v", err)
 		}
 	}()
@@ -86,20 +142,25 @@ func StopAnytypeEngine() {
 
 	if globalServer != nil {
 		log.Info("Shutting down engine...")
-		globalServer.grpcServer.GracefulStop()
 
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		// _ = globalServer.mw.AppShutdown(ctx, &pb.RpcAppShutdownRequest{})
+		// Fix 2: Stop gRPC server FIRST to shed connections safely
+		globalServer.grpcServer.Stop()
+		globalServer.listener.Close()
+
+		// Fix 1: Shut down middleware SECOND using the correct pb payload package
+		globalServer.mw.AppShutdown(
+			context.Background(),
+			&pb.RpcAppShutdownRequest{},
+		)
 
 		globalServer = nil
-		log.Info("Engine stopped")
+		log.Info("Engine cleanly stopped and ports cleared.")
 	}
 }
 
 func main() {}
-*/
-//*
+
+/*
 package main
 
 import "C"
@@ -138,7 +199,6 @@ func StartAnytypeEngine(cGrpcAddr *C.char) C.int {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Errorf("Recovered from panic in StartAnytypeEngine: %v", r)
-			// You can also print the stack trace here if needed
 		}
 	}()
 
@@ -172,7 +232,6 @@ func StartAnytypeEngine(cGrpcAddr *C.char) C.int {
 		grpc.MaxRecvMsgSize(20 * 1024 * 1024),
 	)
 
-	// Register the Anytype middleware endpoints to the gRPC server
 	service.RegisterClientCommandsServer(grpcServer, mw)
 
 	globalServer = &Server{
@@ -181,7 +240,6 @@ func StartAnytypeEngine(cGrpcAddr *C.char) C.int {
 		listener:   listener,
 	}
 
-	// Start serving in the background so we don't block Rust
 	go func() {
 		log.Infof("Starting gRPC server on %s", listener.Addr())
 		if err := grpcServer.Serve(listener); err != nil {
@@ -198,18 +256,23 @@ func StopAnytypeEngine() {
 	defer serverMutex.Unlock()
 
 	if globalServer != nil {
-		log.Info("Shutting down engine...")
-		globalServer.grpcServer.GracefulStop()
+		log.Info("Shutting down engine middleware and gateway...")
 
-		_, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
-		// _ = globalServer.mw.AppShutdown(ctx, &pb.RpcAppShutdownRequest{})
+
+		if globalServer.mw != nil {
+			_ = globalServer.mw.AppShutdown(ctx, &service.RpcAppShutdownRequest{})
+		}
+
+		log.Info("Stopping gRPC listener immediately...")
+		globalServer.grpcServer.Stop()
+		globalServer.listener.Close()
 
 		globalServer = nil
-		log.Info("Engine stopped")
+		log.Info("Engine completely stopped and ports released.")
 	}
 }
 
 func main() {}
-
 //*/
