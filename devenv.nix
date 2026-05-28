@@ -4,8 +4,7 @@
   config,
   inputs,
   ...
-}:
-let
+}: let
   dioxus-src = pkgs.fetchFromGitHub {
     owner = "DioxusLabs";
     repo = "dioxus";
@@ -17,24 +16,24 @@ let
     src = dioxus-src;
     buildAndTestSubdir = "packages/cli";
     cargoLock.lockFile = "${dioxus-src}/Cargo.lock";
-    buildFeatures = [ "no-downloads" ];
+    buildFeatures = ["no-downloads"];
     doCheck = false;
     OPENSSL_NO_VENDOR = 1;
-    nativeBuildInputs = [ pkgs.pkg-config pkgs.cacert ];
-    buildInputs = with pkgs; [ openssl ]
-      ++ lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.CoreServices ];
+    nativeBuildInputs = [pkgs.pkg-config pkgs.cacert];
+    buildInputs = with pkgs;
+      [openssl]
+      ++ lib.optionals stdenv.isDarwin [darwin.apple_sdk.frameworks.CoreServices];
   };
-in
-{
+in {
   android = {
     enable = true;
     ndk = {
       enable = true;
-      version = [ "29.0.14206865" ];
+      version = ["29.0.14206865"];
     };
-    buildTools.version = [ "34.0.0" ];
-    platforms.version = [ "34" ];
-    abis = [ "x86_64" "arm64-v8a" ];
+    buildTools.version = ["34.0.0"];
+    platforms.version = ["34"];
+    abis = ["x86_64" "arm64-v8a"];
   };
   languages.rust = {
     enable = true;
@@ -131,7 +130,7 @@ in
         --additional-properties=packageVersion=0.0.1
     '';
 
-    execIfModified = [ "openapi-2025-11-08.yaml" ];
+    execIfModified = ["openapi-2025-11-08.yaml"];
     showOutput = true;
   };
   # env.API_DIR = "${config.env.DEVENV_ROOT}/apis/";
@@ -151,9 +150,9 @@ in
 
   scripts.bundle-windows = {
     packages = [
-        pkgs.pkgsCross.mingwW64.stdenv.cc
-        pkgs.pkgsCross.mingwW64.windows.pthreads
-      ];
+      pkgs.pkgsCross.mingwW64.stdenv.cc
+      pkgs.pkgsCross.mingwW64.windows.pthreads
+    ];
     exec = ''
       export LIBRARY_PATH="$LIBRARY_PATH:${pkgs.pkgsCross.mingwW64.windows.pthreads}/lib"
       dx bundle --release --windows --target x86_64-pc-windows-gnu --features bundle
@@ -174,17 +173,18 @@ in
     AAPT2 = "${pkgs.android-tools}/bin/aapt2";
   };
   scripts.create-emulator.exec = ''
-      avdmanager create avd -n android-simple -k "system-images;android-34;google_apis_playstore;x86_64" --device "pixel_6_pro"
+    avdmanager create avd -n android-simple -k "system-images;android-34;google_apis_playstore;x86_64" --device "pixel_6_pro"
+  '';
+  scripts.run-android = {
+    packages = [
+      pkgs.bundletool
+      pkgs.unzip
+      pkgs.steam-run
+    ];
+    exec = ''
+      dx serve --android --device
     '';
-    scripts.run-android = {
-      packages = [
-        pkgs.bundletool
-        pkgs.unzip
-        pkgs.steam-run
-      ];
-      exec = ''
-        dx serve --android --device
-  '';};
+  };
 
   scripts.bundle-android = {
     packages = [
@@ -337,4 +337,7 @@ in
   #     ];
   #   };
   # };
+   pre-commit.hooks = {
+      alejandra.enable = true;
+    };
 }
