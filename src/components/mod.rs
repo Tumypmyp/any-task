@@ -1,6 +1,6 @@
 // mod object_row;
 // pub use object_row::ObjectRow;
-// pub mod action;
+pub mod action;
 // mod search;
 // pub use search::Search;
 // pub mod add_properties;

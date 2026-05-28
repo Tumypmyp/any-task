@@ -6,23 +6,16 @@ use crate::protos::anytype::client_commands_client::ClientCommandsClient;
 use crate::protos::anytype::rpc::*;
 use tonic::transport::Channel;
 
+pub static API_CLIENT: GlobalSignal<Option<Client>> = Signal::global(|| None);
+
 #[derive(Clone, Debug)]
 pub struct Client {
-    pub inner: Option<ClientCommandsClient<tonic::transport::Channel>>,
-    pub account_id: Option<String>,
-    pub tech_space_id: Option<String>,
-    pub token: Option<String>,
+    pub inner: ClientCommandsClient<Channel>,
+    pub account_id: String,
+    pub tech_space_id: String,
+    pub token: String,
 }
-
 impl Client {
-    pub fn new() -> Self {
-        Self {
-            inner: None,
-            account_id: None,
-            tech_space_id: None,
-            token: None,
-        }
-    }
     pub async fn init_new_account(root_path_str: String) -> Result<(String, Client), String> {
         let addr = "127.0.0.1:31020";
         let mut client = ClientCommandsClient::connect(format!("http://{}", addr))
@@ -30,7 +23,7 @@ impl Client {
             .unwrap();
         let _ = client.app_shutdown(app::shutdown::Request::default()).await;
 
-        tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
         let wallet_res = client
             .wallet_create(wallet::create::Request {
@@ -76,10 +69,10 @@ impl Client {
         Ok((
             mnemonic,
             Self {
-                inner: Some(client),
-                account_id: Some(account.id),
-                tech_space_id: Some(tech_space_id),
-                token: Some(session_res.token), // <-- Saved token
+                inner: client,
+                account_id: account.id,
+                tech_space_id: tech_space_id,
+                token: session_res.token,
             },
         ))
     }
@@ -135,21 +128,16 @@ impl Client {
             .map_err(|e| format!("Failed to create wallet session: {}", e))?
             .into_inner();
         Ok(Self {
-            inner: Some(client),
-            account_id: Some(account.id),
-            tech_space_id: Some(tech_space_id),
-            token: Some(session_res.token), // <-- Saved token
+            inner: client,
+            account_id: account.id,
+            tech_space_id: tech_space_id,
+            token: session_res.token,
         })
     }
     /// Subscribes to the object search and parses out the target space IDs.
     pub async fn fetch_spaces(&self) -> Result<Vec<String>, String> {
-        let Some(mut grpc_client) = self.inner.clone() else {
-            return Err("Client is not connected yet!".to_string());
-        };
-
-        let Some(tech_space_id) = self.tech_space_id.clone() else {
-            return Err("Tech space ID is missing. User is not fully logged in.".to_string());
-        };
+        let mut grpc_client = self.inner.clone();
+        let tech_space_id = self.tech_space_id.clone();
         let mut req = Request::new(object::search_subscribe::Request {
             space_id: tech_space_id,
             sub_id: "space".to_string(),
@@ -159,7 +147,7 @@ impl Client {
         });
 
         // 2. Inject raw token into lowercase "token" metadata key
-        let meta_val = MetadataValue::try_from(&self.token.clone().unwrap())
+        let meta_val = MetadataValue::try_from(&self.token.clone())
             .map_err(|_| "Failed to parse token into metadata value".to_string())?;
         req.metadata_mut().insert("token", meta_val);
         // 2. Fetch Spaces using the stored tech_space_id
@@ -220,7 +208,6 @@ impl Client {
     }
 }
 
-pub static API_CLIENT: GlobalSignal<Client> = Signal::global(|| Client::new());
 // impl Client {
 //     fn new() -> Self {
 //         Self {

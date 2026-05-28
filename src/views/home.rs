@@ -1,8 +1,6 @@
 use crate::API_CLIENT;
-// use crate::Logout;
-use crate::Route;
-// use crate::components::action::*;
-use crate::components::base::message;
+use crate::Logout;
+use crate::components::action::*;
 use crate::components::button::Button;
 use crate::components::button::ButtonVariant;
 use crate::components::column::Column;
@@ -15,12 +13,17 @@ pub fn Home() -> Element {
             Title { title: "Spaces" }
         }
         Spaces {}
-        // ActionHolder { position: Position::Left, Logout {} }
+        ActionHolder { position: Position::Left, Logout {} }
     }
 }
 #[component]
 fn Spaces() -> Element {
-    let resp = use_resource(move || async move { API_CLIENT().fetch_spaces().await });
+    let resp = use_resource(move || async move {
+        match API_CLIENT.read().as_ref() {
+            Some(client) => client.fetch_spaces().await,
+            None => Err("No API client available".to_string()),
+        }
+    });
     let Some(result) = &*resp.read() else {
         return rsx! { "Loading..." };
     };
@@ -42,7 +45,7 @@ fn Spaces() -> Element {
 
 #[component]
 fn SpaceButton(id: String) -> Element {
-    // let nav = navigator();
+    let nav = navigator();
     rsx! {
         Button {
             id: "{id}",

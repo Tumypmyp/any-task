@@ -16,9 +16,7 @@ pub struct SmartBlockSnapshotBase {
     #[prost(message, optional, tag = "6")]
     pub collections: ::core::option::Option<::prost_types::Struct>,
     #[prost(string, repeated, tag = "8")]
-    pub removed_collection_keys: ::prost::alloc::vec::Vec<
-        ::prost::alloc::string::String,
-    >,
+    pub removed_collection_keys: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
     #[prost(message, repeated, tag = "7")]
     pub relation_links: ::prost::alloc::vec::Vec<RelationLink>,
     /// only used for pb backup purposes, ignored in other cases
@@ -76,15 +74,7 @@ pub mod search {
         /// Nested message and enum types in `Sort`.
         pub mod sort {
             #[derive(
-                Clone,
-                Copy,
-                Debug,
-                PartialEq,
-                Eq,
-                Hash,
-                PartialOrd,
-                Ord,
-                ::prost::Enumeration
+                Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
             )]
             #[repr(i32)]
             pub enum Key {
@@ -118,15 +108,7 @@ pub mod search {
                 }
             }
             #[derive(
-                Clone,
-                Copy,
-                Debug,
-                PartialEq,
-                Eq,
-                Hash,
-                PartialOrd,
-                Ord,
-                ::prost::Enumeration
+                Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
             )]
             #[repr(i32)]
             pub enum Type {
@@ -224,15 +206,7 @@ pub mod block {
         /// Nested message and enum types in `Layout`.
         pub mod layout {
             #[derive(
-                Clone,
-                Copy,
-                Debug,
-                PartialEq,
-                Eq,
-                Hash,
-                PartialOrd,
-                Ord,
-                ::prost::Enumeration
+                Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
             )]
             #[repr(i32)]
             pub enum Style {
@@ -295,15 +269,7 @@ pub mod block {
         /// Nested message and enum types in `Link`.
         pub mod link {
             #[derive(
-                Clone,
-                Copy,
-                Debug,
-                PartialEq,
-                Eq,
-                Hash,
-                PartialOrd,
-                Ord,
-                ::prost::Enumeration
+                Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
             )]
             #[repr(i32)]
             pub enum IconSize {
@@ -334,15 +300,7 @@ pub mod block {
                 }
             }
             #[derive(
-                Clone,
-                Copy,
-                Debug,
-                PartialEq,
-                Eq,
-                Hash,
-                PartialOrd,
-                Ord,
-                ::prost::Enumeration
+                Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
             )]
             #[repr(i32)]
             pub enum Style {
@@ -377,15 +335,7 @@ pub mod block {
                 }
             }
             #[derive(
-                Clone,
-                Copy,
-                Debug,
-                PartialEq,
-                Eq,
-                Hash,
-                PartialOrd,
-                Ord,
-                ::prost::Enumeration
+                Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
             )]
             #[repr(i32)]
             pub enum Description {
@@ -416,15 +366,7 @@ pub mod block {
                 }
             }
             #[derive(
-                Clone,
-                Copy,
-                Debug,
-                PartialEq,
-                Eq,
-                Hash,
-                PartialOrd,
-                Ord,
-                ::prost::Enumeration
+                Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
             )]
             #[repr(i32)]
             pub enum CardStyle {
@@ -464,15 +406,7 @@ pub mod block {
         /// Nested message and enum types in `Div`.
         pub mod div {
             #[derive(
-                Clone,
-                Copy,
-                Debug,
-                PartialEq,
-                Eq,
-                Hash,
-                PartialOrd,
-                Ord,
-                ::prost::Enumeration
+                Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
             )]
             #[repr(i32)]
             pub enum Style {
@@ -527,15 +461,7 @@ pub mod block {
         /// Nested message and enum types in `Bookmark`.
         pub mod bookmark {
             #[derive(
-                Clone,
-                Copy,
-                Debug,
-                PartialEq,
-                Eq,
-                Hash,
-                PartialOrd,
-                Ord,
-                ::prost::Enumeration
+                Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
             )]
             #[repr(i32)]
             pub enum State {
@@ -617,15 +543,7 @@ pub mod block {
             /// Nested message and enum types in `Mark`.
             pub mod mark {
                 #[derive(
-                    Clone,
-                    Copy,
-                    Debug,
-                    PartialEq,
-                    Eq,
-                    Hash,
-                    PartialOrd,
-                    Ord,
-                    ::prost::Enumeration
+                    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
                 )]
                 #[repr(i32)]
                 pub enum Type {
@@ -681,15 +599,7 @@ pub mod block {
                 }
             }
             #[derive(
-                Clone,
-                Copy,
-                Debug,
-                PartialEq,
-                Eq,
-                Hash,
-                PartialOrd,
-                Ord,
-                ::prost::Enumeration
+                Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
             )]
             #[repr(i32)]
             pub enum Style {
@@ -789,15 +699,7 @@ pub mod block {
         /// Nested message and enum types in `File`.
         pub mod file {
             #[derive(
-                Clone,
-                Copy,
-                Debug,
-                PartialEq,
-                Eq,
-                Hash,
-                PartialOrd,
-                Ord,
-                ::prost::Enumeration
+                Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
             )]
             #[repr(i32)]
             pub enum Type {
@@ -837,15 +739,7 @@ pub mod block {
                 }
             }
             #[derive(
-                Clone,
-                Copy,
-                Debug,
-                PartialEq,
-                Eq,
-                Hash,
-                PartialOrd,
-                Ord,
-                ::prost::Enumeration
+                Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
             )]
             #[repr(i32)]
             pub enum Style {
@@ -877,15 +771,7 @@ pub mod block {
                 }
             }
             #[derive(
-                Clone,
-                Copy,
-                Debug,
-                PartialEq,
-                Eq,
-                Hash,
-                PartialOrd,
-                Ord,
-                ::prost::Enumeration
+                Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
             )]
             #[repr(i32)]
             pub enum State {
@@ -1010,15 +896,7 @@ pub mod block {
             /// Nested message and enum types in `View`.
             pub mod view {
                 #[derive(
-                    Clone,
-                    Copy,
-                    Debug,
-                    PartialEq,
-                    Eq,
-                    Hash,
-                    PartialOrd,
-                    Ord,
-                    ::prost::Enumeration
+                    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
                 )]
                 #[repr(i32)]
                 pub enum Type {
@@ -1058,15 +936,7 @@ pub mod block {
                     }
                 }
                 #[derive(
-                    Clone,
-                    Copy,
-                    Debug,
-                    PartialEq,
-                    Eq,
-                    Hash,
-                    PartialOrd,
-                    Ord,
-                    ::prost::Enumeration
+                    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
                 )]
                 #[repr(i32)]
                 pub enum Size {
@@ -1097,15 +967,7 @@ pub mod block {
                     }
                 }
                 #[derive(
-                    Clone,
-                    Copy,
-                    Debug,
-                    PartialEq,
-                    Eq,
-                    Hash,
-                    PartialOrd,
-                    Ord,
-                    ::prost::Enumeration
+                    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
                 )]
                 #[repr(i32)]
                 pub enum ListSize {
@@ -1163,15 +1025,7 @@ pub mod block {
             /// Nested message and enum types in `Relation`.
             pub mod relation {
                 #[derive(
-                    Clone,
-                    Copy,
-                    Debug,
-                    PartialEq,
-                    Eq,
-                    Hash,
-                    PartialOrd,
-                    Ord,
-                    ::prost::Enumeration
+                    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
                 )]
                 #[repr(i32)]
                 pub enum DateFormat {
@@ -1213,15 +1067,7 @@ pub mod block {
                     }
                 }
                 #[derive(
-                    Clone,
-                    Copy,
-                    Debug,
-                    PartialEq,
-                    Eq,
-                    Hash,
-                    PartialOrd,
-                    Ord,
-                    ::prost::Enumeration
+                    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
                 )]
                 #[repr(i32)]
                 pub enum TimeFormat {
@@ -1249,15 +1095,7 @@ pub mod block {
                     }
                 }
                 #[derive(
-                    Clone,
-                    Copy,
-                    Debug,
-                    PartialEq,
-                    Eq,
-                    Hash,
-                    PartialOrd,
-                    Ord,
-                    ::prost::Enumeration
+                    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
                 )]
                 #[repr(i32)]
                 pub enum FormulaType {
@@ -1343,15 +1181,7 @@ pub mod block {
             /// Nested message and enum types in `Sort`.
             pub mod sort {
                 #[derive(
-                    Clone,
-                    Copy,
-                    Debug,
-                    PartialEq,
-                    Eq,
-                    Hash,
-                    PartialOrd,
-                    Ord,
-                    ::prost::Enumeration
+                    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
                 )]
                 #[repr(i32)]
                 pub enum Type {
@@ -1382,15 +1212,7 @@ pub mod block {
                     }
                 }
                 #[derive(
-                    Clone,
-                    Copy,
-                    Debug,
-                    PartialEq,
-                    Eq,
-                    Hash,
-                    PartialOrd,
-                    Ord,
-                    ::prost::Enumeration
+                    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
                 )]
                 #[repr(i32)]
                 pub enum EmptyType {
@@ -1448,15 +1270,7 @@ pub mod block {
             /// Nested message and enum types in `Filter`.
             pub mod filter {
                 #[derive(
-                    Clone,
-                    Copy,
-                    Debug,
-                    PartialEq,
-                    Eq,
-                    Hash,
-                    PartialOrd,
-                    Ord,
-                    ::prost::Enumeration
+                    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
                 )]
                 #[repr(i32)]
                 pub enum Operator {
@@ -1487,15 +1301,7 @@ pub mod block {
                     }
                 }
                 #[derive(
-                    Clone,
-                    Copy,
-                    Debug,
-                    PartialEq,
-                    Eq,
-                    Hash,
-                    PartialOrd,
-                    Ord,
-                    ::prost::Enumeration
+                    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
                 )]
                 #[repr(i32)]
                 pub enum Condition {
@@ -1573,15 +1379,7 @@ pub mod block {
                     }
                 }
                 #[derive(
-                    Clone,
-                    Copy,
-                    Debug,
-                    PartialEq,
-                    Eq,
-                    Hash,
-                    PartialOrd,
-                    Ord,
-                    ::prost::Enumeration
+                    Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
                 )]
                 #[repr(i32)]
                 pub enum QuickOption {
@@ -1729,15 +1527,7 @@ pub mod block {
         /// Nested message and enum types in `Latex`.
         pub mod latex {
             #[derive(
-                Clone,
-                Copy,
-                Debug,
-                PartialEq,
-                Eq,
-                Hash,
-                PartialOrd,
-                Ord,
-                ::prost::Enumeration
+                Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
             )]
             #[repr(i32)]
             pub enum Processor {
@@ -1859,15 +1649,7 @@ pub mod block {
         /// Nested message and enum types in `Widget`.
         pub mod widget {
             #[derive(
-                Clone,
-                Copy,
-                Debug,
-                PartialEq,
-                Eq,
-                Hash,
-                PartialOrd,
-                Ord,
-                ::prost::Enumeration
+                Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
             )]
             #[repr(i32)]
             pub enum Layout {
@@ -1907,17 +1689,7 @@ pub mod block {
         #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
         pub struct Chat {}
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Position {
         None = 0,
@@ -1968,17 +1740,7 @@ pub mod block {
             }
         }
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Align {
         Left = 0,
@@ -2010,17 +1772,7 @@ pub mod block {
             }
         }
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum VerticalAlign {
         Top = 0,
@@ -2217,15 +1969,7 @@ pub mod account {
             pub is_active: bool,
         }
         #[derive(
-            Clone,
-            Copy,
-            Debug,
-            PartialEq,
-            Eq,
-            Hash,
-            PartialOrd,
-            Ord,
-            ::prost::Enumeration
+            Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
         )]
         #[repr(i32)]
         pub enum LocalApiScope {
@@ -2259,17 +2003,7 @@ pub mod account {
             }
         }
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum StatusType {
         Active = 0,
@@ -2319,17 +2053,7 @@ pub struct LinkPreview {
 }
 /// Nested message and enum types in `LinkPreview`.
 pub mod link_preview {
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Type {
         Unknown = 0,
@@ -2378,17 +2102,7 @@ pub mod restrictions {
         #[prost(enumeration = "DataviewRestriction", repeated, tag = "2")]
         pub restrictions: ::prost::alloc::vec::Vec<i32>,
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum ObjectRestriction {
         None = 0,
@@ -2451,17 +2165,7 @@ pub mod restrictions {
             }
         }
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum DataviewRestriction {
         DvNone = 0,
@@ -2563,17 +2267,7 @@ pub struct ObjectType {
 }
 /// Nested message and enum types in `ObjectType`.
 pub mod object_type {
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Layout {
         Basic = 0,
@@ -2777,17 +2471,7 @@ pub mod relation {
         #[prost(string, tag = "6")]
         pub order_id: ::prost::alloc::string::String,
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Scope {
         /// stored within the object
@@ -2827,17 +2511,7 @@ pub mod relation {
             }
         }
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum DataSource {
         /// default, stored inside the object's details
@@ -2900,17 +2574,7 @@ pub struct InternalFlag {
 pub mod internal_flag {
     /// Use such a weird construction due to the issue with imported repeated enum type
     /// Look <https://github.com/golang/protobuf/issues/1135> for more information.
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Value {
         EditorDeleteEmpty = 0,
@@ -3083,15 +2747,7 @@ pub mod notification {
     /// Nested message and enum types in `Export`.
     pub mod export {
         #[derive(
-            Clone,
-            Copy,
-            Debug,
-            PartialEq,
-            Eq,
-            Hash,
-            PartialOrd,
-            Ord,
-            ::prost::Enumeration
+            Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
         )]
         #[repr(i32)]
         pub enum Code {
@@ -3201,17 +2857,7 @@ pub mod notification {
         #[prost(string, tag = "3")]
         pub space_name: ::prost::alloc::string::String,
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Status {
         Created = 0,
@@ -3243,17 +2889,7 @@ pub mod notification {
             }
         }
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum ActionType {
         Close = 0,
@@ -3304,17 +2940,7 @@ pub mod notification {
 pub struct Export {}
 /// Nested message and enum types in `Export`.
 pub mod export {
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Format {
         Markdown = 0,
@@ -3357,17 +2983,7 @@ pub mod export {
 pub struct Import {}
 /// Nested message and enum types in `Import`.
 pub mod import {
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Type {
         Notion = 0,
@@ -3413,17 +3029,7 @@ pub mod import {
             }
         }
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum ErrorCode {
         Null = 0,
@@ -3458,12 +3064,8 @@ pub mod import {
                 Self::NotionNoObjectsInIntegration => "NOTION_NO_OBJECTS_IN_INTEGRATION",
                 Self::NotionServerIsUnavailable => "NOTION_SERVER_IS_UNAVAILABLE",
                 Self::NotionRateLimitExceeded => "NOTION_RATE_LIMIT_EXCEEDED",
-                Self::FileImportNoObjectsInZipArchive => {
-                    "FILE_IMPORT_NO_OBJECTS_IN_ZIP_ARCHIVE"
-                }
-                Self::FileImportNoObjectsInDirectory => {
-                    "FILE_IMPORT_NO_OBJECTS_IN_DIRECTORY"
-                }
+                Self::FileImportNoObjectsInZipArchive => "FILE_IMPORT_NO_OBJECTS_IN_ZIP_ARCHIVE",
+                Self::FileImportNoObjectsInDirectory => "FILE_IMPORT_NO_OBJECTS_IN_DIRECTORY",
                 Self::HtmlWrongHtmlStructure => "HTML_WRONG_HTML_STRUCTURE",
                 Self::PbNotAnyblockFormat => "PB_NOT_ANYBLOCK_FORMAT",
                 Self::CsvLimitOfRowsOrRelationsExceeded => {
@@ -3481,17 +3083,13 @@ pub mod import {
                 "INTERNAL_ERROR" => Some(Self::InternalError),
                 "FILE_LOAD_ERROR" => Some(Self::FileLoadError),
                 "IMPORT_IS_CANCELED" => Some(Self::ImportIsCanceled),
-                "NOTION_NO_OBJECTS_IN_INTEGRATION" => {
-                    Some(Self::NotionNoObjectsInIntegration)
-                }
+                "NOTION_NO_OBJECTS_IN_INTEGRATION" => Some(Self::NotionNoObjectsInIntegration),
                 "NOTION_SERVER_IS_UNAVAILABLE" => Some(Self::NotionServerIsUnavailable),
                 "NOTION_RATE_LIMIT_EXCEEDED" => Some(Self::NotionRateLimitExceeded),
                 "FILE_IMPORT_NO_OBJECTS_IN_ZIP_ARCHIVE" => {
                     Some(Self::FileImportNoObjectsInZipArchive)
                 }
-                "FILE_IMPORT_NO_OBJECTS_IN_DIRECTORY" => {
-                    Some(Self::FileImportNoObjectsInDirectory)
-                }
+                "FILE_IMPORT_NO_OBJECTS_IN_DIRECTORY" => Some(Self::FileImportNoObjectsInDirectory),
                 "HTML_WRONG_HTML_STRUCTURE" => Some(Self::HtmlWrongHtmlStructure),
                 "PB_NOT_ANYBLOCK_FORMAT" => Some(Self::PbNotAnyblockFormat),
                 "CSV_LIMIT_OF_ROWS_OR_RELATIONS_EXCEEDED" => {
@@ -3633,17 +3231,7 @@ pub struct Membership {
 }
 /// Nested message and enum types in `Membership`.
 pub mod membership {
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Status {
         Unknown = 0,
@@ -3682,24 +3270,12 @@ pub mod membership {
                 "StatusUnknown" => Some(Self::Unknown),
                 "StatusPending" => Some(Self::Pending),
                 "StatusActive" => Some(Self::Active),
-                "StatusPendingRequiresFinalization" => {
-                    Some(Self::PendingRequiresFinalization)
-                }
+                "StatusPendingRequiresFinalization" => Some(Self::PendingRequiresFinalization),
                 _ => None,
             }
         }
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum PaymentMethod {
         MethodNone = 0,
@@ -3734,17 +3310,7 @@ pub mod membership {
             }
         }
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum EmailVerificationStatus {
         /// user NEVER comleted the verification of the email
@@ -3837,17 +3403,7 @@ pub struct MembershipTierData {
 }
 /// Nested message and enum types in `MembershipTierData`.
 pub mod membership_tier_data {
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum PeriodType {
         Unknown = 0,
@@ -3989,15 +3545,7 @@ pub mod membership_v2 {
     /// Nested message and enum types in `ProductStatus`.
     pub mod product_status {
         #[derive(
-            Clone,
-            Copy,
-            Debug,
-            PartialEq,
-            Eq,
-            Hash,
-            PartialOrd,
-            Ord,
-            ::prost::Enumeration
+            Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
         )]
         #[repr(i32)]
         pub enum Status {
@@ -4101,17 +3649,7 @@ pub mod membership_v2 {
         #[prost(string, repeated, tag = "5")]
         pub applied_promocodes: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Platform {
         Unknown = 0,
@@ -4146,17 +3684,7 @@ pub mod membership_v2 {
             }
         }
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum PaymentProvider {
         None = 0,
@@ -4194,17 +3722,7 @@ pub mod membership_v2 {
             }
         }
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Period {
         #[deprecated]
@@ -4232,7 +3750,10 @@ pub mod membership_v2 {
         /// Creates an enum from field names used in the ProtoBuf definition.
         pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
             match value {
-                "Unlimited" => Some(#[allow(deprecated)] Self::Unlimited),
+                "Unlimited" => Some(
+                    #[allow(deprecated)]
+                    Self::Unlimited,
+                ),
                 "Monthly" => Some(Self::Monthly),
                 "Yearly" => Some(Self::Yearly),
                 "ThreeYears" => Some(Self::ThreeYears),
@@ -4366,15 +3887,7 @@ pub mod chat_message {
     /// Nested message and enum types in `Attachment`.
     pub mod attachment {
         #[derive(
-            Clone,
-            Copy,
-            Debug,
-            PartialEq,
-            Eq,
-            Hash,
-            PartialOrd,
-            Ord,
-            ::prost::Enumeration
+            Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
         )]
         #[repr(i32)]
         pub enum AttachmentType {
@@ -4412,10 +3925,8 @@ pub mod chat_message {
     pub struct Reactions {
         /// Map of emoji to list of user IDs
         #[prost(map = "string, message", tag = "1")]
-        pub reactions: ::std::collections::HashMap<
-            ::prost::alloc::string::String,
-            reactions::IdentityList,
-        >,
+        pub reactions:
+            ::std::collections::HashMap<::prost::alloc::string::String, reactions::IdentityList>,
     }
     /// Nested message and enum types in `Reactions`.
     pub mod reactions {
@@ -4470,15 +3981,7 @@ pub mod chat_message {
     /// Nested message and enum types in `MessageBlockLink`.
     pub mod message_block_link {
         #[derive(
-            Clone,
-            Copy,
-            Debug,
-            PartialEq,
-            Eq,
-            Hash,
-            PartialOrd,
-            Ord,
-            ::prost::Enumeration
+            Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration,
         )]
         #[repr(i32)]
         pub enum LinkType {
@@ -4557,17 +4060,7 @@ pub mod placeholder {
         #[prost(message, optional, tag = "2")]
         pub value: ::core::option::Option<::prost_types::Value>,
     }
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        PartialEq,
-        Eq,
-        Hash,
-        PartialOrd,
-        Ord,
-        ::prost::Enumeration
-    )]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
     #[repr(i32)]
     pub enum Type {
         PlaceholderValue = 0,
