@@ -17,7 +17,8 @@ impl Position {
 }
 #[component]
 pub fn Row(
-    #[props(default)] position: Position,
+    #[props(default)]
+    position: Position,
     onclick: Option<EventHandler<MouseEvent>>,
     children: Element,
 ) -> Element {

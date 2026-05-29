@@ -21,16 +21,23 @@ pub fn ObjectList(space_id: String, list_id: String) -> Element {
     let mut properties = use_synced_storage::<
         LocalStorage,
         Vec<Vec<(PropertyInfo, PropertySettings)>>,
-    >(storage_key, || {
-        vec![vec![(
-            PropertyInfo {
-                id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
-                name: "Name".to_string(),
-                optional: OptionalInfo::Other,
-            },
-            NAME_PROPERTY_SETTINGS,
-        )]]
-    });
+    >(
+        storage_key,
+        || {
+            vec![
+                vec![
+                    (
+                        PropertyInfo {
+                            id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
+                            name: "Name".to_string(),
+                            optional: OptionalInfo::Other,
+                        },
+                        NAME_PROPERTY_SETTINGS,
+                    ),
+                ],
+            ]
+        },
+    );
     let properties_store = use_store(|| properties.read().clone());
     use_effect(move || {
         let store_value = properties_store.read().clone();
@@ -38,11 +45,13 @@ pub fn ObjectList(space_id: String, list_id: String) -> Element {
         *properties.write() = store_value;
     });
     let mut all_properties: Store<Vec<PropertyInfo>> = use_store(|| {
-        vec![PropertyInfo {
-            id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
-            name: "Name".to_string(),
-            optional: OptionalInfo::Other,
-        }]
+        vec![
+            PropertyInfo {
+                id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
+                name: "Name".to_string(),
+                optional: OptionalInfo::Other,
+            },
+        ]
     });
     use_effect(move || {
         let client = API_CLIENT.read();
@@ -56,7 +65,10 @@ pub fn ObjectList(space_id: String, list_id: String) -> Element {
                         let property_name = prop.name.clone().unwrap();
                         let format = prop.format.clone().unwrap();
                         let select_property_options = client
-                            .list_select_property_options(&space_id, property_id.clone().as_str())
+                            .list_select_property_options(
+                                &space_id,
+                                property_id.clone().as_str(),
+                            )
                             .await;
                         let options = match select_property_options {
                             Ok(o) => o.data.unwrap(),
@@ -68,11 +80,13 @@ pub fn ObjectList(space_id: String, list_id: String) -> Element {
                             Format::PropertyFormatCheckbox => OptionalInfo::Checkbox,
                             _ => OptionalInfo::Other,
                         };
-                        all_properties.write().push(PropertyInfo {
-                            id: property_id.clone(),
-                            name: property_name,
-                            optional: optional_info,
-                        });
+                        all_properties
+                            .write()
+                            .push(PropertyInfo {
+                                id: property_id.clone(),
+                                name: property_name,
+                                optional: optional_info,
+                            });
                     }
                 }
                 Err(e) => {
@@ -150,10 +164,7 @@ pub fn Objects(
     });
     let resp_value = resp.read();
     let objects = match resp_value.as_ref() {
-        Some(Ok(objs)) => {
-            // tracing::debug!("object: {:#?}", objs);
-            objs
-        }
+        Some(Ok(objs)) => objs,
         Some(Err(err)) => {
             message::error("Failed to fetch objects", err);
             return rsx! {};
@@ -172,11 +183,13 @@ pub fn Objects(
                 }
                 ObjectRow {
                     key: "{id}",
-                    name: obj.clone().name.unwrap(),
+                    name: obj.clone().name
+                            .unwrap(),
                     space_id,
                     object_id: obj.clone().id.unwrap(),
                     properties,
-                    data: obj.clone(),
+                    data: obj
+                            .clone(),
                 }
             }
         }

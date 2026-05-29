@@ -8,11 +8,11 @@ pub fn Space(space_id: String) -> Element {
     tracing::info!("loading space {space_id}");
     rsx! {
         SpaceTitle { space_id: space_id.clone() }
-        Collections { space_id: space_id.clone() }
+        Collections { space_id: space_id
+                    .clone() }
         ActionHolder { BaseActions {} }
     }
 }
-
 #[component]
 pub fn Collections(space_id: String) -> Element {
     rsx! {
@@ -33,12 +33,7 @@ pub fn SpaceTitle(space_id: String) -> Element {
         return rsx! { "Loading..." };
     };
     let name = match result {
-        Ok(obj) => obj
-            .space
-            .clone()
-            .unwrap_or_default()
-            .name
-            .unwrap_or_default(),
+        Ok(obj) => obj.space.clone().unwrap_or_default().name.unwrap_or_default(),
         Err(err) => {
             tracing::debug!("Got error loading the space: {:#?}", err);
             return rsx! { "Error: {err}" };

@@ -76,10 +76,12 @@ in {
         export CC="zig cc -target x86_64-windows-gnu"
         export CXX="zig c++ -target x86_64-windows-gnu"
 
-        export CGO_LDFLAGS="-L$LIBS_DIR/windows-amd64 -ltantivy_go -Wl,--out-implib,$OUTPUT_BASE/windows/anytype_engine.lib"
+        export CGO_LDFLAGS="-L$LIBS_DIR/windows-amd64 -ltantivy_go -Wl,--out-implib,$OUTPUT_BASE/windows/libanytype_engine.lib"
+        # export CGO_LDFLAGS="-L$LIBS_DIR/windows-amd64 -ltantivy_go -Wl,--out-implib,$OUTPUT_BASE/windows/libanytype_engine.dll.a"
+        export RUSTFLAGS="-Clink-arg=-mwindows"
 
         mkdir -p $OUTPUT_BASE/windows
-        go build -buildmode=c-shared -o $OUTPUT_BASE/windows/anytype_engine.dll main.go
+        go build -buildmode=c-shared -o $OUTPUT_BASE/windows/libanytype_engine.dll main.go
       '';
     };
     "engine:build-linux" = {
@@ -164,6 +166,6 @@ in {
     };
   };
   pre-commit.hooks = {
-      alejandra.enable = true;
-    };
+    alejandra.enable = true;
+  };
 }

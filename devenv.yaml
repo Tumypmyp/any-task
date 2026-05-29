@@ -1,4 +1,9 @@
 inputs:
+  git-hooks:
+    url: github:cachix/git-hooks.nix
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
   nixpkgs:
     url: github:cachix/devenv-nixpkgs/rolling
   nixpkgs-unstable:
@@ -8,8 +13,7 @@ inputs:
     inputs:
       nixpkgs:
         follows: nixpkgs
-
-allowUnfree: true
-
+allow_unfree: true
+allow_unsupported_system: true
 imports:
-  - ./go-engine
+- ./go-engine

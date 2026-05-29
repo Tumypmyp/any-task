@@ -21,10 +21,12 @@ dioxus-history = "0.7"
 dioxus-icons = { version = "0.1.0", default-features = false }
 time = { version = "0.3.44", default-features = false }
 dioxus-i18n = "0.5.1"
-tonic = "0.14.6"
+tonic = { version = "0.14.6", features = ["tls-ring", "tls-webpki-roots"] }
 prost = "0.14.3"
 tonic-prost = "0.14.6"
 prost-types = "0.14.3"
+url = "2.5.8"
+anyhow = "1.0.102"
 
 [build-dependencies]
 tonic-prost-build = "0.14.6"
@@ -32,7 +34,6 @@ protoc-bin-vendored = "3.0"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 time = { version = "0.3.44", features = ["local-offset"] }
-reqwest = { version = "0.13.3", default-features = false, features = ["json", "rustls"] }
 hyper = { version = "1", features = ["full"] }
 tokio = { version = "1", features = ["full"] }
 pretty_env_logger = "0.5"

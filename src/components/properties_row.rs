@@ -10,7 +10,9 @@ use dioxus::prelude::*;
 use dioxus_desktop::use_window;
 use std::vec;
 #[component]
-pub fn PropertiesRow(properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>>) -> Element {
+pub fn PropertiesRow(
+    properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>>,
+) -> Element {
     rsx! {
         Column {
             for (i, vec_property) in properties.read().clone().iter().enumerate() {
@@ -31,20 +33,22 @@ pub fn Property(
     let property = properties.get(i).unwrap().get(j).unwrap();
     let name = property().0.name;
     let mut mutate_settings = move |callback: Box<dyn FnOnce(&mut PropertySettings)>| {
-        properties.with_mut(|rows| {
-            if let Some(row) = rows.get_mut(i) {
-                if let Some((_, settings)) = row.get_mut(j) {
-                    callback(settings);
+        properties
+            .with_mut(|rows| {
+                if let Some(row) = rows.get_mut(i) {
+                    if let Some((_, settings)) = row.get_mut(j) {
+                        callback(settings);
+                    }
                 }
-            }
-        });
+            });
     };
     let edit = match property().1 {
         PropertySettings::Date(settings) => {
             rsx! {
                 DateSettingsEdit {
                     format: settings.date_format,
-                    on_change: move |new_format: DateTimeFormat| mutate_settings(
+                    on_change: move |
+                                    new_format : DateTimeFormat | mutate_settings(Box::new(move | s | { if
                         Box::new(move |s| {
                             if let PropertySettings::Date(d) = s {
                                 d.date_format = new_format;
@@ -54,7 +58,8 @@ pub fn Property(
                 }
                 GeneralPropertyEdit {
                     settings: settings.general,
-                    on_change: move |new_settings: GeneralPropertySettings| mutate_settings(
+                    on_change: move |
+                                    new_settings : GeneralPropertySettings | mutate_settings(Box::new(move |
                         Box::new(move |s| {
                             if let PropertySettings::Date(d) = s {
                                 d.general = new_settings;
@@ -68,7 +73,8 @@ pub fn Property(
             rsx! {
                 GeneralPropertyEdit {
                     settings,
-                    on_change: move |new_settings: GeneralPropertySettings| mutate_settings(
+                    on_change: move | new_settings :
+                                    GeneralPropertySettings | mutate_settings(Box::new(move | s | { if let
                         Box::new(move |s| {
                             if let PropertySettings::General(g) = s {
                                 *g = new_settings;
@@ -82,7 +88,8 @@ pub fn Property(
             rsx! {
                 SizeSlider {
                     size: settings.size,
-                    on_change: move |new_size: f64| mutate_settings(
+                    on_change: move | new_size : f64 |
+                                    mutate_settings(Box::new(move | s | { if let
                         Box::new(move |s| {
                             if let PropertySettings::Checkbox(c) = s {
                                 c.size = new_size;
@@ -109,7 +116,8 @@ pub fn Property(
                 "X"
             }
         }
-        {edit}
+        { edit
+                }
         Row { position: Position::Middle,
             Button {
                 variant: if 0 < j { ButtonVariant::Primary } else { ButtonVariant::Ghost },
@@ -152,7 +160,6 @@ pub fn Property(
                 Button {
                     onclick: move |_| {
                         properties
-
                             .with_mut(|rows| {
                                 let item = rows
                                     .get_mut(i)
@@ -197,7 +204,6 @@ pub fn GeneralPropertyEdit(
     on_change: EventHandler<GeneralPropertySettings>,
 ) -> Element {
     let window = use_window();
-
     let window_width = window.inner_size().width as f64;
     let window_height = window.inner_size().height as f64;
     rsx! {

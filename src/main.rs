@@ -21,32 +21,24 @@ use std::rc::Rc;
 pub const USER_SETTINGS_KEY: &str = "settings-~aaabbcccdeefffggg";
 use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
-
 use crate::helpers::api_client::Client;
-
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Default)]
 pub struct AppSettings {
     pub mnemonic: String,
     pub account_id: String,
 }
-
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/main.css");
 const THEME_CSS: Asset = asset!("/assets/dx-components-theme.css");
 #[derive(Clone, Routable)]
 #[rustfmt::skip]
 enum Route {
-#[route("/")]
-#[redirect("/:.._s", |_s:Vec<String>|Route::Home{})]
-Home {},
-// #[route("/spaces/:space_id")]
-// Space { space_id: String },
-// #[route("/spaces/:space_id/lists/:list_id")]
-// ObjectList { space_id: String, list_id: String },
-#[route("/login")]
-Login {},
+    #[route("/")]
+    #[redirect("/:.._s", |_s:Vec<String>|Route::Home{})]
+    Home {},
+    #[route("/login")]
+    Login {},
 }
-
 #[cfg_attr(feature = "bundle", windows_subsystem = "windows")]
 fn main() {
     dioxus::logger::initialize_default();
@@ -56,19 +48,17 @@ fn main() {
         .with_visible(true)
         .with_focused(true)
         .with_inner_size(PhysicalSize::new(900, 1300));
-
     let addr = "127.0.0.1:31020";
     tracing::info!("Initializing Anytype Engine...");
     if let Err(e) = start_engine(addr) {
         tracing::error!("Failed to start Anytype Engine: {}", e);
         return;
     }
-
     let data_dir = get_app_data_dir();
-    std::fs::create_dir_all(&data_dir).expect("Failed to create application data directory");
+    std::fs::create_dir_all(&data_dir)
+        .expect("Failed to create application data directory");
     tracing::debug!("User data path is {:#?}", data_dir);
     dioxus_sdk_storage::set_directory(data_dir.clone());
-
     let cfg = if cfg!(target_os = "windows") {
         dioxus_desktop::Config::new()
             .with_data_directory(data_dir)
@@ -86,14 +76,15 @@ fn main() {
     tracing::info!("config is ready");
     dioxus_desktop::launch::launch(App, vec![], vec![Box::new(cfg)]);
 }
-
 pub fn get_app_data_dir() -> PathBuf {
     if cfg!(target_os = "windows") {
-        PathBuf::from(env::var("LOCALAPPDATA").expect("LOCALAPPDATA not found")).join("AnyTask")
+        PathBuf::from(env::var("LOCALAPPDATA").expect("LOCALAPPDATA not found"))
+            .join("AnyTask")
     } else if cfg!(target_os = "linux") {
-        let base = env::var("XDG_DATA_HOME").unwrap_or_else(|_| {
-            format!("{}/.local/share", env::var("HOME").expect("HOME not found"))
-        });
+        let base = env::var("XDG_DATA_HOME")
+            .unwrap_or_else(|_| {
+                format!("{}/.local/share", env::var("HOME").expect("HOME not found"))
+            });
         PathBuf::from(base).join("AnyTask")
     } else if cfg!(target_os = "android") {
         PathBuf::from("/data/user/0/com.Tumypmyp.AnyTask/files")
@@ -104,14 +95,17 @@ pub fn get_app_data_dir() -> PathBuf {
 #[component]
 fn App() -> Element {
     tracing::info!("App is started");
-
-    let settings =
-        use_synced_storage::<LocalStorage, AppSettings>(USER_SETTINGS_KEY.into(), || AppSettings {
+    let settings = use_synced_storage::<
+        LocalStorage,
+        AppSettings,
+    >(
+        USER_SETTINGS_KEY.into(),
+        || AppSettings {
             account_id: "".to_string(),
             mnemonic: "".to_string(),
-        });
+        },
+    );
     use_context_provider(|| settings);
-
     use_future(move || async move {
         let mnemonic = settings.peek().mnemonic.clone();
         let account_id = settings.peek().account_id.clone();
@@ -125,12 +119,10 @@ fn App() -> Element {
             }
         }
     });
-
     use_drop(move || {
         tracing::info!("App closing. Stopping engine...");
         stop_engine();
     });
-
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
         document::Stylesheet { href: MAIN_CSS }

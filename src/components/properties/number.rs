@@ -14,13 +14,18 @@ impl PropertyRenderer for NumberPropertyValue {
             NumberValue {
                 space_id: &space_id,
                 object_id: &object_id,
-                prop: self.clone(),
+                prop: self
+                            .clone(),
             }
         }
     }
 }
 #[component]
-pub fn NumberValue(space_id: String, object_id: String, prop: NumberPropertyValue) -> Element {
+pub fn NumberValue(
+    space_id: String,
+    object_id: String,
+    prop: NumberPropertyValue,
+) -> Element {
     let value = prop.number.unwrap_or_default();
     rsx! {
         Button { width: "100%", height: "100%", "{value}" }

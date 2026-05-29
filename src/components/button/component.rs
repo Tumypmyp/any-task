@@ -2,7 +2,8 @@ use dioxus::prelude::*;
 #[component]
 pub fn ButtonHolder(
     children: Element,
-    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    #[props(extends = GlobalAttributes)]
+    attributes: Vec<Attribute>,
 ) -> Element {
     rsx! {
         div { ..attributes,{children} }
@@ -10,7 +11,8 @@ pub fn ButtonHolder(
 }
 #[component]
 pub fn ButtonWithHolder(
-    #[props(default)] variant: ButtonVariant,
+    #[props(default)]
+    variant: ButtonVariant,
     #[props(extends = GlobalAttributes)]
     #[props(extends = button)]
     attributes: Vec<Attribute>,
@@ -53,7 +55,8 @@ impl ButtonVariant {
 }
 #[component]
 pub fn Button(
-    #[props(default)] variant: ButtonVariant,
+    #[props(default)]
+    variant: ButtonVariant,
     #[props(extends = GlobalAttributes)]
     #[props(extends = button)]
     attributes: Vec<Attribute>,

@@ -38,9 +38,9 @@ pub fn SelectPValue(
         Select::<Option<String>> {
             width: "100%",
             height: "100%",
-            // aria_placeholder: "{prop.clone().select.unwrap_or_default().name.clone().unwrap_or_default()}",
             default_value: prop.clone().select.unwrap_or_default().id.clone(),
-            on_value_change: move |v: Option<Option<String>>| {
+            on_value_change: move | v :
+                    Option < Option < String >>| { let prop = prop.clone(); spawn(async move {
                 let prop = prop.clone();
                 spawn(async move {
                     tracing::debug!("chosen option: {:#?}", v);

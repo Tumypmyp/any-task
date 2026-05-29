@@ -6,13 +6,10 @@ use crate::components::select::*;
 use crate::helpers::models::DateTimeFormat;
 use crate::helpers::*;
 use dioxus::prelude::*;
-// use dioxus_primitives::date_picker::DatePicker;
 use openapi::models::DatePropertyValue;
 use time::format_description::well_known::Rfc3339;
 use time::macros::{format_description, offset};
 use time::{Date, OffsetDateTime, Time, UtcDateTime, UtcOffset};
-
-// use dioxus_i18n::tid;
 #[component]
 pub fn DateSettingsEdit(
     format: DateTimeFormat,
@@ -21,7 +18,8 @@ pub fn DateSettingsEdit(
     rsx! {
         Select::<DateTimeFormat> {
             default_value: format,
-            on_value_change: move |v: Option<DateTimeFormat>| {
+            on_value_change: move | v :
+                    Option < DateTimeFormat >| { if let Some(f) = v { on_change.call(f); } }
                 if let Some(f) = v {
                     on_change.call(f);
                 }
@@ -87,13 +85,14 @@ pub fn DateTimeValues(
     let date = prop.date.unwrap_or_default();
     let space_id = use_signal(|| space_id.clone());
     let object_id = use_signal(|| object_id.clone());
-    let offset = UtcOffset::current_local_offset().unwrap_or(offset! {
-        + 0
-    });
+    let offset = UtcOffset::current_local_offset()
+        .unwrap_or(
+            offset! {
+                + 0
+            },
+        );
     let dt = use_signal(|| {
-        UtcDateTime::parse(&date, &Rfc3339)
-            .unwrap()
-            .to_offset(offset)
+        UtcDateTime::parse(&date, &Rfc3339).unwrap().to_offset(offset)
     });
     rsx! {
         if settings == DateTimeFormat::DateTime || settings == DateTimeFormat::Date {
@@ -131,7 +130,6 @@ pub fn DateValue(
             selected_date: selected_date(),
             on_value_change: move |v| {
                 if let Some(d) = v {
-
                     tracing::info!("Selected date changed: {:?}", v);
                     dt.set(dt().replace_date(d));
                     tracing::debug!("change date to: {:?}", dt);
@@ -144,7 +142,6 @@ pub fn DateValue(
                             dt().to_utc(),
                         );
                     selected_date.set(d);
-
                 }
             },
         }

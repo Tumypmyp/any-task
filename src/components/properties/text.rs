@@ -14,13 +14,18 @@ impl PropertyRenderer for TextPropertyValue {
             TextValue {
                 space_id: &space_id,
                 object_id: &object_id,
-                prop: self.clone(),
+                prop: self
+                            .clone(),
             }
         }
     }
 }
 #[component]
-pub fn TextValue(space_id: String, object_id: String, prop: TextPropertyValue) -> Element {
+pub fn TextValue(
+    space_id: String,
+    object_id: String,
+    prop: TextPropertyValue,
+) -> Element {
     let value = prop.text.unwrap_or_default();
     rsx! {
         Button { width: "100%", height: "100%", "{value}" }

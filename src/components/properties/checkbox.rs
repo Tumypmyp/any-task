@@ -27,7 +27,11 @@ impl PropertyRenderer for CheckboxPropertyValue {
     }
 }
 #[component]
-pub fn CheckboxValue(space_id: String, object_id: String, prop: CheckboxPropertyValue) -> Element {
+pub fn CheckboxValue(
+    space_id: String,
+    object_id: String,
+    prop: CheckboxPropertyValue,
+) -> Element {
     let mut value = use_signal(|| prop);
     rsx! {
         Checkbox {

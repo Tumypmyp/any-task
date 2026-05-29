@@ -10,7 +10,6 @@ use crate::helpers::*;
 use dioxus::prelude::*;
 use dioxus_primitives::scroll_area::ScrollDirection;
 use std::vec;
-
 #[component]
 pub fn EditView(
     space_id: Signal<String>,
@@ -24,11 +23,13 @@ pub fn EditView(
         ButtonHolder {
             Button {
                 variant: ButtonVariant::Secondary,
-                onclick: move |_| { open.set(true) },
+                onclick: move | _ |
+                        { open.set(true) },
                 "Edit view"
             }
         }
-        Sheet { open: open(), on_open_change: move |v| open.set(v),
+        Sheet { open: open(), on_open_change: move
+                    | v | open.set(v),
             SheetContent { side: SheetSide::Bottom, style: "max-height: 70vh;",
                 ScrollArea { direction: ScrollDirection::Vertical,
                     Row { position: Position::Middle,

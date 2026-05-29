@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-// use openapi::models::Tag;
 use serde::{Deserialize, Serialize};
 #[derive(Eq, Hash, PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct PropertyID(pub String);
@@ -24,7 +23,6 @@ pub struct PropertyInfo {
 }
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub enum OptionalInfo {
-    // Select(Vec<Tag>),
     Date,
     Checkbox,
     #[default]
@@ -62,10 +60,7 @@ impl Default for DateSettings {
 }
 impl Default for GeneralPropertySettings {
     fn default() -> Self {
-        Self {
-            width: 60.0,
-            height: 40.0,
-        }
+        Self { width: 60.0, height: 40.0 }
     }
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -79,11 +74,10 @@ impl Default for PropertySettings {
         Self::General(GeneralPropertySettings::default())
     }
 }
-pub const NAME_PROPERTY_SETTINGS: PropertySettings =
-    PropertySettings::General(GeneralPropertySettings {
-        width: 100.0,
-        height: 40.0,
-    });
+pub const NAME_PROPERTY_SETTINGS: PropertySettings = PropertySettings::General(GeneralPropertySettings {
+    width: 100.0,
+    height: 40.0,
+});
 impl PropertySettings {
     pub fn height(&self) -> f64 {
         match self {

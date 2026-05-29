@@ -68,24 +68,8 @@ in {
     pkgs.openjdk
     pkgs.protobuf
 
-    # bundle windows
-    # https://github.com/euphemism/dirtywave-updater-releases-mirror/blob/main/devenv.nix
-    # pkgs.pkgsCross.mingwW64.stdenv
-    # pkgs.pkgsCross.mingwW64.pkgsStatic.stdenv.targetPlatform.config
-    # pkgs.pkgsCross.mingwW64.stdenv.targetPlatform.config
-    # pkgs.pkgsCross.mingwW64.gcc
-
-    # This is the correct way to reference the 64-bit compiler package
-    # pkgs.mingwW64.x86_64-w64-mingw32-gcc
-
-    # This is the correct way to reference the 32-bit compiler package (if you need it)
-    # pkgs.mingwW64.i686-w64-mingw32-gcc
-
-    # For any C dependencies (like OpenSSL or similar), you might also need this:
-    # pkgs.mingwW64.pkg-config
-
-    # pkgs.pkgsCross.mingwW64.stdenv
-    # pkgs.pkgsCross.mingwW64.libxcrypt
+    pkgs.pkgsCross.mingwW64.stdenv.cc
+    #   pkgs.pkgsCross.mingwW64.windows.pthreads
   ];
   # https://wiki.nixos.org/wiki/Tauri
   # https://devenv.sh/processes/
@@ -112,52 +96,27 @@ in {
     '';
   };
 
-  tasks."api:generate" = {
-    cwd = "${config.env.DEVENV_ROOT}/apis";
-    env = {
-      INPUT_SPEC = "openapi-2025-11-08.yaml";
-      OUTPUT_DIR = "openapi-2025-11-08";
-    };
-
-    exec = ''
-      mkdir -p "$OUTPUT_DIR"
-
-      openapi-generator-cli generate \
-        -i "$INPUT_SPEC" \
-        -g rust \
-        -o "$OUTPUT_DIR" \
-        --skip-validate-spec \
-        --additional-properties=packageVersion=0.0.1
-    '';
-
-    execIfModified = ["openapi-2025-11-08.yaml"];
-    showOutput = true;
-  };
-  # env.API_DIR = "${config.env.DEVENV_ROOT}/apis/";
-  # scripts.client-api-generate = {
-  #   packages = [
-  #     pkgs.openapi-generator-cli
-  #   ];
+  # tasks."bundle:windows" = {
+  #   # packages = [
+  #   #   pkgs.pkgsCross.mingwW64.stdenv.cc
+  #   #   pkgs.pkgsCross.mingwW64.windows.pthreads
+  #   # ];
   #   exec = ''
-  #     openapi-generator-cli generate \
-  #       -i "''${API_DIR}/openapi-2025-11-08.yaml" \
-  #       -g rust \
-  #       -o "''${API_DIR}/openapi-2025-11-08" \
-  #       --skip-validate-spec \
-  #       --additional-properties=packageVersion=0.0.1
+  #     # export CC="zig cc -target x86_64-windows-gnu"
+  #     # export CXX="zig c++ -target x86_64-windows-gnu"
+
+  #     # # export LIBRARY_PATH="$LIBRARY_PATH:${pkgs.pkgsCross.mingwW64.windows.pthreads}/lib"
+  #     # dx bundle --release --windows --target x86_64-pc-windows-gnu --features bundle
+  #     export CC_x86_64_pc_windows_gnu="x86_64-w64-mingw32-gcc"
+  #         export CXX_x86_64_pc_windows_gnu="x86_64-w64-mingw32-g++"
+  #         export AR_x86_64_pc_windows_gnu="x86_64-w64-mingw32-ar"
+
+  #         # Tell Cargo to use the MinGW linker for the final executable
+  #         export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER="x86_64-w64-mingw32-gcc"
+
+  #         dx bundle --release --windows --target x86_64-pc-windows-gnu --features bundle
   #   '';
   # };
-
-  scripts.bundle-windows = {
-    packages = [
-      pkgs.pkgsCross.mingwW64.stdenv.cc
-      pkgs.pkgsCross.mingwW64.windows.pthreads
-    ];
-    exec = ''
-      export LIBRARY_PATH="$LIBRARY_PATH:${pkgs.pkgsCross.mingwW64.windows.pthreads}/lib"
-      dx bundle --release --windows --target x86_64-pc-windows-gnu --features bundle
-    '';
-  };
 
   dotenv.enable = true;
   dotenv.filename = ".env.devenv";
@@ -239,105 +198,14 @@ in {
     '';
   };
 
-  # tasks = {
-  #   "engine:build-linux" = {
-  #     cwd = engineCwd;
-  #     env = {
-  #       OUTPUT_DIR = "${targetLibsDir}/linux";
-  #       OUTPUT_FILE = "libanytype_engine.so";
-  #     };
-  #     exec = ''
-  #       CGO_ENABLED=1 \
-  #       GOOS=linux \
-  #       GOARCH=amd64 \
-  #       go build -buildmode=c-shared -o $OUTPUT_DIR/$OUTPUT_FILE main.go
-  #     '';
-  #     execIfModified = [ "go.mod" "go.sum" "**/*.go" ];
-  #     showOutput = true;
-  #   };
-
-  #   "engine:build-macos" = {
-  #     cwd = engineCwd;
-  #     env = {
-  #       OUTPUT_DIR = "${targetLibsDir}/darwin";
-  #       OUTPUT_FILE = "libanytype_engine.dylib";
-  #     };
-  #     exec = ''
-  #       CGO_ENABLED=1 \
-  #       GOOS=darwin \
-  #       GOARCH=arm64 \
-  #       go build -buildmode=c-shared -o $OUTPUT_DIR/$OUTPUT_FILE main.go
-  #     '';
-  #     execIfModified = [ "go.mod" "go.sum" "**/*.go" ];
-  #     showOutput = true;
-  #   };
-
-  #   "engine:build-windows" = {
-  #     cwd = engineCwd;
-  #     env = {
-  #       OUTPUT_DIR = "${targetLibsDir}/windows";
-  #       OUTPUT_FILE = "libanytype_engine.dll";
-  #     };
-  #     exec = ''
-  #       CGO_ENABLED=1 \
-  #       GOOS=windows \
-  #       GOARCH=amd64 \
-  #       go build -buildmode=c-shared -o $OUTPUT_DIR/$OUTPUT_FILE main.go
-  #     '';
-  #     execIfModified = [ "go.mod" "go.sum" "**/*.go" ];
-  #     showOutput = true;
-  #   };
-
-  #   "engine:build-android" = {
-  #     cwd = engineCwd;
-  #     env = {
-  #       OUTPUT_DIR = "${targetLibsDir}/android";
-  #       OUTPUT_FILE = "libanytype_engine.so";
-  #     };
-  #     exec = ''
-  #       # Replace this path with your actual Android NDK toolchain location
-  #       export TOOLCHAIN=$(echo $ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/*/bin)
-
-  #       CGO_ENABLED=1 \
-  #       GOOS=android \
-  #       GOARCH=arm64 \
-  #       CC=$TOOLCHAIN/aarch64-linux-android34-clang \
-  #       go build -buildmode=c-shared -o $OUTPUT_DIR/$OUTPUT_FILE main.go
-  #     '';
-  #     execIfModified = [ "go.mod" "go.sum" "**/*.go" ];
-  #     showOutput = true;
-  #   };
-
-  #   "engine:build-ios" = {
-  #     cwd = engineCwd;
-  #     env = {
-  #       OUTPUT_DIR = "${targetLibsDir}/ios";
-  #       OUTPUT_FILE = "libanytype_engine.a";
-  #     };
-  #     exec = ''
-  #       SDK=iphoneos
-  #       CGO_ENABLED=1 \
-  #       GOOS=ios \
-  #       GOARCH=arm64 \
-  #       CC=$(xcrun --sdk $SDK --find clang) \
-  #       CGO_CFLAGS="-arch arm64 -miphoneos-version-min=14.0" \
-  #       go build -buildmode=c-archive -o $OUTPUT_DIR/$OUTPUT_FILE main.go
-  #     '';
-  #     execIfModified = [ "go.mod" "go.sum" "**/*.go" ];
-  #     showOutput = true;
-  #   };
-  #   "engine:build-all" = {
-  #     exec = "echo '✅ All platform targets successfully evaluated.'";
-  #     after = [
-  #       "engine:build-linux"
-  #       "engine:build-macos"
-  #       "engine:build-windows"
-  #       "engine:build-android"
-  #       "engine:build-ios"
-  #     ];
-  #   };
-  # };
-   pre-commit.hooks = {
-      alejandra.enable = true;
+  pre-commit.hooks = {
+    alejandra.enable = true;
+    dx-fmt = {
+      enable = true;
+      name = "Dioxus Format";
+      entry = "dx fmt --all-code";
+      files = "\\.rs$";
+      pass_filenames = false;
     };
+  };
 }
