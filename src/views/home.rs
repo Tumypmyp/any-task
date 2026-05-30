@@ -24,7 +24,7 @@ fn Spaces() -> Element {
     let resp = use_resource(move || async move {
         match API_CLIENT.read().as_ref() {
             Some(client) => client.fetch_spaces().await,
-            None => Err("No API client available".to_string()),
+            None => Err(anyhow::anyhow!("No API client available")),
         }
     });
     let Some(result) = &*resp.read() else {

@@ -5,11 +5,9 @@ use crate::components::base::message;
 use crate::components::button::{Button, ButtonHolder, ButtonVariant};
 use crate::components::column::Column;
 use crate::components::input::Input;
-use crate::engine;
 use crate::helpers::api_client::Client;
 use crate::helpers::*;
 use dioxus::prelude::*;
-use serde::{Deserialize, Serialize};
 use std::env;
 use std::path::PathBuf;
 #[component]
@@ -73,7 +71,7 @@ pub fn Login() -> Element {
                     *API_CLIENT.write() = Some(client);
                     app_state.set(AppState::Ready);
                 }
-                Err(e) => app_state.set(AppState::Error(e)),
+                Err(e) => app_state.set(AppState::Error(e.to_string())),
             }
         }
     });
@@ -94,7 +92,7 @@ pub fn Login() -> Element {
                     app_state.set(AppState::Ready);
                 }
                 Err(e) => {
-                    app_state.set(AppState::Error(e));
+                    app_state.set(AppState::Error(e.to_string()));
                 }
             };
             nav.push(Route::Home {});

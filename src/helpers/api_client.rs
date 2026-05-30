@@ -1,6 +1,8 @@
 use crate::protos::anytype::client_commands_client::ClientCommandsClient;
 use crate::protos::anytype::rpc::*;
 use crate::protos::anytype_model::block::*;
+use anyhow::Context;
+use anyhow::Result;
 use dioxus::prelude::*;
 use tonic::Request;
 use tonic::metadata::MetadataValue;
@@ -15,9 +17,7 @@ pub struct Client {
     pub network_id: String,
 }
 impl Client {
-    pub async fn init_new_account(
-        root_path_str: String,
-    ) -> Result<(String, Client), String> {
+    pub async fn init_new_account(root_path_str: String) -> Result<(String, Client)> {
         let addr = "127.0.0.1:31020";
         let mut client = ClientCommandsClient::connect(format!("http://{}", addr))
             .await
@@ -30,7 +30,7 @@ impl Client {
                 ..Default::default()
             })
             .await
-            .map_err(|e| e.to_string())?
+            .context("Failed to create wallet")?
             .into_inner();
         let mnemonic = wallet_res.mnemonic;
         _ = client
@@ -50,19 +50,21 @@ impl Client {
                 ..Default::default()
             })
             .await
-            .map_err(|e| e.to_string())?
+            .context("Failed to create account")?
             .into_inner();
-        let account = account_res.account.ok_or("Account data missing")?;
+        let account = account_res
+            .account
+            .ok_or(anyhow::anyhow!("Account data missing"))?;
         let tech_space_id = account.info.clone().unwrap_or_default().tech_space_id;
         let network_id = account.info.clone().unwrap_or_default().network_id;
         let session_res = client
             .wallet_create_session(wallet::create_session::Request {
-                auth: Some(
-                    wallet::create_session::request::Auth::Mnemonic(mnemonic.clone()),
-                ),
+                auth: Some(wallet::create_session::request::Auth::Mnemonic(
+                    mnemonic.clone(),
+                )),
             })
             .await
-            .map_err(|e| format!("Failed to create wallet session: {}", e))?
+            .context("Failed to create wallet session")?
             .into_inner();
         Ok((
             mnemonic,
@@ -81,11 +83,11 @@ impl Client {
         mnemonic: String,
         account_id: String,
         root_path_str: String,
-    ) -> Result<Client, String> {
+    ) -> Result<Client> {
         let addr = "127.0.0.1:31020";
         let mut client = ClientCommandsClient::connect(format!("http://{}", addr))
             .await
-            .map_err(|e| format!("Failed to connect to engine: {}", e))?;
+            .context("Failed to connect to engine")?;
         client
             .wallet_recover(wallet::recover::Request {
                 root_path: root_path_str.clone(),
@@ -93,7 +95,7 @@ impl Client {
                 ..Default::default()
             })
             .await
-            .map_err(|e| e.to_string())?;
+            .context("Failed to recover wallet")?;
         _ = client
             .initial_set_parameters(initial::set_parameters::Request {
                 platform: "android".to_string(),
@@ -109,19 +111,19 @@ impl Client {
                 ..Default::default()
             })
             .await
-            .map_err(|e| e.to_string())?
+            .context("Failed to select account")?
             .into_inner();
-        let account = account_res.account.ok_or("Account data missing")?;
+        let account = account_res.account.context("Account data missing")?;
         let network_id = account.info.clone().unwrap_or_default().network_id;
         let tech_space_id = account.info.unwrap_or_default().tech_space_id;
         let session_res = client
             .wallet_create_session(wallet::create_session::Request {
-                auth: Some(
-                    wallet::create_session::request::Auth::Mnemonic(mnemonic.clone()),
-                ),
+                auth: Some(wallet::create_session::request::Auth::Mnemonic(
+                    mnemonic.clone(),
+                )),
             })
             .await
-            .map_err(|e| format!("Failed to create wallet session: {}", e))?
+            .context("Failed to create wallet session")?
             .into_inner();
         Ok(Self {
             client,
@@ -132,32 +134,30 @@ impl Client {
         })
     }
     /// Subscribes to the object search and parses out the target space IDs.
-    pub async fn fetch_spaces(&self) -> Result<Vec<(String, String)>, String> {
+    pub async fn fetch_spaces(&self) -> Result<Vec<(String, String)>> {
         let mut grpc_client = self.client.clone();
         let mut req = Request::new(object::search_subscribe::Request {
             space_id: self.tech_space_id.clone(),
             sub_id: "space".to_string(),
-            filters: vec![
-                content::dataview::Filter {
-                    operator: 0,
-                    relation_key: "spaceLocalStatus".to_string(),
-                    condition: 1,
-                    value: Some(prost_types::Value {
-                        kind: Some(prost_types::value::Kind::NumberValue(2.0)),
-                    }),
-                    ..Default::default()
-                },
-            ],
+            filters: vec![content::dataview::Filter {
+                operator: 0,
+                relation_key: "spaceLocalStatus".to_string(),
+                condition: 1,
+                value: Some(prost_types::Value {
+                    kind: Some(prost_types::value::Kind::NumberValue(2.0)),
+                }),
+                ..Default::default()
+            }],
             keys: vec!["targetSpaceId".to_string(), "name".to_string()],
             ..Default::default()
         });
         let meta_val = MetadataValue::try_from(&self.token.clone())
-            .map_err(|_| "Failed to parse token into metadata value".to_string())?;
+            .context("Failed to parse token into metadata value")?;
         req.metadata_mut().insert("token", meta_val);
         let response = grpc_client
             .object_search_subscribe(req)
             .await
-            .map_err(|e| format!("Search subscribe error: {}", e))?
+            .context("Search subscribe error")?
             .into_inner();
         let mut spaces = Vec::new();
         tracing::debug!("spaces found: {:#?}", response);
@@ -188,7 +188,7 @@ impl Client {
         }
         Ok(spaces)
     }
-    pub async fn join_space_from_link(&self, url: &str) -> anyhow::Result<String> {
+    pub async fn join_space_from_link(&self, url: &str) -> Result<String> {
         let mut client = self.client.clone();
         let invite = parse_invite_url(url)?;
         let mut preview_req = tonic::Request::new(space::invite_view::Request {
@@ -249,7 +249,7 @@ pub struct ParsedInvite {
     pub key: String,
     pub space_id: String,
 }
-pub fn parse_invite_url(invite_url: &str) -> anyhow::Result<ParsedInvite> {
+pub fn parse_invite_url(invite_url: &str) -> Result<ParsedInvite> {
     if invite_url.is_empty() {
         anyhow::bail!("Invite URL is empty");
     }
