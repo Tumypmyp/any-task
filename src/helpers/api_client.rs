@@ -242,6 +242,102 @@ impl Client {
         }
         Ok(preview_res.space_name)
     }
+    pub async fn fetch_collections_and_sets(
+        &self,
+        space_id: &str,
+    ) -> Result<Vec<(String, String, i32)>> {
+        let mut grpc_client = self.client.clone();
+        let mut req = Request::new(object::search::Request {
+            space_id: space_id.to_string(),
+            filters: vec![
+                content::dataview::Filter {
+                    operator: 0, // No
+                    relation_key: "resolvedLayout".to_string(),
+                    condition: 9, // In
+                    value: Some(prost_types::Value {
+                        kind: Some(prost_types::value::Kind::ListValue(
+                            prost_types::ListValue {
+                                values: vec![
+                                    prost_types::Value {
+                                        kind: Some(prost_types::value::Kind::NumberValue(3.0)), // set
+                                    },
+                                    prost_types::Value {
+                                        kind: Some(prost_types::value::Kind::NumberValue(14.0)), // collection
+                                    },
+                                ],
+                            },
+                        )),
+                    }),
+                    ..Default::default()
+                },
+                content::dataview::Filter {
+                    operator: 0, // No
+                    relation_key: "isHidden".to_string(),
+                    condition: 2, // NotEqual
+                    value: Some(prost_types::Value {
+                        kind: Some(prost_types::value::Kind::BoolValue(true)),
+                    }),
+                    ..Default::default()
+                },
+            ],
+            keys: vec![
+                "id".to_string(),
+                "name".to_string(),
+                "resolvedLayout".to_string(),
+            ],
+            ..Default::default()
+        });
+        req.metadata_mut().insert(
+            "token",
+            MetadataValue::try_from(&self.token).context("Failed to parse token")?,
+        );
+        let response = grpc_client
+            .object_search(req)
+            .await
+            .context("ObjectSearch error")?
+            .into_inner();
+
+        let mut results = Vec::new();
+        for record in response.records {
+            let id = record
+                .fields
+                .get("id")
+                .and_then(|v| {
+                    if let Some(prost_types::value::Kind::StringValue(s)) = &v.kind {
+                        Some(s.clone())
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or_default();
+            let name = record
+                .fields
+                .get("name")
+                .and_then(|v| {
+                    if let Some(prost_types::value::Kind::StringValue(s)) = &v.kind {
+                        Some(s.clone())
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or_default();
+            let layout = record
+                .fields
+                .get("resolvedLayout")
+                .and_then(|v| {
+                    if let Some(prost_types::value::Kind::NumberValue(n)) = &v.kind {
+                        Some(*n as i32)
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or(0);
+            if !id.is_empty() {
+                results.push((id, name, layout));
+            }
+        }
+        Ok(results)
+    }
 }
 use url::Url;
 pub struct ParsedInvite {

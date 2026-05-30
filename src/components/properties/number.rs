@@ -15,7 +15,7 @@ impl PropertyRenderer for NumberPropertyValue {
                 space_id: &space_id,
                 object_id: &object_id,
                 prop: self
-                            .clone(),
+                                            .clone(),
             }
         }
     }
