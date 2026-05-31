@@ -20,11 +20,13 @@ local.properties
 .pre-commit-config.yaml
 .tmp
 .android
+
+# build
 dist
 **/native-libs/
 *.dll
 
 # part of anytype-heart
-./protos
+protos/
 
 .env*

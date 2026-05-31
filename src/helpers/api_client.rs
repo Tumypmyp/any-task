@@ -1,6 +1,6 @@
-use crate::protos::anytype::client_commands_client::ClientCommandsClient;
-use crate::protos::anytype::rpc::*;
 use crate::protos::anytype_model::block::*;
+use crate::protos::client_commands_client::ClientCommandsClient;
+use crate::protos::rpc::*;
 use anyhow::Context;
 use anyhow::Result;
 use dioxus::prelude::*;
@@ -59,9 +59,9 @@ impl Client {
         let network_id = account.info.clone().unwrap_or_default().network_id;
         let session_res = client
             .wallet_create_session(wallet::create_session::Request {
-                auth: Some(
-                    wallet::create_session::request::Auth::Mnemonic(mnemonic.clone()),
-                ),
+                auth: Some(wallet::create_session::request::Auth::Mnemonic(
+                    mnemonic.clone(),
+                )),
             })
             .await
             .context("Failed to create wallet session")?
@@ -118,9 +118,9 @@ impl Client {
         let tech_space_id = account.info.unwrap_or_default().tech_space_id;
         let session_res = client
             .wallet_create_session(wallet::create_session::Request {
-                auth: Some(
-                    wallet::create_session::request::Auth::Mnemonic(mnemonic.clone()),
-                ),
+                auth: Some(wallet::create_session::request::Auth::Mnemonic(
+                    mnemonic.clone(),
+                )),
             })
             .await
             .context("Failed to create wallet session")?
@@ -139,17 +139,15 @@ impl Client {
         let mut req = Request::new(object::search_subscribe::Request {
             space_id: self.tech_space_id.clone(),
             sub_id: "space".to_string(),
-            filters: vec![
-                content::dataview::Filter {
-                    operator: 0,
-                    relation_key: "spaceLocalStatus".to_string(),
-                    condition: 1,
-                    value: Some(prost_types::Value {
-                        kind: Some(prost_types::value::Kind::NumberValue(2.0)),
-                    }),
-                    ..Default::default()
-                },
-            ],
+            filters: vec![content::dataview::Filter {
+                operator: 0,
+                relation_key: "spaceLocalStatus".to_string(),
+                condition: 1,
+                value: Some(prost_types::Value {
+                    kind: Some(prost_types::value::Kind::NumberValue(2.0)),
+                }),
+                ..Default::default()
+            }],
             keys: vec!["targetSpaceId".to_string(), "name".to_string()],
             ..Default::default()
         });
@@ -257,8 +255,8 @@ impl Client {
                     relation_key: "resolvedLayout".to_string(),
                     condition: 9,
                     value: Some(prost_types::Value {
-                        kind: Some(
-                            prost_types::value::Kind::ListValue(prost_types::ListValue {
+                        kind: Some(prost_types::value::Kind::ListValue(
+                            prost_types::ListValue {
                                 values: vec![
                                     prost_types::Value {
                                         kind: Some(prost_types::value::Kind::NumberValue(3.0)),
@@ -267,8 +265,8 @@ impl Client {
                                         kind: Some(prost_types::value::Kind::NumberValue(14.0)),
                                     },
                                 ],
-                            }),
-                        ),
+                            },
+                        )),
                     }),
                     ..Default::default()
                 },
@@ -289,11 +287,10 @@ impl Client {
             ],
             ..Default::default()
         });
-        req.metadata_mut()
-            .insert(
-                "token",
-                MetadataValue::try_from(&self.token).context("Failed to parse token")?,
-            );
+        req.metadata_mut().insert(
+            "token",
+            MetadataValue::try_from(&self.token).context("Failed to parse token")?,
+        );
         let response = grpc_client
             .object_search(req)
             .await

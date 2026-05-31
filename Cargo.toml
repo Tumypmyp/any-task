@@ -46,10 +46,10 @@ http = "1"
 futures-util = { version = "0.3", default-features = false }
 hyper-util = { version = "0.1.18", features = ["tokio"] }
 
-[target.x86_64-pc-windows-gnu]
-rustflags = ["-L", "native/"]
-linker = "x86_64-w64-mingw32-gcc"
-ar = "x86_64-w64-mingw32-ar"
+# [target.x86_64-pc-windows-gnu]
+# rustflags = ["-L", "native/"]
+# linker = "x86_64-w64-mingw32-gcc"
+# ar = "x86_64-w64-mingw32-ar"
 
 [features]
 default = ["desktop"]

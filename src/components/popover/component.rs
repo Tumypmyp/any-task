@@ -49,7 +49,7 @@ pub fn PopoverRoot(props: PopoverRootProps) -> Element {
             class: "popover",
             is_modal: props.is_modal,
             open: props
-                    .open,
+                                .open,
             default_open: props.default_open,
             on_open_change: props.on_open_change,
             attributes: props.attributes,
@@ -61,7 +61,7 @@ pub fn PopoverRoot(props: PopoverRootProps) -> Element {
 pub fn PopoverTrigger(props: PopoverTriggerProps) -> Element {
     rsx! {
         popover::PopoverTrigger { class: "popover-trigger", attributes: props
-                    .attributes, {props.children} }
+                                .attributes, {props.children} }
     }
 }
 #[component]
@@ -71,7 +71,7 @@ pub fn PopoverContent(props: PopoverContentProps) -> Element {
             class: "popover-content",
             id: props.id,
             side: props
-                    .side,
+                                .side,
             align: props.align,
             attributes: props.attributes,
             {props.children}

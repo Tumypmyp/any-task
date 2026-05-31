@@ -131,7 +131,7 @@ pub fn Calendar(props: CalendarProps) -> Element {
         CalendarRoot {
             selected_date: props.selected_date,
             on_date_change: props
-                    .on_date_change,
+                                .on_date_change,
             on_format_weekday: props.on_format_weekday,
             on_format_month: props.on_format_month,
             view_date: props.view_date,
@@ -143,7 +143,7 @@ pub fn Calendar(props: CalendarProps) -> Element {
             max_date: props.max_date,
             disabled_ranges: props.disabled_ranges,
             attributes: props
-                    .attributes,
+                                .attributes,
             for offset in 0..month_count {
                 CalendarMonthView { key: "{offset}", offset, month_count }
             }
@@ -168,7 +168,7 @@ pub fn RangeCalendar(props: RangeCalendarProps) -> Element {
             max_date: props.max_date,
             disabled_ranges: props.disabled_ranges,
             attributes: props
-                    .attributes,
+                                .attributes,
             for offset in 0..month_count {
                 CalendarMonthView { key: "{offset}", offset, month_count }
             }
@@ -183,7 +183,7 @@ pub(crate) fn CalendarRoot(props: calendar::CalendarProps) -> Element {
         calendar::Calendar {
             selected_date: props.selected_date,
             on_date_change: props
-                    .on_date_change,
+                                .on_date_change,
             on_format_weekday: props.on_format_weekday,
             on_format_month: props.on_format_month,
             view_date: props.view_date,
@@ -259,7 +259,7 @@ fn CalendarView(props: CalendarViewProps) -> Element {
 fn CalendarHeader(props: CalendarHeaderProps) -> Element {
     rsx! {
         calendar::CalendarHeader { id: props.id, attributes: props.attributes, { props
-                .children } }
+                        .children } }
     }
 }
 #[component]
@@ -324,7 +324,7 @@ fn CalendarSelectMonthValue(props: CalendarSelectMonthValueProps) -> Element {
             class: Styles::dx_calendar_month_select_value,
             attributes: props.attributes,
             { props
-                    .children }
+                                .children }
         }
     }
 }
@@ -358,7 +358,7 @@ fn CalendarSelectYearValue(props: CalendarSelectYearValueProps) -> Element {
             class: Styles::dx_calendar_year_select_value,
             attributes: props.attributes,
             { props
-                    .children }
+                                .children }
         }
     }
 }
@@ -379,7 +379,7 @@ fn CalendarGrid(
                             key: "{weekday.weekday():?}",
                             weekday: weekday.weekday(),
                             { weekday.label()
-                                    .to_string() }
+                                                                .to_string() }
                         }
                     }
                 }
