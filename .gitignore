@@ -24,4 +24,7 @@ dist
 **/native-libs/
 *.dll
 
+# part of anytype-heart
+./protos
+
 .env*

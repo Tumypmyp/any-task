@@ -18,13 +18,13 @@ pub fn Select<T: Clone + PartialEq + 'static>(props: SelectProps<T>) -> Element 
             on_value_change: props.on_value_change,
             disabled: props.disabled,
             open: props
-                                .open,
+                    .open,
             default_open: props.default_open,
             on_open_change: props.on_open_change,
             name: props.name,
             roving_loop: props.roving_loop,
             typeahead_timeout: props
-                                .typeahead_timeout,
+                    .typeahead_timeout,
             attributes: merged,
             {props.children}
         }
@@ -40,10 +40,10 @@ pub fn SelectMulti<T: Clone + PartialEq + 'static>(
         select::SelectMulti {
             values: props.values,
             default_values: props
-                                .default_values,
+                    .default_values,
             on_values_change: props.on_values_change,
             disabled: props
-                                .disabled,
+                    .disabled,
             open: props.open,
             default_open: props.default_open,
             on_open_change: props.on_open_change,
@@ -52,7 +52,7 @@ pub fn SelectMulti<T: Clone + PartialEq + 'static>(
             typeahead_timeout: props.typeahead_timeout,
             attributes: merged,
             { props
-                                .children }
+                    .children }
         }
     }
 }
@@ -75,7 +75,7 @@ pub fn SelectTrigger(props: SelectTriggerProps) -> Element {
 pub fn SelectValue(props: SelectValueProps) -> Element {
     rsx! {
         select::SelectValue { placeholder: props.placeholder, attributes: props
-                                .attributes }
+                    .attributes }
     }
 }
 #[component]
@@ -119,7 +119,7 @@ pub fn SelectOption<T: Clone + PartialEq + 'static>(
             id: props.id,
             index: props.index,
             aria_label: props
-                                .aria_label,
+                    .aria_label,
             aria_roledescription: props.aria_roledescription,
             attributes: merged,
             {props.children}

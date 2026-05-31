@@ -32,30 +32,30 @@ pub fn Input(
             onchange: move |e| _ = onchange.map(|callback| callback(e)),
             oninvalid: move |e| _ = oninvalid.map(|callback| callback(e)),
             onselect: move | e | _ =
-                                onselect.map(| callback | callback(e)),
+                    onselect.map(| callback | callback(e)),
             onselectionchange: move | e | _ =
-                                onselectionchange.map(| callback | callback(e)),
+                    onselectionchange.map(| callback | callback(e)),
             onfocus: move | e | _ = onfocus
-                                .map(| callback | callback(e)),
+                    .map(| callback | callback(e)),
             onblur: move | e | _ = onblur.map(| callback |
-                                callback(e)),
+                    callback(e)),
             onfocusin: move |e| _ = onfocusin.map(|callback| callback(e)),
             onfocusout: move |e| _ = onfocusout.map(|callback| callback(e)),
             onkeydown: move |e| _ = onkeydown.map(|callback| callback(e)),
             onkeypress: move | e | _
-                                = onkeypress.map(| callback | callback(e)),
+                    = onkeypress.map(| callback | callback(e)),
             onkeyup: move | e | _ = onkeyup
-                                .map(| callback | callback(e)),
+                    .map(| callback | callback(e)),
             oncompositionstart: move | e | _ =
-                                oncompositionstart.map(| callback | callback(e)),
+                    oncompositionstart.map(| callback | callback(e)),
             oncompositionupdate: move | e
-                                | _ = oncompositionupdate.map(| callback | callback(e)),
+                    | _ = oncompositionupdate.map(| callback | callback(e)),
             oncompositionend: move
-                                | e | _ = oncompositionend.map(| callback | callback(e)),
+                    | e | _ = oncompositionend.map(| callback | callback(e)),
             oncopy: move | e | _ =
-                                oncopy.map(| callback | callback(e)),
+                    oncopy.map(| callback | callback(e)),
             oncut: move | e | _ = oncut.map(| callback
-                                | callback(e)),
+                    | callback(e)),
             onpaste: move |e| _ = onpaste.map(|callback| callback(e)),
             ..attributes,
             {children}

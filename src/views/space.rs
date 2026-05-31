@@ -3,7 +3,6 @@ use crate::components::button::Button;
 use crate::components::button::ButtonHolder;
 use crate::components::button::ButtonVariant;
 use crate::components::column::Column;
-// use crate::Search;
 use crate::components::action::*;
 use crate::components::header::{Header, Title};
 use dioxus::prelude::*;
@@ -11,9 +10,7 @@ use dioxus::prelude::*;
 pub fn Space(space_id: String) -> Element {
     tracing::info!("loading space {space_id}");
     rsx! {
-        // SpaceTitle { space_id: space_id.clone() }
-        Collections { space_id: space_id
-                                .clone() }
+        Collections { space_id: space_id.clone() }
         ActionHolder { BaseActions {} }
     }
 }
@@ -25,12 +22,16 @@ pub fn Collections(space_id: String) -> Element {
             let client_guard = API_CLIENT.read();
             let client = client_guard
                 .as_ref()
-                .ok_or_else(|| anyhow::anyhow!("No API client available, try reloading the app"))?;
+                .ok_or_else(|| {
+                    anyhow::anyhow!("No API client available, try reloading the app")
+                })?;
             client.fetch_collections_and_sets(&space_id).await
         }
     });
     let collections = match &*resp.read() {
-        None => return rsx! { "Loading..." },
+        None => {
+            return rsx! { "Loading..." };
+        }
         Some(Err(err)) => {
             tracing::debug!("Got error loading collections: {:#?}", err);
             return rsx! { "Error: {err}" };
@@ -45,31 +46,3 @@ pub fn Collections(space_id: String) -> Element {
         }
     }
 }
-// #[component]
-// pub fn SpaceTitle(space_id: String) -> Element {
-//     let resp = use_resource(move || {
-//         let client = API_CLIENT.read().clone();
-//         let space_id = space_id.clone();
-//         async move { client.get_space(space_id).await }
-//     });
-//     let Some(result) = &*resp.read() else {
-//         return rsx! { "Loading..." };
-//     };
-//     let name = match result {
-//         Ok(obj) => obj
-//             .space
-//             .clone()
-//             .unwrap_or_default()
-//             .name
-//             .unwrap_or_default(),
-//         Err(err) => {
-//             tracing::debug!("Got error loading the space: {:#?}", err);
-//             return rsx! { "Error: {err}" };
-//         }
-//     };
-//     rsx! {
-//         Header {
-//             Title { title: "{name}" }
-//         }
-//     }
-// }

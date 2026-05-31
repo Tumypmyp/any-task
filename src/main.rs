@@ -57,7 +57,8 @@ fn main() {
         return;
     }
     let data_dir = get_app_data_dir();
-    std::fs::create_dir_all(&data_dir).expect("Failed to create application data directory");
+    std::fs::create_dir_all(&data_dir)
+        .expect("Failed to create application data directory");
     tracing::debug!("User data path is {:#?}", data_dir);
     dioxus_sdk_storage::set_directory(data_dir.clone());
     let cfg = if cfg!(target_os = "windows") {
@@ -79,11 +80,13 @@ fn main() {
 }
 pub fn get_app_data_dir() -> PathBuf {
     if cfg!(target_os = "windows") {
-        PathBuf::from(env::var("LOCALAPPDATA").expect("LOCALAPPDATA not found")).join("AnyTask")
+        PathBuf::from(env::var("LOCALAPPDATA").expect("LOCALAPPDATA not found"))
+            .join("AnyTask")
     } else if cfg!(target_os = "linux") {
-        let base = env::var("XDG_DATA_HOME").unwrap_or_else(|_| {
-            format!("{}/.local/share", env::var("HOME").expect("HOME not found"))
-        });
+        let base = env::var("XDG_DATA_HOME")
+            .unwrap_or_else(|_| {
+                format!("{}/.local/share", env::var("HOME").expect("HOME not found"))
+            });
         PathBuf::from(base).join("AnyTask")
     } else if cfg!(target_os = "android") {
         PathBuf::from("/data/user/0/com.Tumypmyp.AnyTask/files")
@@ -94,11 +97,16 @@ pub fn get_app_data_dir() -> PathBuf {
 #[component]
 fn App() -> Element {
     tracing::info!("App is started");
-    let settings =
-        use_synced_storage::<LocalStorage, AppSettings>(USER_SETTINGS_KEY.into(), || AppSettings {
+    let settings = use_synced_storage::<
+        LocalStorage,
+        AppSettings,
+    >(
+        USER_SETTINGS_KEY.into(),
+        || AppSettings {
             account_id: "".to_string(),
             mnemonic: "".to_string(),
-        });
+        },
+    );
     use_context_provider(|| settings);
     use_future(move || async move {
         let mnemonic = settings.peek().mnemonic.clone();

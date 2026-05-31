@@ -1,6 +1,6 @@
 use std::ffi::{c_char, c_int};
-use std::time::Duration;
 use std::net::TcpStream;
+use std::time::Duration;
 unsafe extern "C" {
     fn StartAnytypeEngine(grpc_addr: *const c_char) -> c_int;
     fn StopAnytypeEngine();
