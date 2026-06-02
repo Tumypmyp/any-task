@@ -63,7 +63,7 @@ pub fn ObjectRow(props: ObjectProps) -> Element {
                                 key: "{property.0.id.as_str()}",
                                 space_id: props.space_id.clone(),
                                 object_id: props
-                                                                        .object_id.clone(),
+                                        .object_id.clone(),
                                 data: prop.read().clone(),
                                 info: property,
                             }
@@ -71,7 +71,7 @@ pub fn ObjectRow(props: ObjectProps) -> Element {
                             PropertyValue {
                                 key: "{property.0.id.as_str()}",
                                 space_id: props.space_id
-                                                                        .clone(),
+                                        .clone(),
                                 object_id: props.object_id.clone(),
                                 data: None,
                                 info: property,

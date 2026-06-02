@@ -42,14 +42,14 @@ fn SheetRoot(props: DialogRootProps) -> Element {
             class: "sheet-root",
             "data-slot": "sheet-root",
             id: props
-                                .id,
+                    .id,
             is_modal: props.is_modal,
             open: props.open,
             default_open: props
-                                .default_open,
+                    .default_open,
             on_open_change: props.on_open_change,
             attributes: props
-                                .attributes,
+                    .attributes,
             {props.children}
         }
     }
@@ -128,7 +128,7 @@ pub fn SheetDescription(props: DialogDescriptionProps) -> Element {
             "data-slot": "sheet-description",
             attributes: props.attributes,
             { props
-                                .children }
+                    .children }
         }
     }
 }

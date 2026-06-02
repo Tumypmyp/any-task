@@ -26,7 +26,9 @@ fn Spaces() -> Element {
         let client_guard = API_CLIENT.read();
         let client = client_guard
             .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("No API client available, try reloading the app"))?;
+            .ok_or_else(|| {
+                anyhow::anyhow!("No API client available, try reloading the app")
+            })?;
         client.fetch_spaces().await
     });
     let spaces = match &*resp.read() {
@@ -92,9 +94,14 @@ pub fn JoinSpace() -> Element {
             match client.join_space_from_link(&url).await {
                 Ok(space_name) => {
                     invite_url.set(String::new());
-                    status.set(JoinStatus::Success(format!(
-                        "Request sent to join '{space_name}'. Waiting for owner approval.",
-                    )));
+                    status
+                        .set(
+                            JoinStatus::Success(
+                                format!(
+                                    "Request sent to join '{space_name}'. Waiting for owner approval.",
+                                ),
+                            ),
+                        );
                 }
                 Err(e) => {
                     status.set(JoinStatus::Error(format!("{e}")));
@@ -127,7 +134,8 @@ pub fn JoinSpace() -> Element {
                     }
                 }
             }
-            match &*status.read() {
+            match &*
+                    status.read() { JoinStatus::Success(msg) => rsx! { p { style :
                 JoinStatus::Success(msg) => rsx! {
                     p { style: "color: green; font-size: 0.9em;", "{msg}" }
                 },

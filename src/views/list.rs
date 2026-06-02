@@ -184,12 +184,12 @@ pub fn Objects(
                 ObjectRow {
                     key: "{id}",
                     name: obj.clone().name
-                                                .unwrap(),
+                            .unwrap(),
                     space_id,
                     object_id: obj.clone().id.unwrap(),
                     properties,
                     data: obj
-                                                .clone(),
+                            .clone(),
                 }
             }
         }

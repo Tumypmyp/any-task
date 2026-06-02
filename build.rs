@@ -8,14 +8,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("cargo:rustc-link-search=native={output_base}/windows");
             println!("cargo:rustc-link-lib=dylib=anytype_engine");
             println!("cargo:rerun-if-env-changed=OUTPUT_BASE");
-            println!("cargo:rerun-if-changed={output_base}/windows/libanytype_engine.dll",);
+            println!(
+                "cargo:rerun-if-changed={output_base}/windows/libanytype_engine.dll",
+            );
             let src_dll = std::path::PathBuf::from(&output_base)
                 .join("windows")
                 .join("libanytype_engine.dll");
             if src_dll.exists() {
                 if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
                     let p_root = std::path::PathBuf::from(manifest_dir);
-                    let _ = std::fs::copy(&src_dll, p_root.join("libanytype_engine.dll"));
+                    let _ = std::fs::copy(
+                        &src_dll,
+                        p_root.join("libanytype_engine.dll"),
+                    );
                     let dx_windows_dir = p_root
                         .join("target")
                         .join("dx")
@@ -25,14 +30,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if !dx_windows_dir.exists() {
                         let _ = std::fs::create_dir_all(&dx_windows_dir);
                     }
-                    let _ = std::fs::copy(&src_dll, dx_windows_dir.join("libanytype_engine.dll"));
+                    let _ = std::fs::copy(
+                        &src_dll,
+                        dx_windows_dir.join("libanytype_engine.dll"),
+                    );
                 }
                 if let Ok(out_dir) = std::env::var("OUT_DIR") {
                     let mut profile_dir = std::path::PathBuf::from(out_dir);
                     profile_dir.pop();
                     profile_dir.pop();
                     profile_dir.pop();
-                    let _ = std::fs::copy(&src_dll, profile_dir.join("libanytype_engine.dll"));
+                    let _ = std::fs::copy(
+                        &src_dll,
+                        profile_dir.join("libanytype_engine.dll"),
+                    );
                     let _ = std::fs::copy(
                         &src_dll,
                         profile_dir.join("deps").join("libanytype_engine.dll"),
@@ -78,7 +89,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             if let Err(e) = std::fs::copy(&src, &dst) {
                 panic!("Failed to copy {src} to {dst}: {e}");
             }
-            let ndk_home = std::env::var("ANDROID_NDK_HOME").expect("ANDROID_NDK_HOME must be set");
+            let ndk_home = std::env::var("ANDROID_NDK_HOME")
+                .expect("ANDROID_NDK_HOME must be set");
             let host = if cfg!(target_os = "linux") {
                 "linux-x86_64"
             } else if cfg!(target_os = "macos") {
@@ -98,7 +110,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             );
             let libcxx_dst = format!("{dest_dir}/libc++_shared.so");
             if let Err(e) = std::fs::copy(&libcxx_src, &libcxx_dst) {
-                panic!("Failed to copy libc++_shared.so from {libcxx_src} to {libcxx_dst}: {e}",);
+                panic!(
+                    "Failed to copy libc++_shared.so from {libcxx_src} to {libcxx_dst}: {e}",
+                );
             }
         }
         _ => {}
@@ -110,7 +124,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     tonic_prost_build::configure()
         .build_server(false)
         .build_client(false)
-        // .out_dir("src/protos")
         .compile_protos(
             &[
                 "protos/pkg/lib/pb/model/protos/models.proto",
@@ -118,35 +131,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ],
             &["protos"],
         )?;
-
-    // Step 2: generate service client, referencing model types externally
     tonic_prost_build::configure()
         .build_server(false)
         .build_client(true)
-        // .out_dir("src/protos")
         .extern_path(".anytype.model", "crate::protos::anytype_model")
         .compile_protos(&["protos/pb/protos/service/service.proto"], &["protos"])?;
-
-    // tonic_prost_build::configure()
-    //     .build_server(false)
-    //     .build_client(true)
-    //     .compile_protos(
-    //         // Only compile the root service, Tonic will auto-resolve the rest!
-    //         &["protos/pb/protos/service/service.proto"],
-    //         &["protos"], // This tells Tonic where the root of the import paths is
-    //     )?;
-    // tonic_prost_build::configure()
-    //     .build_server(false)
-    //     .build_client(true)
-    //     .compile_protos(
-    //         &[
-    //             "protos/pb/protos/service/service.proto",
-    //             "protos/pb/protos/commands.proto",
-    //             "protos/pb/protos/events.proto",
-    //             "protos/pkg/lib/pb/model/protos/models.proto",
-    //             "protos/pkg/lib/pb/model/protos/localstore.proto",
-    //         ],
-    //         &["protos"],
-    //     )?;
     Ok(())
 }
