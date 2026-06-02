@@ -66,7 +66,7 @@ pub fn Search(space_id: String, types: Vec<String>) -> Element {
                     name: obj.name.clone(),
                     space_id: obj.space_id.clone(),
                     object_id: obj.object_id
-                            .clone(),
+                                                                                                                                                                                                                                    .clone(),
                     properties,
                     data: obj.data.clone(),
                 }

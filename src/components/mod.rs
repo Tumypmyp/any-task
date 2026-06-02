@@ -1,11 +1,15 @@
 pub mod action;
+pub mod add_properties;
 pub mod base;
 pub mod button;
 pub mod checkbox;
+pub mod choose_view;
 pub mod column;
+pub mod edit_view;
 pub mod header;
 pub mod input;
 pub mod label;
+pub mod properties_row;
 pub mod row;
 pub mod scroll_area;
 pub mod select;
@@ -14,3 +18,5 @@ pub mod sheet;
 pub mod slider;
 pub mod switch;
 pub mod toast;
+
+pub mod object_row;

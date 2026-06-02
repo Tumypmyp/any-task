@@ -13,7 +13,7 @@ pub fn Checkbox(props: CheckboxProps) -> Element {
             name: props.name,
             value: props.value,
             on_checked_change: props
-                    .on_checked_change,
+                                                                                                                                            .on_checked_change,
             attributes: props.attributes,
             checkbox::CheckboxIndicator { class: "checkbox-indicator",
                 svg {

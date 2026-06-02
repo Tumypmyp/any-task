@@ -1,4 +1,6 @@
+use crate::protos::anytype_model::RelationFormat;
 use crate::protos::anytype_model::block::*;
+use crate::protos::anytype_model::object_type::*;
 use crate::protos::client_commands_client::ClientCommandsClient;
 use crate::protos::rpc::*;
 use anyhow::Context;
@@ -28,6 +30,26 @@ impl Interceptor for AuthInterceptor {
         Ok(request)
     }
 }
+fn extract_string(val: Option<&prost_types::Value>) -> String {
+    if let Some(prost_types::Value {
+        kind: Some(prost_types::value::Kind::StringValue(s)),
+    }) = val
+    {
+        s.clone()
+    } else {
+        String::new()
+    }
+}
+fn extract_number(val: Option<&prost_types::Value>) -> i32 {
+    if let Some(prost_types::Value {
+        kind: Some(prost_types::value::Kind::NumberValue(n)),
+    }) = val
+    {
+        *n as i32
+    } else {
+        0
+    }
+}
 impl Client {
     pub async fn init_new_account(root_path_str: String) -> Result<(String, Client)> {
         let addr = "127.0.0.1:31020";
@@ -36,8 +58,6 @@ impl Client {
             .await
             .context("Failed to connect channel")?;
         let mut setup_client = ClientCommandsClient::new(channel.clone());
-        let _ = setup_client.app_shutdown(app::shutdown::Request::default()).await;
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
         let wallet_res = setup_client
             .wallet_create(wallet::create::Request {
                 root_path: root_path_str.clone(),
@@ -73,9 +93,9 @@ impl Client {
         let network_id = account.info.clone().unwrap_or_default().network_id;
         let session_res = setup_client
             .wallet_create_session(wallet::create_session::Request {
-                auth: Some(
-                    wallet::create_session::request::Auth::Mnemonic(mnemonic.clone()),
-                ),
+                auth: Some(wallet::create_session::request::Auth::Mnemonic(
+                    mnemonic.clone(),
+                )),
             })
             .await
             .context("Failed to create wallet session")?
@@ -83,10 +103,7 @@ impl Client {
         let meta_val = MetadataValue::try_from(&session_res.token)
             .map_err(|_| anyhow::anyhow!("Invalid token format"))?;
         let interceptor = AuthInterceptor { token: meta_val };
-        let authenticated_client = ClientCommandsClient::with_interceptor(
-            channel,
-            interceptor,
-        );
+        let authenticated_client = ClientCommandsClient::with_interceptor(channel, interceptor);
         Ok((
             mnemonic,
             Self {
@@ -110,7 +127,6 @@ impl Client {
             .await
             .context("Failed to connect channel")?;
         let mut setup_client = ClientCommandsClient::new(channel.clone());
-        let _ = setup_client.app_shutdown(app::shutdown::Request::default()).await;
         setup_client
             .wallet_recover(wallet::recover::Request {
                 root_path: root_path_str.clone(),
@@ -141,9 +157,9 @@ impl Client {
         let tech_space_id = account.info.unwrap_or_default().tech_space_id;
         let session_res = setup_client
             .wallet_create_session(wallet::create_session::Request {
-                auth: Some(
-                    wallet::create_session::request::Auth::Mnemonic(mnemonic.clone()),
-                ),
+                auth: Some(wallet::create_session::request::Auth::Mnemonic(
+                    mnemonic.clone(),
+                )),
             })
             .await
             .context("Failed to create wallet session")?
@@ -151,10 +167,7 @@ impl Client {
         let meta_val = MetadataValue::try_from(&session_res.token)
             .map_err(|_| anyhow::anyhow!("Invalid token format"))?;
         let interceptor = AuthInterceptor { token: meta_val };
-        let authenticated_client = ClientCommandsClient::with_interceptor(
-            channel,
-            interceptor,
-        );
+        let authenticated_client = ClientCommandsClient::with_interceptor(channel, interceptor);
         Ok(Self {
             client: authenticated_client,
             account_id: account.id,
@@ -168,17 +181,15 @@ impl Client {
         let req = Request::new(object::search_subscribe::Request {
             space_id: self.tech_space_id.clone(),
             sub_id: "space".to_string(),
-            filters: vec![
-                content::dataview::Filter {
-                    operator: 0,
-                    relation_key: "spaceLocalStatus".to_string(),
-                    condition: 1,
-                    value: Some(prost_types::Value {
-                        kind: Some(prost_types::value::Kind::NumberValue(2.0)),
-                    }),
-                    ..Default::default()
-                },
-            ],
+            filters: vec![content::dataview::Filter {
+                operator: 0,
+                relation_key: "spaceLocalStatus".to_string(),
+                condition: 1,
+                value: Some(prost_types::Value {
+                    kind: Some(prost_types::value::Kind::NumberValue(2.0)),
+                }),
+                ..Default::default()
+            }],
             keys: vec!["targetSpaceId".to_string(), "name".to_string()],
             ..Default::default()
         });
@@ -187,34 +198,15 @@ impl Client {
             .await
             .context("Search subscribe error")?
             .into_inner();
-        let mut spaces = Vec::new();
-        tracing::debug!("spaces found: {:#?}", response);
-        for record in response.records {
-            let id = record
-                .fields
-                .get("targetSpaceId")
-                .and_then(|v| {
-                    if let Some(prost_types::value::Kind::StringValue(s)) = &v.kind {
-                        Some(s.clone())
-                    } else {
-                        None
-                    }
-                })
-                .unwrap_or_default();
-            let name = record
-                .fields
-                .get("name")
-                .and_then(|v| {
-                    if let Some(prost_types::value::Kind::StringValue(s)) = &v.kind {
-                        Some(s.clone())
-                    } else {
-                        None
-                    }
-                })
-                .unwrap_or_default();
-            spaces.push((id, name));
-        }
-        Ok(spaces)
+        Ok(response
+            .records
+            .into_iter()
+            .map(|record| {
+                let id = extract_string(record.fields.get("targetSpaceId"));
+                let name = extract_string(record.fields.get("name"));
+                (id, name)
+            })
+            .collect())
     }
     pub async fn join_space_from_link(&self, url: &str) -> Result<String> {
         let mut client = self.client.clone();
@@ -223,16 +215,15 @@ impl Client {
             invite_cid: invite.cid.clone(),
             invite_file_key: invite.key.clone(),
         });
-        let preview_res: space::invite_view::Response = client
-            .space_invite_view(preview_req)
-            .await?
-            .into_inner();
+        let preview_res: space::invite_view::Response =
+            client.space_invite_view(preview_req).await?.into_inner();
         tracing::info!("preview: {:#?}", preview_res);
         if let Some(error) = preview_res.error {
             if error.code != 0 {
                 anyhow::bail!(
-                    "Failed to preview space invite (code {}): {}", error.code, error
-                    .description
+                    "Failed to preview space invite (code {}): {}",
+                    error.code,
+                    error.description
                 );
             }
         }
@@ -251,16 +242,15 @@ impl Client {
         if let Some(error) = join_res.error {
             if error.code != 0 {
                 anyhow::bail!(
-                    "Failed to join space (code {}): {}", error.code, error.description
+                    "Failed to join space (code {}): {}",
+                    error.code,
+                    error.description
                 );
             }
         }
         Ok(preview_res.space_name)
     }
-    pub async fn fetch_collections_and_sets(
-        &self,
-        space_id: &str,
-    ) -> Result<Vec<(String, String, i32)>> {
+    pub async fn fetch_sets(&self, space_id: &str) -> Result<Vec<(String, String, i32)>> {
         let mut grpc_client = self.client.clone();
         let req = Request::new(object::search::Request {
             space_id: space_id.to_string(),
@@ -270,18 +260,20 @@ impl Client {
                     relation_key: "resolvedLayout".to_string(),
                     condition: 9,
                     value: Some(prost_types::Value {
-                        kind: Some(
-                            prost_types::value::Kind::ListValue(prost_types::ListValue {
+                        kind: Some(prost_types::value::Kind::ListValue(
+                            prost_types::ListValue {
                                 values: vec![
                                     prost_types::Value {
-                                        kind: Some(prost_types::value::Kind::NumberValue(3.0)),
+                                        kind: Some(prost_types::value::Kind::NumberValue(
+                                            Layout::Set as i32 as f64,
+                                        )),
                                     },
-                                    prost_types::Value {
-                                        kind: Some(prost_types::value::Kind::NumberValue(14.0)),
-                                    },
+                                    // prost_types::Value {
+                                    //     kind: Some(prost_types::value::Kind::NumberValue(14.0)),
+                                    // },
                                 ],
-                            }),
-                        ),
+                            },
+                        )),
                     }),
                     ..Default::default()
                 },
@@ -307,45 +299,210 @@ impl Client {
             .await
             .context("ObjectSearch error")?
             .into_inner();
-        let mut results = Vec::new();
-        for record in response.records {
-            let id = record
-                .fields
-                .get("id")
-                .and_then(|v| {
-                    if let Some(prost_types::value::Kind::StringValue(s)) = &v.kind {
-                        Some(s.clone())
-                    } else {
-                        None
-                    }
-                })
-                .unwrap_or_default();
-            let name = record
-                .fields
-                .get("name")
-                .and_then(|v| {
-                    if let Some(prost_types::value::Kind::StringValue(s)) = &v.kind {
-                        Some(s.clone())
-                    } else {
-                        None
-                    }
-                })
-                .unwrap_or_default();
-            let layout = record
-                .fields
-                .get("resolvedLayout")
-                .and_then(|v| {
-                    if let Some(prost_types::value::Kind::NumberValue(n)) = &v.kind {
-                        Some(*n as i32)
-                    } else {
-                        None
-                    }
-                })
-                .unwrap_or(0);
-            if !id.is_empty() {
-                results.push((id, name, layout));
+        Ok(response
+            .records
+            .into_iter()
+            .filter_map(|record| {
+                let id = extract_string(record.fields.get("id"));
+                let name = extract_string(record.fields.get("name"));
+                let layout = extract_number(record.fields.get("resolvedLayout"));
+                Some((id, name, layout))
+            })
+            .collect())
+    }
+    pub async fn fetch_properties(
+        &self,
+        space_id: &str,
+    ) -> Result<Vec<(String, String, String, RelationFormat)>> {
+        let mut grpc_client = self.client.clone();
+        let req = Request::new(object::search::Request {
+            space_id: space_id.to_string(),
+            filters: vec![
+                content::dataview::Filter {
+                    operator: 0,
+                    relation_key: "resolvedLayout".to_string(),
+                    condition: 1,
+                    value: Some(prost_types::Value {
+                        kind: Some(prost_types::value::Kind::NumberValue(5.0)),
+                    }),
+                    ..Default::default()
+                },
+                content::dataview::Filter {
+                    operator: 0,
+                    relation_key: "isHidden".to_string(),
+                    condition: 2,
+                    value: Some(prost_types::Value {
+                        kind: Some(prost_types::value::Kind::BoolValue(true)),
+                    }),
+                    ..Default::default()
+                },
+            ],
+            keys: vec![
+                "id".to_string(),
+                "name".to_string(),
+                "relationKey".to_string(),
+                "relationFormat".to_string(),
+                "description".to_string(),
+            ],
+            ..Default::default()
+        });
+        let response = grpc_client
+            .object_search(req)
+            .await
+            .context("ObjectSearch error")?
+            .into_inner();
+        if let Some(e) = &response.error {
+            if e.code != 0 {
+                anyhow::bail!("fetch_properties error ({}): {}", e.code, e.description);
             }
         }
+        let properties = response
+            .records
+            .into_iter()
+            .map(|record| {
+                let id = extract_string(record.fields.get("id"));
+                let name = extract_string(record.fields.get("name"));
+                let key = extract_string(record.fields.get("relationKey"));
+                let format =
+                    RelationFormat::try_from(extract_number(record.fields.get("relationFormat")))
+                        .unwrap_or(RelationFormat::Longtext);
+                (id, name, key, format)
+            })
+            .collect();
+        Ok(properties)
+    }
+    pub async fn get_list_name(&self, space_id: &str, list_id: &str) -> anyhow::Result<String> {
+        let mut client = self.client.clone();
+        let req = tonic::Request::new(object::show::Request {
+            object_id: list_id.to_string(),
+            space_id: space_id.to_string(),
+            ..Default::default()
+        });
+        let resp = client
+            .object_show(req)
+            .await
+            .context("get_list_name error")?
+            .into_inner();
+        if let Some(e) = &resp.error {
+            if e.code != 0 {
+                anyhow::bail!("ObjectShow error ({}): {}", e.code, e.description);
+            }
+        }
+        let name = extract_string(
+            resp.object_view.context("no details")?.details[0]
+                .details
+                .clone()
+                .context("no details 2")?
+                .fields
+                .get("name"),
+        );
+        Ok(name)
+    }
+    pub async fn get_list_objects(
+        &self,
+        space_id: &str,
+        list_id: &str,
+    ) -> Result<Vec<(String, String)>> {
+        let mut client = self.client.clone();
+
+        // Step 1: ObjectShow on the set to get its setOf field
+        let show_req = tonic::Request::new(object::show::Request {
+            space_id: space_id.to_string(),
+            object_id: list_id.to_string(),
+            ..Default::default()
+        });
+        let show_res = client
+            .object_show(show_req)
+            .await
+            .context("get_list_name error")?
+            .into_inner();
+
+        if let Some(e) = &show_res.error {
+            if e.code != 0 {
+                anyhow::bail!("ObjectShow failed ({}): {}", e.code, e.description);
+            }
+        }
+
+        // Step 2: Read setOf from details[0]
+        let details = show_res
+            .object_view
+            .as_ref()
+            .and_then(|v| v.details.first())
+            .and_then(|d| d.details.as_ref())
+            .ok_or_else(|| anyhow::anyhow!("no details in ObjectShow response"))?;
+
+        let set_of_ids: Vec<String> =
+            match details.fields.get("setOf").and_then(|v| v.kind.as_ref()) {
+                Some(prost_types::value::Kind::ListValue(list)) => list
+                    .values
+                    .iter()
+                    .map(|v| extract_string(Some(v)))
+                    .collect(),
+                _ => vec![], // Returns an empty Vec if it's missing or not a ListValue
+            };
+        // Step 3: Resolve each type ID to its uniqueKey
+        let mut source_keys = Vec::new();
+        for type_id in &set_of_ids {
+            let req = tonic::Request::new(object::show::Request {
+                space_id: space_id.to_string(),
+                object_id: type_id.clone(),
+                ..Default::default()
+            });
+            let res = client.object_show(req).await?.into_inner();
+
+            let unique_key = res
+                .object_view
+                .as_ref()
+                .and_then(|v| v.details.first())
+                .and_then(|d| d.details.as_ref())
+                .and_then(|d| d.fields.get("uniqueKey"))
+                .and_then(|v| {
+                    if let Some(prost_types::value::Kind::StringValue(s)) = &v.kind {
+                        Some(s.clone())
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or_default();
+
+            if !unique_key.is_empty() {
+                source_keys.push(unique_key);
+            }
+        }
+
+        // Step 4: ObjectSearchSubscribe with source=[uniqueKeys]
+        let search_req = tonic::Request::new(object::search_subscribe::Request {
+            space_id: space_id.to_string(),
+            sub_id: format!("set-{}", list_id),
+            source: source_keys,
+            keys: vec!["id".to_string(), "name".to_string()],
+            ..Default::default()
+        });
+        let search_res = client
+            .object_search_subscribe(search_req)
+            .await?
+            .into_inner();
+
+        if let Some(e) = &search_res.error {
+            if e.code != 0 {
+                anyhow::bail!(
+                    "ObjectSearchSubscribe failed ({}): {}",
+                    e.code,
+                    e.description
+                );
+            }
+        }
+
+        let results = search_res
+            .records
+            .into_iter()
+            .filter_map(|record| {
+                let id = extract_string(record.fields.get("id"));
+                let name = extract_string(record.fields.get("name"));
+                Some((id, name))
+            })
+            .collect();
+
         Ok(results)
     }
 }
