@@ -1,7 +1,7 @@
 use crate::components::add_properties::*;
 use crate::components::button::*;
 use crate::components::choose_view::ChooseView;
-use crate::components::properties_row::PropertiesRow;
+use crate::components::properties_row::*;
 use crate::components::row::*;
 use crate::components::scroll_area::*;
 use crate::components::separator::Separator;
@@ -9,22 +9,22 @@ use crate::components::sheet::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
 use dioxus_primitives::scroll_area::ScrollDirection;
+use std::collections::HashMap;
 use std::vec;
-
 #[component]
 pub fn EditView(
-    space_id: Signal<String>,
-    list_id: Signal<String>,
+    space_id: String,
+    list_id: String,
     view_id: Store<String>,
-    properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>>,
-    all_properties: Store<Vec<PropertyInfo>>,
+    properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
+    all_properties: Store<Vec<RelationInfo>>,
 ) -> Element {
     let mut open = use_signal(|| false);
     rsx! {
         ButtonHolder {
             Button {
                 variant: ButtonVariant::Secondary,
-                onclick: move |_| { open.set(true) },
+                onclick: move |_| open.set(true),
                 "Edit view"
             }
         }
@@ -35,7 +35,7 @@ pub fn EditView(
                         ChooseView { space_id, list_id, view_id }
                     }
                     Separator {}
-                    PropertiesRow { properties }
+                    EditRelations { properties }
                     AddProperties { properties, all_properties }
                 }
             }

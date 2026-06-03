@@ -36,45 +36,32 @@
 - [ ] Standalone app (independent of Anytype desktop)
 <!--- [ ] Timeline/Calendar view-->
 
-## How to use
-
-**⚠️ Requirement:** The current version of AnyTask requires a **running official Anytype desktop client** on the local network to function.
-
-### Windows
-
-- Open Anytype app
-- Set server IP to 127.0.0.1:31009
-- Request one-time code
-- Enter your account
-
-### Android
-
-- Run Anytype and AnyTask apps on desktop device
-- Set server IP to your desktop device IP, with port 31010 (example: 10.0.0.45:31010)
-  - both devices should be connected to the same network
-- Request one-time code
-- Enter your account
-
 ## Developing
 
-### Dependencies
-
-- Client API code is generated with [openapi-generator](https://github.com/OpenAPITools/openapi-generator)
-- [anytype-api](https://github.com/anyproto/anytype-api/)
-- [dioxus-cli](https://github.com/DioxusLabs/dioxus)
-
-#### Windows, Linux
-
-```bash
-cargo install --git https://github.com/DioxusLabs/dioxus dioxus-cli --locked
-```
-
-#### NixOS
+### NixOS
 
 You can install development environment with all dependencies using [devenv](https://devenv.sh/).
 
 ```bash
 devenv shell -v
+```
+
+```bash
+devenv tasks run engine:build           # build anytype-heart library
+devenv tasks run engine:build-linux     # build anytype-heart library for linux
+devenv tasks run engine:build-android   # build anytype-heart library for android
+devenv tasks run engine:build-windows   # build anytype-heart library for windows
+
+```
+
+#### Other (Windows, Linux, Mac)
+
+### Dependencies
+
+- [dioxus-cli](https://github.com/DioxusLabs/dioxus)
+
+```bash
+cargo install --git https://github.com/DioxusLabs/dioxus dioxus-cli --locked
 ```
 
 ### Running

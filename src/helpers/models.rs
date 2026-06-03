@@ -1,6 +1,12 @@
 use dioxus::prelude::*;
-use openapi::models::Tag;
 use serde::{Deserialize, Serialize};
+#[derive(Eq, Hash, PartialEq, Clone, Debug, Serialize, Deserialize)]
+pub struct RelationKey(pub String);
+impl RelationKey {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
 #[derive(Eq, Hash, PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct PropertyID(pub String);
 impl PropertyID {
@@ -17,14 +23,14 @@ pub enum DateTimeFormat {
 }
 pub const NAME_PROPERTY_ID_STR: &str = "name_property_id";
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct PropertyInfo {
-    pub id: PropertyID,
+pub struct RelationInfo {
+    // pub id: PropertyID,
+    pub key: RelationKey,
     pub name: String,
     pub optional: OptionalInfo,
 }
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub enum OptionalInfo {
-    Select(Vec<Tag>),
     Date,
     Checkbox,
     #[default]
@@ -119,7 +125,7 @@ pub trait PropertyRenderer {
         &self,
         space_id: String,
         object_id: String,
-        info: PropertyInfo,
+        info: RelationInfo,
         settings: PropertySettings,
     ) -> Element;
 }

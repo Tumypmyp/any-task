@@ -2,11 +2,12 @@ use crate::components::button::*;
 use crate::components::row::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
+use std::collections::HashMap;
 use std::vec;
 #[component]
 pub fn AddProperties(
-    properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>>,
-    all_properties: Store<Vec<PropertyInfo>>,
+    properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
+    all_properties: Store<Vec<RelationInfo>>,
 ) -> Element {
     rsx! {
         Row { position: Position::Middle,
@@ -14,7 +15,7 @@ pub fn AddProperties(
         }
         for property in all_properties.read().clone().iter() {
             ShowProperty {
-                key: "{property.id.as_str()}",
+                key: "{property.key.as_str()}",
                 property: property.clone(),
                 properties,
             }
@@ -23,8 +24,8 @@ pub fn AddProperties(
 }
 #[component]
 pub fn ShowProperty(
-    property: PropertyInfo,
-    properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>>,
+    property: RelationInfo,
+    properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
 ) -> Element {
     let name = property.clone().name;
     rsx! {
@@ -40,11 +41,12 @@ pub fn ShowProperty(
                 };
                 properties
                     .with_mut(|v| {
-                        if let Some(last_row) = v.last_mut() {
-                            last_row.push((property.clone(), settings));
-                        } else {
-                            v.push(vec![(property.clone(), settings)]);
-                        }
+                        v.insert(property.clone().key, (property.clone(), settings));
+                        // if let Some(last_row) = v.last_mut() {
+                        //     last_row.push((property.clone(), settings));
+                        // } else {
+                        //     v.push(vec![(property.clone(), settings)]);
+                        // }
                     });
             },
             "{name}"

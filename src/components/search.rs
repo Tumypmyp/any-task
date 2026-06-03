@@ -11,7 +11,6 @@ struct Object {
     space_id: String,
     data: ApimodelObject,
 }
-
 #[component]
 pub fn Search(space_id: String, types: Vec<String>) -> Element {
     let space_id2 = space_id.clone();
@@ -21,7 +20,6 @@ pub fn Search(space_id: String, types: Vec<String>) -> Element {
         let space_id = space_id2.clone();
         async move { client.get_types(space_id, types).await }
     });
-
     let Some(result) = &*resp.read() else {
         return rsx! { "Loading..." };
     };
@@ -40,16 +38,6 @@ pub fn Search(space_id: String, types: Vec<String>) -> Element {
                     .collect()
             })
             .unwrap_or_default(),
-        // {
-        //     for object in s.data.clone().unwrap() {
-        //         let obj = Object {
-        //             name: object.clone().name.unwrap(),
-        //             object_id: object.clone().id.unwrap(),
-        //             data: object.clone(),
-        //         };
-        //         objects.push(obj);
-        //     }
-        // }
         Err(e) => {
             tracing::error!("Got error loading objects: {:#?}", e);
             return rsx! { "Error: {e}" };
