@@ -1,6 +1,13 @@
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 #[derive(Eq, Hash, PartialEq, Clone, Debug, Serialize, Deserialize)]
+pub struct RelationKey(pub String);
+impl RelationKey {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+#[derive(Eq, Hash, PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct PropertyID(pub String);
 impl PropertyID {
     pub fn as_str(&self) -> &str {
@@ -16,8 +23,9 @@ pub enum DateTimeFormat {
 }
 pub const NAME_PROPERTY_ID_STR: &str = "name_property_id";
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct PropertyInfo {
-    pub id: PropertyID,
+pub struct RelationInfo {
+    // pub id: PropertyID,
+    pub key: RelationKey,
     pub name: String,
     pub optional: OptionalInfo,
 }
@@ -60,7 +68,10 @@ impl Default for DateSettings {
 }
 impl Default for GeneralPropertySettings {
     fn default() -> Self {
-        Self { width: 60.0, height: 40.0 }
+        Self {
+            width: 60.0,
+            height: 40.0,
+        }
     }
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -74,10 +85,11 @@ impl Default for PropertySettings {
         Self::General(GeneralPropertySettings::default())
     }
 }
-pub const NAME_PROPERTY_SETTINGS: PropertySettings = PropertySettings::General(GeneralPropertySettings {
-    width: 100.0,
-    height: 40.0,
-});
+pub const NAME_PROPERTY_SETTINGS: PropertySettings =
+    PropertySettings::General(GeneralPropertySettings {
+        width: 100.0,
+        height: 40.0,
+    });
 impl PropertySettings {
     pub fn height(&self) -> f64 {
         match self {
@@ -113,7 +125,7 @@ pub trait PropertyRenderer {
         &self,
         space_id: String,
         object_id: String,
-        info: PropertyInfo,
+        info: RelationInfo,
         settings: PropertySettings,
     ) -> Element;
 }

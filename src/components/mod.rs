@@ -9,6 +9,8 @@ pub mod edit_view;
 pub mod header;
 pub mod input;
 pub mod label;
+pub mod object_row;
+pub mod properties;
 pub mod properties_row;
 pub mod row;
 pub mod scroll_area;
@@ -18,5 +20,3 @@ pub mod sheet;
 pub mod slider;
 pub mod switch;
 pub mod toast;
-
-pub mod object_row;

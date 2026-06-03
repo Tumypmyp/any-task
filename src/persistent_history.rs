@@ -2,7 +2,7 @@ use dioxus_history::History;
 use dioxus_sdk_storage::{LocalStorage, StorageBacking};
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
-const HISTORY_KEY: &str = "dioxus_history_state";
+const HISTORY_KEY: &str = "dioxus_history_state789";
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct PersistentState {
     current: String,
@@ -20,14 +20,13 @@ impl Default for PersistentHistory {
 }
 impl PersistentHistory {
     pub fn with_initial_path(path: impl ToString) -> Self {
-        let state = <LocalStorage as StorageBacking>::get::<
-            PersistentState,
-        >(&HISTORY_KEY.to_string())
-            .unwrap_or_else(|| PersistentState {
-                current: path.to_string(),
-                history: Vec::new(),
-                future: Vec::new(),
-            });
+        let state =
+            <LocalStorage as StorageBacking>::get::<PersistentState>(&HISTORY_KEY.to_string())
+                .unwrap_or_else(|| PersistentState {
+                    current: path.to_string(),
+                    history: Vec::new(),
+                    future: Vec::new(),
+                });
         Self {
             state: RefCell::new(state),
             base_path: None,

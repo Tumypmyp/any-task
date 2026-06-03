@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 mod persistent_history;
 use persistent_history::*;
 use std::rc::Rc;
-pub const USER_SETTINGS_KEY: &str = "settings-~aaabbcccdeefffggg";
+pub const USER_SETTINGS_KEY: &str = "settings_654";
 use crate::helpers::api_client::Client;
 use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
@@ -39,9 +39,9 @@ enum Route {
     #[route("/login")]
     Login {},
     #[route("/space/:space_id")]
-     Space { space_id: String },
-   #[route("/space/:space_id/list/:list_id")]
-    List { space_id: String , list_id: String},
+    Space { space_id: String },
+    #[route("/space/:space_id/list/:list_id")]
+    List { space_id: String, list_id: String },
 }
 #[cfg_attr(feature = "bundle", windows_subsystem = "windows")]
 fn main() {

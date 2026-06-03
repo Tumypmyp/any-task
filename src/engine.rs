@@ -6,12 +6,8 @@ unsafe extern "C" {
     fn StopAnytypeEngine();
 }
 pub fn start_engine(grpc_addr: &str) -> Result<(), String> {
-    if TcpStream::connect_timeout(&grpc_addr.parse().unwrap(), Duration::from_millis(50))
-        .is_ok()
-    {
-        tracing::info!(
-            "Anytype Engine is already running from a previous session. Reusing it."
-        );
+    if TcpStream::connect_timeout(&grpc_addr.parse().unwrap(), Duration::from_millis(50)).is_ok() {
+        tracing::info!("Anytype Engine is already running from a previous session. Reusing it.");
         return Ok(());
     }
     unsafe {

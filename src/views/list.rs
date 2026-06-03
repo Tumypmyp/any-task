@@ -10,26 +10,28 @@ use crate::protos::anytype_model::*;
 use dioxus::prelude::*;
 use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
+use std::collections::HashMap;
 use std::vec;
 #[component]
-pub fn List(space_id: String, list_id: String) -> Element {
+pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Element {
     tracing::info!("loading space {space_id}, list {list_id}");
-    let space_id = use_signal(|| space_id);
-    let list_id = use_signal(|| list_id);
     let view_id = use_store(|| "".to_string());
     let storage_key = format!("properties-list-view-{}", list_id());
     let mut properties = use_synced_storage::<
         LocalStorage,
-        Vec<Vec<(PropertyInfo, PropertySettings)>>,
+        HashMap<RelationKey, (RelationInfo, PropertySettings)>,
     >(storage_key, || {
-        vec![vec![(
-            PropertyInfo {
-                id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
-                name: "Name".to_string(),
-                optional: OptionalInfo::Other,
-            },
-            NAME_PROPERTY_SETTINGS,
-        )]]
+        HashMap::from([(
+            RelationKey("name".to_string()),
+            (
+                RelationInfo {
+                    name: "Name".to_string(),
+                    key: RelationKey("name".to_string()),
+                    optional: OptionalInfo::Other,
+                },
+                NAME_PROPERTY_SETTINGS,
+            ),
+        )])
     });
     let properties_store = use_store(|| properties.read().clone());
     use_effect(move || {
@@ -37,9 +39,9 @@ pub fn List(space_id: String, list_id: String) -> Element {
         tracing::info!("saved the properties: {:#?}", store_value);
         *properties.write() = store_value;
     });
-    let mut all_properties: Store<Vec<PropertyInfo>> = use_store(|| {
-        vec![PropertyInfo {
-            id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
+    let mut all_properties: Store<Vec<RelationInfo>> = use_store(|| {
+        vec![RelationInfo {
+            key: RelationKey("name".to_string()),
             name: "Name".to_string(),
             optional: OptionalInfo::Other,
         }]
@@ -56,7 +58,7 @@ pub fn List(space_id: String, list_id: String) -> Element {
             match resp {
                 Ok(props) => {
                     for prop in props {
-                        let property_id = PropertyID(prop.0.clone());
+                        // let property_id = PropertyID(prop.0.clone());
                         let property_name = prop.1.clone();
                         let format = prop.3.clone();
                         let optional_info = match format {
@@ -64,9 +66,9 @@ pub fn List(space_id: String, list_id: String) -> Element {
                             RelationFormat::Checkbox => OptionalInfo::Checkbox,
                             _ => OptionalInfo::Other,
                         };
-                        all_properties.write().push(PropertyInfo {
-                            id: property_id.clone(),
+                        all_properties.write().push(RelationInfo {
                             name: property_name,
+                            key: RelationKey(prop.2.clone()),
                             optional: optional_info,
                         });
                     }
@@ -99,8 +101,8 @@ pub fn ListHeader(
     space_id: ReadSignal<String>,
     list_id: ReadSignal<String>,
     view_id: Store<String>,
-    properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>>,
-    all_properties: Store<Vec<PropertyInfo>>,
+    properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
+    all_properties: Store<Vec<RelationInfo>>,
 ) -> Element {
     let resp = use_resource({
         move || async move {
@@ -138,7 +140,7 @@ pub fn Objects(
     space_id: ReadSignal<String>,
     list_id: ReadSignal<String>,
     view_id: Store<String>,
-    properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>>,
+    properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
 ) -> Element {
     let resp = use_resource({
         move || async move {
@@ -146,16 +148,13 @@ pub fn Objects(
             let client = client_guard
                 .as_ref()
                 .ok_or_else(|| anyhow::anyhow!("No API client available, try reloading the app"))?;
-            client
-                .get_list_objects(&space_id(), &list_id()) //, view_id())
-                .await
+            client.get_list_objects(&space_id(), &list_id()).await
         }
     });
     let resp_value = resp.read();
     let objects = match resp_value.as_ref() {
         Some(Ok(objs)) => objs,
         Some(Err(err)) => {
-            // message::error("Failed to fetch objects", err);
             return rsx! {};
         }
         None => {
@@ -164,20 +163,12 @@ pub fn Objects(
     };
     rsx! {
         for obj in objects {
-                Separator {
-                    style: "margin: 2px 0; width: 95vw;",
-                    horizontal: true,
-                    decorative: true,
-                }
-                ObjectRow {
-                    key: "{obj.clone().0}",
-                    name: obj.clone().1,
-                    space_id,
-                    id: obj.clone().0,
-                    properties,
-                    // data: obj
-                            // .clone(),
-                }
+            Separator {
+                style: "margin: 2px 0; width: 95vw;",
+                horizontal: true,
+                decorative: true,
+            }
+            ObjectView { space_id, id: obj.clone(), properties }
         }
     }
 }

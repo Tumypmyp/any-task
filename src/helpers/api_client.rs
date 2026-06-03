@@ -262,16 +262,11 @@ impl Client {
                     value: Some(prost_types::Value {
                         kind: Some(prost_types::value::Kind::ListValue(
                             prost_types::ListValue {
-                                values: vec![
-                                    prost_types::Value {
-                                        kind: Some(prost_types::value::Kind::NumberValue(
-                                            Layout::Set as i32 as f64,
-                                        )),
-                                    },
-                                    // prost_types::Value {
-                                    //     kind: Some(prost_types::value::Kind::NumberValue(14.0)),
-                                    // },
-                                ],
+                                values: vec![prost_types::Value {
+                                    kind: Some(prost_types::value::Kind::NumberValue(
+                                        Layout::Set as i32 as f64,
+                                    )),
+                                }],
                             },
                         )),
                     }),
@@ -398,14 +393,8 @@ impl Client {
         );
         Ok(name)
     }
-    pub async fn get_list_objects(
-        &self,
-        space_id: &str,
-        list_id: &str,
-    ) -> Result<Vec<(String, String)>> {
+    pub async fn get_list_objects(&self, space_id: &str, list_id: &str) -> Result<Vec<String>> {
         let mut client = self.client.clone();
-
-        // Step 1: ObjectShow on the set to get its setOf field
         let show_req = tonic::Request::new(object::show::Request {
             space_id: space_id.to_string(),
             object_id: list_id.to_string(),
@@ -416,21 +405,17 @@ impl Client {
             .await
             .context("get_list_name error")?
             .into_inner();
-
         if let Some(e) = &show_res.error {
             if e.code != 0 {
                 anyhow::bail!("ObjectShow failed ({}): {}", e.code, e.description);
             }
         }
-
-        // Step 2: Read setOf from details[0]
         let details = show_res
             .object_view
             .as_ref()
             .and_then(|v| v.details.first())
             .and_then(|d| d.details.as_ref())
             .ok_or_else(|| anyhow::anyhow!("no details in ObjectShow response"))?;
-
         let set_of_ids: Vec<String> =
             match details.fields.get("setOf").and_then(|v| v.kind.as_ref()) {
                 Some(prost_types::value::Kind::ListValue(list)) => list
@@ -438,9 +423,8 @@ impl Client {
                     .iter()
                     .map(|v| extract_string(Some(v)))
                     .collect(),
-                _ => vec![], // Returns an empty Vec if it's missing or not a ListValue
+                _ => vec![],
             };
-        // Step 3: Resolve each type ID to its uniqueKey
         let mut source_keys = Vec::new();
         for type_id in &set_of_ids {
             let req = tonic::Request::new(object::show::Request {
@@ -449,7 +433,6 @@ impl Client {
                 ..Default::default()
             });
             let res = client.object_show(req).await?.into_inner();
-
             let unique_key = res
                 .object_view
                 .as_ref()
@@ -464,25 +447,21 @@ impl Client {
                     }
                 })
                 .unwrap_or_default();
-
             if !unique_key.is_empty() {
                 source_keys.push(unique_key);
             }
         }
-
-        // Step 4: ObjectSearchSubscribe with source=[uniqueKeys]
         let search_req = tonic::Request::new(object::search_subscribe::Request {
             space_id: space_id.to_string(),
             sub_id: format!("set-{}", list_id),
             source: source_keys,
-            keys: vec!["id".to_string(), "name".to_string()],
+            keys: vec!["id".to_string()],
             ..Default::default()
         });
         let search_res = client
             .object_search_subscribe(search_req)
             .await?
             .into_inner();
-
         if let Some(e) = &search_res.error {
             if e.code != 0 {
                 anyhow::bail!(
@@ -492,18 +471,44 @@ impl Client {
                 );
             }
         }
-
         let results = search_res
             .records
             .into_iter()
             .filter_map(|record| {
                 let id = extract_string(record.fields.get("id"));
-                let name = extract_string(record.fields.get("name"));
-                Some((id, name))
+                Some(id)
             })
             .collect();
-
         Ok(results)
+    }
+    pub async fn get_object_properties(
+        &self,
+        space_id: &str,
+        object_id: &str,
+    ) -> Result<std::collections::HashMap<String, prost_types::Value>> {
+        let mut client = self.client.clone();
+        let show_res = client
+            .object_show(tonic::Request::new(object::show::Request {
+                space_id: space_id.to_string(),
+                object_id: object_id.to_string(),
+                ..Default::default()
+            }))
+            .await
+            .context("get_object_properties: object_show failed")?
+            .into_inner();
+        if let Some(e) = &show_res.error {
+            if e.code != 0 {
+                anyhow::bail!("ObjectShow failed ({}): {}", e.code, e.description);
+            }
+        }
+        let fields = show_res
+            .object_view
+            .as_ref()
+            .and_then(|v| v.details.first())
+            .and_then(|d| d.details.as_ref())
+            .map(|d| d.fields.clone())
+            .unwrap_or_default();
+        Ok(fields.into_iter().collect())
     }
 }
 use url::Url;

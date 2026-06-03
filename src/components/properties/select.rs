@@ -2,8 +2,6 @@ use crate::API_CLIENT;
 use crate::components::select::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
-use openapi::models::SelectPropertyValue;
-use openapi::models::Tag;
 impl PropertyRenderer for SelectPropertyValue {
     fn render(
         &self,
@@ -34,33 +32,7 @@ pub fn SelectPValue(
     let space_id_clone = use_signal(|| space_id.clone());
     let object_id_clone = use_signal(|| object_id.clone());
     tracing::debug!("{:#?}", prop.clone().select.unwrap_or_default());
-    rsx! {
-        Select::<Option<String>> {
-            width: "100%",
-            height: "100%",
-            default_value: prop.clone().select.unwrap_or_default().id.clone(),
-            on_value_change: move | v :
-                    Option < Option < String >>| { let prop = prop.clone(); spawn(async move {
-                let prop = prop.clone();
-                spawn(async move {
-                    tracing::debug!("chosen option: {:#?}", v);
-                    API_CLIENT
-                        .read()
-                        .update_select_property(
-                            space_id_clone(),
-                            object_id_clone(),
-                            prop.key.unwrap(),
-                            v.unwrap(),
-                        )
-                        .await;
-                });
-            },
-            SelectTrigger { width: "100%", height: "100%",
-                SelectValue { width: "100%", height: "100%" }
-            }
-            SelectPropertySelectList { options }
-        }
-    }
+    rsx! {}
 }
 #[component]
 pub fn SelectPropertySelectList(options: Vec<Tag>) -> Element {

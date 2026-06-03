@@ -9,8 +9,7 @@ pub fn Slider(props: SliderProps) -> Element {
         slider::Slider {
             class: "slider",
             value: props.value,
-            default_value: props
-                                                                                                                                            .default_value,
+            default_value: props.default_value,
             min: props.min,
             max: props.max,
             step: props.step,
@@ -19,8 +18,7 @@ pub fn Slider(props: SliderProps) -> Element {
             inverted: props.inverted,
             on_value_change: props.on_value_change,
             label: props.label,
-            attributes: props
-                                                                                                                                            .attributes,
+            attributes: props.attributes,
             {props.children}
         }
     }

@@ -15,40 +15,7 @@ pub fn DateSettingsEdit(
     format: DateTimeFormat,
     on_change: EventHandler<DateTimeFormat>,
 ) -> Element {
-    rsx! {
-        Select::<DateTimeFormat> {
-            default_value: format,
-            on_value_change: move | v :
-                    Option < DateTimeFormat >| { if let Some(f) = v { on_change.call(f); } }
-                if let Some(f) = v {
-                    on_change.call(f);
-                }
-            },
-            SelectTrigger { SelectValue {} }
-            SelectList {
-                SelectGroup {
-                    SelectOption::<DateTimeFormat> {
-                        index: 0usize,
-                        value: DateTimeFormat::DateTime,
-                        text_value: "DateTime",
-                        "DateTime"
-                    }
-                    SelectOption::<DateTimeFormat> {
-                        index: 1usize,
-                        value: DateTimeFormat::Date,
-                        text_value: "Date",
-                        "Date"
-                    }
-                    SelectOption::<DateTimeFormat> {
-                        index: 2usize,
-                        value: DateTimeFormat::Time,
-                        text_value: "Time",
-                        "Time"
-                    }
-                }
-            }
-        }
-    }
+    rsx! {}
 }
 impl PropertyRenderer for DatePropertyValue {
     fn render(

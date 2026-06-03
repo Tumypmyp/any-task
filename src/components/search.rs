@@ -24,39 +24,34 @@ pub fn Search(space_id: String, types: Vec<String>) -> Element {
         return rsx! { "Loading..." };
     };
     let objects: Vec<_> = match result {
-        Ok(s) => {
-            s.data
-                .as_ref()
-                .map(|data| {
-                    data.iter()
-                        .map(|o| Object {
-                            name: o.name.clone().unwrap_or_default(),
-                            object_id: o.id.clone().unwrap_or_default(),
-                            space_id: space_id.clone(),
-                            data: o.clone(),
-                        })
-                        .collect()
-                })
-                .unwrap_or_default()
-        }
+        Ok(s) => s
+            .data
+            .as_ref()
+            .map(|data| {
+                data.iter()
+                    .map(|o| Object {
+                        name: o.name.clone().unwrap_or_default(),
+                        object_id: o.id.clone().unwrap_or_default(),
+                        space_id: space_id.clone(),
+                        data: o.clone(),
+                    })
+                    .collect()
+            })
+            .unwrap_or_default(),
         Err(e) => {
             tracing::error!("Got error loading objects: {:#?}", e);
             return rsx! { "Error: {e}" };
         }
     };
     let properties: Store<Vec<Vec<(PropertyInfo, PropertySettings)>>> = use_store(|| {
-        vec![
-            vec![
-                (
-                    PropertyInfo {
-                        id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
-                        name: "Name".to_string(),
-                        optional: OptionalInfo::Other,
-                    },
-                    NAME_PROPERTY_SETTINGS,
-                ),
-            ],
-        ]
+        vec![vec![(
+            PropertyInfo {
+                id: PropertyID(NAME_PROPERTY_ID_STR.to_string()),
+                name: "Name".to_string(),
+                optional: OptionalInfo::Other,
+            },
+            NAME_PROPERTY_SETTINGS,
+        )]]
     });
     rsx! {
         Column {
@@ -65,8 +60,7 @@ pub fn Search(space_id: String, types: Vec<String>) -> Element {
                     key: "{obj.object_id}",
                     name: obj.name.clone(),
                     space_id: obj.space_id.clone(),
-                    object_id: obj.object_id
-                                                                                                                                                                                                                                    .clone(),
+                    object_id: obj.object_id.clone(),
                     properties,
                     data: obj.data.clone(),
                 }

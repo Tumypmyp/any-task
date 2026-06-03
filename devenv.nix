@@ -200,12 +200,12 @@ in {
 
   pre-commit.hooks = {
     alejandra.enable = true;
-    # dx-fmt = {
-    #   enable = true;
-    #   name = "Dioxus Format";
-    #   entry = "dx fmt --all-code";
-    #   files = "\\.rs$";
-    #   pass_filenames = false;
-    # };
+    dx-fmt = {
+      enable = true;
+      name = "Dioxus Format";
+      entry = "dx fmt";
+      files = "\\.rs$";
+      pass_filenames = false;
+    };
   };
 }

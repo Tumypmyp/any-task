@@ -1,12 +1,11 @@
 use crate::{components::button::*, helpers::*};
 use dioxus::prelude::*;
-use openapi::models::*;
 #[component]
 pub fn PropertyValue(
     space_id: String,
     object_id: String,
-    data: ReadSignal<Option<PropertyWithValue>>,
-    info: ReadSignal<(PropertyInfo, PropertySettings)>,
+    data: ReadSignal<prost_types::Value>,
+    info: ReadSignal<(RelationInfo, PropertySettings)>,
 ) -> Element {
     let (p_info, settings) = info();
     rsx! {
@@ -14,30 +13,14 @@ pub fn PropertyValue(
             style: "display: flex; align-items: center; justify-content: center;",
             width: "{info().1.width()}px",
             height: "{info().1.height()}px",
-            match data() {
-                Some(v) => v.render(space_id, object_id, p_info, settings),
+            match data().kind {
+                Some(prost_types::value::Kind::StringValue(s)) => rsx! {
+                    Button { "{s}" }
+                },
                 _ => rsx! {
                     Button { variant: ButtonVariant::Ghost, " " }
                 },
             }
-        }
-    }
-}
-impl PropertyRenderer for PropertyWithValue {
-    fn render(
-        &self,
-        space_id: String,
-        object_id: String,
-        p_info: PropertyInfo,
-        settings: PropertySettings,
-    ) -> Element {
-        match self {
-            Self::Text(v) => v.render(space_id, object_id, p_info, settings),
-            Self::Checkbox(v) => v.render(space_id, object_id, p_info, settings),
-            Self::Select(v) => v.render(space_id, object_id, p_info, settings),
-            Self::Date(v) => v.render(space_id, object_id, p_info, settings),
-            Self::Number(v) => v.render(space_id, object_id, p_info, settings),
-            _ => rsx!(),
         }
     }
 }

@@ -1,20 +1,20 @@
+use super::super::calendar::*;
+use super::super::popover::*;
 use dioxus::prelude::*;
 use dioxus_icons::lucide::ChevronDown;
 use dioxus_primitives::{
+    ContentAlign,
     calendar::DateRange,
     date_picker::{
-        self, DatePickerDaySegmentProps, DatePickerInputProps,
-        DatePickerMonthSegmentProps, DatePickerSeparatorProps,
-        DatePickerYearSegmentProps, DateRangePickerEndValueProps,
+        self, DatePickerDaySegmentProps, DatePickerInputProps, DatePickerMonthSegmentProps,
+        DatePickerSeparatorProps, DatePickerYearSegmentProps, DateRangePickerEndValueProps,
         DateRangePickerStartValueProps,
     },
-    dioxus_attributes::attributes, merge_attributes,
+    dioxus_attributes::attributes,
+    merge_attributes,
     popover::{PopoverContentProps, PopoverTriggerProps},
-    ContentAlign,
 };
 use time::{Date, Month};
-use super::super::calendar::*;
-use super::super::popover::*;
 #[css_module("/src/components/date_picker/style.css")]
 struct Styles;
 fn fixed_date(year: i32, month: Month, day: u8) -> Date {
@@ -116,20 +116,19 @@ pub struct DateRangePickerProps {
 }
 #[component]
 pub fn DatePicker(props: DatePickerProps) -> Element {
-    let base = attributes!(div { class : Styles::dx_date_picker });
+    let base = attributes!(div {
+        class: Styles::dx_date_picker
+    });
     let merged = merge_attributes(vec![base, props.attributes]);
     let month_count = props.month_count.max(1);
-    use_context_provider(|| StyledDatePickerContext {
-        month_count,
-    });
+    use_context_provider(|| StyledDatePickerContext { month_count });
     rsx! {
         div {
             date_picker::DatePicker {
                 on_value_change: props.on_value_change,
                 selected_date: props.selected_date,
                 disabled: props.disabled,
-                read_only: props
-                                                                                                                                                                                        .read_only,
+                read_only: props.read_only,
                 min_date: props.min_date,
                 max_date: props.max_date,
                 disabled_ranges: props.disabled_ranges,
@@ -148,12 +147,12 @@ pub fn DatePicker(props: DatePickerProps) -> Element {
 }
 #[component]
 pub fn DateRangePicker(props: DateRangePickerProps) -> Element {
-    let base = attributes!(div { class : Styles::dx_date_picker });
+    let base = attributes!(div {
+        class: Styles::dx_date_picker
+    });
     let merged = merge_attributes(vec![base, props.attributes]);
     let month_count = props.month_count.max(1);
-    use_context_provider(|| StyledDatePickerContext {
-        month_count,
-    });
+    use_context_provider(|| StyledDatePickerContext { month_count });
     rsx! {
         div {
             date_picker::DateRangePicker {
@@ -168,12 +167,9 @@ pub fn DateRangePicker(props: DateRangePickerProps) -> Element {
                 attributes: merged,
                 date_picker::DatePickerPopover { popover_root: PopoverRoot,
                     DateRangePickerInput {
-                        on_format_day_placeholder: props
-                                                                                                                                                                                                                                                                                .on_format_day_placeholder,
-                        on_format_month_placeholder: props
-                                                                                                                                                                                                                                                                                .on_format_month_placeholder,
-                        on_format_year_placeholder: props
-                                                                                                                                                                                                                                                                                .on_format_year_placeholder,
+                        on_format_day_placeholder: props.on_format_day_placeholder,
+                        on_format_month_placeholder: props.on_format_month_placeholder,
+                        on_format_year_placeholder: props.on_format_year_placeholder,
                     }
                 }
             }
@@ -182,26 +178,22 @@ pub fn DateRangePicker(props: DateRangePickerProps) -> Element {
 }
 #[component]
 pub(crate) fn DatePickerInput(props: DatePickerInputProps) -> Element {
-    let base = attributes!(div { class : Styles::dx_date_picker_group });
+    let base = attributes!(div {
+        class: Styles::dx_date_picker_group
+    });
     let merged = merge_attributes(vec![base, props.attributes]);
     let extra_children = props.children;
     let month_count = styled_month_count();
     rsx! {
         date_picker::DatePickerInput {
-            on_format_day_placeholder: props
-                                                                                                                                            .on_format_day_placeholder,
-            on_format_month_placeholder: props
-                                                                                                                                            .on_format_month_placeholder,
-            on_format_year_placeholder: props
-                                                                                                                                            .on_format_year_placeholder,
+            on_format_day_placeholder: props.on_format_day_placeholder,
+            on_format_month_placeholder: props.on_format_month_placeholder,
+            on_format_year_placeholder: props.on_format_year_placeholder,
             attributes: merged,
             date_picker::DatePickerInputValue {
-                on_format_day_placeholder: props
-                                                                                                                                                                                        .on_format_day_placeholder,
-                on_format_month_placeholder: props
-                                                                                                                                                                                        .on_format_month_placeholder,
-                on_format_year_placeholder: props
-                                                                                                                                                                                        .on_format_year_placeholder,
+                on_format_day_placeholder: props.on_format_day_placeholder,
+                on_format_month_placeholder: props.on_format_month_placeholder,
+                on_format_year_placeholder: props.on_format_year_placeholder,
                 DatePickerYearSegment {}
                 DatePickerSeparator {}
                 DatePickerMonthSegment {}
@@ -224,26 +216,22 @@ pub(crate) fn DatePickerInput(props: DatePickerInputProps) -> Element {
 }
 #[component]
 pub(crate) fn DateRangePickerInput(props: DatePickerInputProps) -> Element {
-    let base = attributes!(div { class : Styles::dx_date_picker_group });
+    let base = attributes!(div {
+        class: Styles::dx_date_picker_group
+    });
     let merged = merge_attributes(vec![base, props.attributes]);
     let extra_children = props.children;
     let month_count = styled_month_count();
     rsx! {
         date_picker::DateRangePickerInput {
-            on_format_day_placeholder: props
-                                                                                                                                            .on_format_day_placeholder,
-            on_format_month_placeholder: props
-                                                                                                                                            .on_format_month_placeholder,
-            on_format_year_placeholder: props
-                                                                                                                                            .on_format_year_placeholder,
+            on_format_day_placeholder: props.on_format_day_placeholder,
+            on_format_month_placeholder: props.on_format_month_placeholder,
+            on_format_year_placeholder: props.on_format_year_placeholder,
             attributes: merged,
             date_picker::DateRangePickerInputValue {
-                on_format_day_placeholder: props
-                                                                                                                                                                                        .on_format_day_placeholder,
-                on_format_month_placeholder: props
-                                                                                                                                                                                        .on_format_month_placeholder,
-                on_format_year_placeholder: props
-                                                                                                                                                                                        .on_format_year_placeholder,
+                on_format_day_placeholder: props.on_format_day_placeholder,
+                on_format_month_placeholder: props.on_format_month_placeholder,
+                on_format_year_placeholder: props.on_format_year_placeholder,
                 DateRangePickerStartValue {
                     DatePickerYearSegment {}
                     DatePickerSeparator {}
@@ -303,9 +291,7 @@ pub(crate) fn DatePickerSeparator(props: DatePickerSeparatorProps) -> Element {
     }
 }
 #[component]
-pub(crate) fn DateRangePickerStartValue(
-    props: DateRangePickerStartValueProps,
-) -> Element {
+pub(crate) fn DateRangePickerStartValue(props: DateRangePickerStartValueProps) -> Element {
     rsx! {
         date_picker::DateRangePickerStartValue { {props.children} }
     }

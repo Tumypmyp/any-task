@@ -50,7 +50,6 @@ pub fn Collections(space_id: ReadSignal<String>) -> Element {
                             space_id: space_id(),
                             list_id: id.clone(),
                         });
-
                     },
                     "{name}"
                 }
