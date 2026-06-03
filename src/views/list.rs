@@ -3,7 +3,7 @@ use crate::components::action::{ActionHolder, BaseActions};
 use crate::components::base::message;
 use crate::components::edit_view::*;
 use crate::components::header::{Header, Title};
-use crate::components::object_row::*;
+use crate::components::object_view::*;
 use crate::components::separator::Separator;
 use crate::helpers::*;
 use crate::protos::anytype_model::*;
@@ -12,20 +12,23 @@ use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
 use std::collections::HashMap;
 use std::vec;
+
 #[component]
 pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Element {
     tracing::info!("loading space {space_id}, list {list_id}");
     let view_id = use_store(|| "".to_string());
-    let storage_key = format!("properties-list-view-{}", list_id());
+    let storage_relations_key = format!("list-view-relations-{}", list_id());
+    let storage_view_tree_key = format!("list-view-relations-tree-{}", list_id());
+
     let mut properties = use_synced_storage::<
         LocalStorage,
         HashMap<RelationKey, (RelationInfo, PropertySettings)>,
-    >(storage_key, || {
+    >(storage_relations_key.clone(), || {
         HashMap::from([(
-            RelationKey("name".to_string()),
+            RelationKey(NAME_RELATION_KEY.to_string()),
             (
                 RelationInfo {
-                    name: "Name".to_string(),
+                    name: NAME_RELATION_KEY.to_string(),
                     key: RelationKey("name".to_string()),
                     optional: OptionalInfo::Other,
                 },
@@ -39,45 +42,52 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
         tracing::info!("saved the properties: {:#?}", store_value);
         *properties.write() = store_value;
     });
-    let mut all_properties: Store<Vec<RelationInfo>> = use_store(|| {
-        vec![RelationInfo {
-            key: RelationKey("name".to_string()),
-            name: "Name".to_string(),
-            optional: OptionalInfo::Other,
-        }]
-    });
-    use_effect(move || {
-        spawn(async move {
-            let client_guard = API_CLIENT.read().clone();
-            let Some(client) = client_guard.as_ref() else {
-                tracing::warn!("No API client available");
-                return;
-            };
-            let space_id = space_id();
-            let resp = client.fetch_properties(&space_id).await;
-            match resp {
-                Ok(props) => {
-                    for prop in props {
-                        // let property_id = PropertyID(prop.0.clone());
-                        let property_name = prop.1.clone();
-                        let format = prop.3.clone();
-                        let optional_info = match format {
-                            RelationFormat::Date => OptionalInfo::Date,
-                            RelationFormat::Checkbox => OptionalInfo::Checkbox,
-                            _ => OptionalInfo::Other,
-                        };
-                        all_properties.write().push(RelationInfo {
-                            name: property_name,
-                            key: RelationKey(prop.2.clone()),
-                            optional: optional_info,
-                        });
-                    }
-                }
-                Err(e) => {
-                    tracing::error!("error loading property list: {:#?}", e);
-                }
+
+    let mut positions =
+        use_synced_storage::<LocalStorage, ViewTree>(storage_view_tree_key.clone(), || {
+            ViewTree::Pane {
+                relation_key: RelationKey("name".to_string()),
             }
         });
+    let positions_store = use_store(|| positions.read().clone());
+    use_effect(move || {
+        let store_value = positions_store.read().clone();
+        tracing::info!("saved the properties: {:#?}", store_value);
+        *positions.write() = store_value;
+    });
+
+    let all_properties_res = use_resource(move || async move {
+        let client_guard = API_CLIENT.read();
+        let client = client_guard
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("No API client available"))?;
+        client.fetch_properties(&space_id()).await
+    });
+
+    match &*all_properties_res.read_unchecked() {
+        None => return rsx! { "Loading..." },
+        Some(Err(e)) => return rsx! { "Error: {e}" },
+        Some(Ok(_)) => {}
+    }
+
+    let all_properties: Memo<Vec<RelationInfo>> = use_memo(move || {
+        all_properties_res
+            .read()
+            .as_ref()
+            .and_then(|r| r.as_ref().ok())
+            .map(|props| {
+                let mut sorted_props: Vec<RelationInfo> = props
+                    .iter()
+                    .map(|(_id, name, key, _format)| RelationInfo {
+                        name: name.clone(),
+                        key: RelationKey(key.clone()),
+                        optional: OptionalInfo::Other,
+                    })
+                    .collect();
+                sorted_props.sort_by_cached_key(|prop| prop.name.to_lowercase());
+                sorted_props
+            })
+            .unwrap_or_default()
     });
     rsx! {
         ListHeader {
@@ -85,12 +95,14 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
             list_id,
             view_id,
             properties: properties_store,
+            positions: positions_store,
             all_properties,
         }
         Objects {
             space_id,
             list_id,
             view_id,
+            positions: positions_store,
             properties: properties_store,
         }
         ActionHolder { BaseActions {} }
@@ -102,7 +114,8 @@ pub fn ListHeader(
     list_id: ReadSignal<String>,
     view_id: Store<String>,
     properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
-    all_properties: Store<Vec<RelationInfo>>,
+    positions: Store<ViewTree>,
+    all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
     let resp = use_resource({
         move || async move {
@@ -114,12 +127,8 @@ pub fn ListHeader(
         }
     });
     let name = match &*resp.read() {
-        None => {
-            return rsx! { "Loading..." };
-        }
-        Some(Err(err)) => {
-            return rsx! { "Error: {err}" };
-        }
+        None => return rsx! { "Loading..." },
+        Some(Err(e)) => return rsx! { "Error: {e}" },
         Some(Ok(name)) => name.clone(),
     };
     rsx! {
@@ -129,6 +138,7 @@ pub fn ListHeader(
                 space_id,
                 list_id,
                 view_id,
+                positions,
                 properties,
                 all_properties,
             }
@@ -139,8 +149,9 @@ pub fn ListHeader(
 pub fn Objects(
     space_id: ReadSignal<String>,
     list_id: ReadSignal<String>,
-    view_id: Store<String>,
-    properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
+    view_id: ReadSignal<String>,
+    positions: ReadSignal<ViewTree>,
+    properties: ReadSignal<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
 ) -> Element {
     let resp = use_resource({
         move || async move {
@@ -153,22 +164,23 @@ pub fn Objects(
     });
     let resp_value = resp.read();
     let objects = match resp_value.as_ref() {
-        Some(Ok(objs)) => objs,
-        Some(Err(err)) => {
-            return rsx! {};
-        }
-        None => {
-            return rsx! { "Loading..." };
-        }
+        None => return rsx! { "Loading..." },
+        Some(Err(e)) => return rsx! { "Error: {e}" },
+        Some(Ok(objs)) => objs.clone(),
     };
     rsx! {
-        for obj in objects {
+        for id in objects {
             Separator {
                 style: "margin: 2px 0; width: 95vw;",
                 horizontal: true,
                 decorative: true,
             }
-            ObjectView { space_id, id: obj.clone(), properties }
+            ObjectView {
+                positions,
+                space_id,
+                id,
+                properties,
+            }
         }
     }
 }

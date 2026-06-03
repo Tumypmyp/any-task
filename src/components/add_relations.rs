@@ -5,9 +5,9 @@ use dioxus::prelude::*;
 use std::collections::HashMap;
 use std::vec;
 #[component]
-pub fn AddProperties(
+pub fn AddRelations(
     properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
-    all_properties: Store<Vec<RelationInfo>>,
+    all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
     rsx! {
         Row { position: Position::Middle,
@@ -42,11 +42,6 @@ pub fn ShowProperty(
                 properties
                     .with_mut(|v| {
                         v.insert(property.clone().key, (property.clone(), settings));
-                        // if let Some(last_row) = v.last_mut() {
-                        //     last_row.push((property.clone(), settings));
-                        // } else {
-                        //     v.push(vec![(property.clone(), settings)]);
-                        // }
                     });
             },
             "{name}"

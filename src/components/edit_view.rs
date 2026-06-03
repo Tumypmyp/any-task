@@ -1,7 +1,7 @@
-use crate::components::add_properties::*;
+use crate::components::add_relations::*;
 use crate::components::button::*;
 use crate::components::choose_view::ChooseView;
-use crate::components::properties_row::*;
+use crate::components::edit_relations::*;
 use crate::components::row::*;
 use crate::components::scroll_area::*;
 use crate::components::separator::Separator;
@@ -16,8 +16,9 @@ pub fn EditView(
     space_id: String,
     list_id: String,
     view_id: Store<String>,
+    positions: Store<ViewTree>,
     properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
-    all_properties: Store<Vec<RelationInfo>>,
+    all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
     let mut open = use_signal(|| false);
     rsx! {
@@ -35,8 +36,8 @@ pub fn EditView(
                         ChooseView { space_id, list_id, view_id }
                     }
                     Separator {}
-                    EditRelations { properties }
-                    AddProperties { properties, all_properties }
+                    EditRelations { positions, properties }
+                    AddRelations { properties, all_properties }
                 }
             }
         }

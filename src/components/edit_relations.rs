@@ -12,13 +12,14 @@ use dioxus_desktop::use_window;
 use std::vec;
 #[component]
 pub fn EditRelations(
+    positions: Store<ViewTree>,
     properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
 ) -> Element {
+    // view
     rsx! {
-        Column {
+        Row {
             for (relation_key, property) in properties.read().clone().iter() {
                 Property { relation_key: relation_key.clone(), properties }
-                Separator {}
             }
         }
     }

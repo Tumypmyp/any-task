@@ -3,18 +3,19 @@ use crate::components::button::Button;
 use crate::components::column::Column;
 use crate::components::properties::PropertyValue;
 use crate::components::row::*;
-use crate::helpers::NAME_PROPERTY_ID_STR;
 use crate::helpers::*;
 use dioxus::prelude::*;
 use std::collections::HashMap;
+
 #[derive(Clone, Props, PartialEq)]
-pub struct ObjectProps {
+pub struct ObjectViewProps {
     pub space_id: ReadSignal<String>,
     pub id: ReadSignal<String>,
-    pub properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
+    pub properties: ReadSignal<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
+    pub positions: ReadSignal<ViewTree>,
 }
 #[component]
-pub fn ObjectView(props: ObjectProps) -> Element {
+pub fn ObjectView(props: ObjectViewProps) -> Element {
     let nav = navigator();
     let resp = use_resource({
         move || async move {
@@ -29,19 +30,15 @@ pub fn ObjectView(props: ObjectProps) -> Element {
     });
     let resp_value = resp.read();
     let property_values = match resp_value.as_ref() {
-        Some(Err(err)) => {
-            return rsx! {};
-        }
-        None => {
-            return rsx! { "Loading..." };
-        }
+        Some(Err(e)) => return rsx! { "Error: {e}" },
+        None => return rsx! { "Loading..." },
         Some(Ok(props)) => props,
     };
-    tracing::debug!("got object: {:#?}", property_values);
+    // view
     let rows: Vec<Element> = (props.properties)()
         .into_iter()
         .filter_map(|(key, property)| {
-            let val = property_values.get(property.0.key.as_str())?.clone();
+            let val = property_values.get(key.as_str())?.clone();
             Some(rsx! {
                 Column {
                     PropertyValue {

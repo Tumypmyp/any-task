@@ -7,13 +7,31 @@ impl RelationKey {
         &self.0
     }
 }
-#[derive(Eq, Hash, PartialEq, Clone, Debug, Serialize, Deserialize)]
-pub struct PropertyID(pub String);
-impl PropertyID {
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+pub enum SplitDirection {
+    Row,
+    Column,
 }
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+pub enum ViewTree {
+    Split {
+        direction: SplitDirection,
+        ratio: f32,
+        first: Box<ViewTree>,
+        second: Box<ViewTree>,
+    },
+    Pane {
+        relation_key: RelationKey,
+    },
+}
+
+// #[derive(Eq, Hash, PartialEq, Clone, Debug, Serialize, Deserialize)]
+// pub struct PropertyID(pub String);
+// impl PropertyID {
+//     pub fn as_str(&self) -> &str {
+//         &self.0
+//     }
+// }
 #[derive(Clone, Copy, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub enum DateTimeFormat {
     #[default]
@@ -21,14 +39,14 @@ pub enum DateTimeFormat {
     Date,
     Time,
 }
-pub const NAME_PROPERTY_ID_STR: &str = "name_property_id";
+pub const NAME_RELATION_KEY: &str = "name";
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct RelationInfo {
-    // pub id: PropertyID,
     pub key: RelationKey,
     pub name: String,
     pub optional: OptionalInfo,
 }
+
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub enum OptionalInfo {
     Date,

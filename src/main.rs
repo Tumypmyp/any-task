@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 mod persistent_history;
 use persistent_history::*;
 use std::rc::Rc;
-pub const USER_SETTINGS_KEY: &str = "settings_654";
+pub const USER_SETTINGS_KEY: &str = "settings_65lkj4";
 use crate::helpers::api_client::Client;
 use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
@@ -123,7 +123,7 @@ fn App() -> Element {
         document::Link { rel: "icon", href: FAVICON }
         document::Stylesheet { href: MAIN_CSS }
         document::Stylesheet { href: THEME_CSS }
-        document::Stylesheet { href: asset!("/src/components/button/style.css") }
+        // document::Stylesheet { href: asset!("/src/components/button/style.css") }
         ToastProvider {
             HistoryProvider {
                 history: move |_| {
