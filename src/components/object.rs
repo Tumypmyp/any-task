@@ -11,7 +11,6 @@ use std::collections::HashMap;
 pub struct ObjectProps {
     pub space_id: ReadSignal<String>,
     pub id: ReadSignal<String>,
-    pub properties: ReadSignal<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
     pub positions: Store<HashMap<NodeId, ViewTree>>,
 }
 #[component]

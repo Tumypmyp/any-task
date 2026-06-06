@@ -17,31 +17,7 @@ use std::vec;
 pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Element {
     tracing::info!("loading space {space_id}, list {list_id}");
     let view_id = use_store(|| "".to_string());
-    let storage_relations_key = format!("list-view-relations-{}", list_id());
     let storage_view_tree_key = format!("list-view-relations-tree-{}", list_id());
-
-    let mut properties = use_synced_storage::<
-        LocalStorage,
-        HashMap<RelationKey, (RelationInfo, PropertySettings)>,
-    >(storage_relations_key.clone(), || {
-        HashMap::from([(
-            RelationKey(NAME_RELATION_KEY.to_string()),
-            (
-                RelationInfo {
-                    name: NAME_RELATION_KEY.to_string(),
-                    key: RelationKey("name".to_string()),
-                    // optional: OptionalInfo::Other,
-                },
-                NAME_PROPERTY_SETTINGS,
-            ),
-        )])
-    });
-    let properties_store = use_store(|| properties.read().clone());
-    use_effect(move || {
-        let store_value = properties_store.read().clone();
-        tracing::info!("saved the properties: {:#?}", store_value);
-        *properties.write() = store_value;
-    });
 
     let mut positions = use_synced_storage::<LocalStorage, HashMap<NodeId, ViewTree>>(
         storage_view_tree_key.clone(),
@@ -75,7 +51,7 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
 
     use_effect(move || {
         let store_value = positions_store.read().clone();
-        tracing::info!("saved the properties: {:#?}", store_value);
+        tracing::debug!("Saved the relation positions tree: {:#?}", store_value);
         *positions.write() = store_value;
     });
     let all_properties_res = use_resource(move || async move {
@@ -109,7 +85,6 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
             space_id,
             list_id,
             view_id,
-            properties: properties_store,
             positions: positions_store,
             all_properties,
         }
@@ -118,7 +93,6 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
             list_id,
             view_id,
             positions: positions_store,
-            properties: properties_store,
         }
         ActionHolder { BaseActions {} }
     }
@@ -128,7 +102,6 @@ pub fn ListHeader(
     space_id: ReadSignal<String>,
     list_id: ReadSignal<String>,
     view_id: Store<String>,
-    properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
     positions: Store<HashMap<NodeId, ViewTree>>,
     all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
@@ -154,7 +127,6 @@ pub fn ListHeader(
                 list_id,
                 view_id,
                 positions,
-                properties,
                 all_properties,
             }
         }
@@ -166,7 +138,6 @@ pub fn Objects(
     list_id: ReadSignal<String>,
     view_id: ReadSignal<String>,
     positions: Store<HashMap<NodeId, ViewTree>>,
-    properties: ReadSignal<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
 ) -> Element {
     let resp = use_resource({
         move || async move {
@@ -190,12 +161,7 @@ pub fn Objects(
                 horizontal: true,
                 decorative: true,
             }
-            Object {
-                positions,
-                space_id,
-                id,
-                properties,
-            }
+            Object { positions, space_id, id }
         }
     }
 }

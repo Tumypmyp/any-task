@@ -7,7 +7,6 @@ use std::vec;
 #[component]
 pub fn AddRelations(
     positions: Store<HashMap<NodeId, ViewTree>>,
-    properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
     all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
     rsx! {

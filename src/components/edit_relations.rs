@@ -24,7 +24,6 @@ pub fn EditRelations(
         .clone();
 
     use_effect(move || {
-        tracing::debug!("tree: {:#?}", positions());
         let ViewTree::Split { first, second, .. } = positions
             .get(id)
             .expect("got corrupted tile tree")

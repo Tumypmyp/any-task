@@ -17,7 +17,6 @@ pub fn EditView(
     list_id: String,
     view_id: Store<String>,
     positions: Store<HashMap<NodeId, ViewTree>>,
-    properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
     all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
     let mut open = use_signal(|| false);
@@ -30,8 +29,12 @@ pub fn EditView(
             }
         }
         Sheet { open: open(), on_open_change: move |v| open.set(v),
-            SheetContent { side: SheetSide::Bottom, style: "max-height: 70vh;",
-                ScrollArea { direction: ScrollDirection::Vertical,
+            SheetContent {
+                side: SheetSide::Bottom,
+                style: "min-height: 50vh; max-height: 70vh;",
+                ScrollArea {
+                    direction: ScrollDirection::Vertical,
+                    style: "min-height: 50vh; max-height: 70vh;",
                     Row { position: Position::Middle,
                         ChooseView { space_id, list_id, view_id }
                     }
@@ -43,7 +46,7 @@ pub fn EditView(
                             all_properties,
                         }
                     }
-                    AddRelations { positions, properties, all_properties }
+                    AddRelations { positions, all_properties }
                 }
             }
         }

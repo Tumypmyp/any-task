@@ -11,7 +11,7 @@ use crate::components::header::{Header, Title};
 use dioxus::prelude::*;
 #[component]
 pub fn Space(space_id: String) -> Element {
-    tracing::info!("loading space {space_id}");
+    tracing::info!("Loading space: {space_id}");
     rsx! {
         Collections { space_id: space_id.clone() }
         ActionHolder { BaseActions {} }
