@@ -1,3 +1,4 @@
+use crate::helpers::models::*;
 use crate::protos::anytype_model::RelationFormat;
 use crate::protos::anytype_model::block::content::dataview;
 use crate::protos::anytype_model::block::*;
@@ -295,10 +296,7 @@ impl Client {
             })
             .collect())
     }
-    pub async fn fetch_properties(
-        &self,
-        space_id: &str,
-    ) -> Result<Vec<(String, String, String, RelationFormat)>> {
+    pub async fn fetch_properties(&self, space_id: &str) -> Result<Vec<RelationInfo>> {
         let mut grpc_client = self.client.clone();
         let req = Request::new(object::search::Request {
             space_id: space_id.to_string(),
@@ -341,7 +339,11 @@ impl Client {
                 let format =
                     RelationFormat::try_from(extract_number(record.fields.get("relationFormat")))
                         .unwrap_or(RelationFormat::Longtext);
-                (id, name, key, format)
+                RelationInfo {
+                    name: name.clone(),
+                    key: RelationKey(key.clone()),
+                    // optional: OptionalInfo::Other,
+                }
             })
             .collect();
         Ok(properties)

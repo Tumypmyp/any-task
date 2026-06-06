@@ -7,18 +7,22 @@ impl RelationKey {
         &self.0
     }
 }
+#[derive(Copy, PartialEq, Eq, Hash, Clone, Debug, Serialize, Deserialize)]
+pub struct NodeId(pub u32);
+
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub enum SplitDirection {
     Row,
     Column,
 }
+
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub enum ViewTree {
     Split {
         direction: SplitDirection,
         ratio: f32,
-        first: Box<ViewTree>,
-        second: Box<ViewTree>,
+        first: NodeId,
+        second: NodeId,
     },
     Pane {
         relation_key: RelationKey,
@@ -44,7 +48,7 @@ pub const NAME_RELATION_KEY: &str = "name";
 pub struct RelationInfo {
     pub key: RelationKey,
     pub name: String,
-    pub optional: OptionalInfo,
+    // pub optional: OptionalInfo,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

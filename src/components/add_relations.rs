@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::vec;
 #[component]
 pub fn AddRelations(
+    positions: Store<HashMap<NodeId, ViewTree>>,
     properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
     all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
@@ -13,35 +14,34 @@ pub fn AddRelations(
         Row { position: Position::Middle,
             Button { variant: ButtonVariant::Secondary, "Add Properties" }
         }
-        for property in all_properties.read().clone().iter() {
-            ShowProperty {
-                key: "{property.key.as_str()}",
-                property: property.clone(),
-                properties,
-            }
+        ShowProperty {
+            positions,
+            property: RelationInfo {
+                key: RelationKey("name".to_string()),
+                name: "Name".to_string(),
+            },
         }
+
     }
 }
 #[component]
 pub fn ShowProperty(
+    positions: Store<HashMap<NodeId, ViewTree>>,
     property: RelationInfo,
-    properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
 ) -> Element {
     let name = property.clone().name;
     rsx! {
         Button {
             variant: ButtonVariant::Ghost,
             onclick: move |_| {
-                let settings = match property.optional {
-                    OptionalInfo::Date => PropertySettings::Date(DateSettings::default()),
-                    OptionalInfo::Checkbox => {
-                        PropertySettings::Checkbox(CheckboxSettings::default())
-                    }
-                    _ => PropertySettings::default(),
-                };
-                properties
+                positions
                     .with_mut(|v| {
-                        v.insert(property.clone().key, (property.clone(), settings));
+                        v.insert(
+                            NodeId(0),
+                            ViewTree::Pane {
+                                relation_key: property.clone().key,
+                            },
+                        );
                     });
             },
             "{name}"

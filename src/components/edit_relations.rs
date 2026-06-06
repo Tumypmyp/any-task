@@ -1,5 +1,6 @@
 use crate::components::button::*;
 use crate::components::column::*;
+use crate::components::combobox::*;
 use crate::components::label::*;
 use std::collections::HashMap;
 // use crate::components::properties::*;
@@ -8,284 +9,176 @@ use crate::components::separator::*;
 use crate::components::slider::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
-use dioxus_desktop::use_window;
 use std::vec;
+
 #[component]
 pub fn EditRelations(
-    positions: Store<ViewTree>,
-    properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
+    id: NodeId,
+    positions: Store<HashMap<NodeId, ViewTree>>,
+    all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
-    // view
-    rsx! {
-        Row {
-            for (relation_key, property) in properties.read().clone().iter() {
-                Property { relation_key: relation_key.clone(), properties }
+    let node = positions
+        .get(id)
+        .context("corrupted tile tree")?
+        .read()
+        .clone();
+
+    use_effect(move || {
+        tracing::debug!("tree: {:#?}", positions());
+        let ViewTree::Split { first, second, .. } = positions
+            .get(id)
+            .expect("got corrupted tile tree")
+            .read()
+            .clone()
+        else {
+            return;
+        };
+        if id.0 == 0 {
+            return;
+        }
+        let first_exists = positions.contains_key(&first);
+        let second_exists = positions.contains_key(&second);
+        match (first_exists, second_exists) {
+            (false, true) => {
+                let val = positions.get(second.clone()).expect("").read().clone();
+                positions.write().insert(id, val);
+            }
+            (true, false) => {
+                let val = positions.get(first.clone()).expect("").read().clone();
+                positions.write().insert(id, val);
+            }
+            (false, false) => {
+                positions.remove(&id);
+            }
+            _ => {}
+        }
+    });
+
+    match node {
+        ViewTree::Split {
+            first,
+            second,
+            direction,
+            ..
+        } => {
+            let children = rsx! {
+                if positions.read().contains_key(&first) {
+                    EditRelations { id: first, positions, all_properties }
+                }
+                if positions.read().contains_key(&second) {
+                    EditRelations { id: second, positions, all_properties }
+                }
+            };
+
+            match direction {
+                SplitDirection::Row => rsx! {
+                    Row { {children} }
+                },
+                SplitDirection::Column => rsx! {
+                    Column { {children} }
+                },
             }
         }
+        ViewTree::Pane { relation_key } => rsx! {
+            Property {
+                id,
+                positions,
+                relation_key,
+                all_properties,
+            }
+        },
     }
 }
+
 #[component]
 pub fn Property(
+    id: NodeId,
+    positions: Store<HashMap<NodeId, ViewTree>>,
     relation_key: RelationKey,
-    properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
+    all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
-    let property = properties.get(relation_key.clone()).unwrap();
-    let name = property().0.name;
+    let mut query = use_signal(String::new);
+    let mut value = use_signal(|| Some(relation_key));
     rsx! {
         Row { position: Position::Middle,
-            Button { variant: ButtonVariant::Secondary, "{name}" }
+            Combobox::<RelationKey> {
+                value: Some(value.into()),
+                query: Some(query()),
+                on_value_change: move |next: Option<RelationKey>| {
+                    value.set(next.clone());
+                    positions
+                        .with_mut(|v| {
+                            v.insert(
+                                id,
+                                ViewTree::Pane {
+                                    relation_key: next.unwrap_or(RelationKey("".to_string())),
+                                },
+                            );
+                        });
+                },
+                on_query_change: move |next| query.set(next),
+                placeholder: "Search relations...",
+                aria_label: "Switch relation",
+                list_aria_label: "Relations",
+                ComboboxEmpty { "No relations match." }
+                PropertyOptions { all_properties }
+
+            }
             Button {
                 variant: ButtonVariant::Destructive,
                 onclick: move |_| {
-                    properties
-                        .with_mut(|v| {
-                            v.remove(&relation_key);
-                        });
+                    positions
+                            .remove(&id);
                 },
                 "X"
             }
+            Button {
+                variant: ButtonVariant::Primary,
+                onclick: move |_| {
+                    positions
+                        .with_mut(|v| {
+                            let id_first = v
+                                .keys()
+                                .map(|node_id| node_id.0)
+                                .max()
+                                .map(|max_val| NodeId(max_val + 1))
+                                .unwrap_or(NodeId(0));
+                            let id_second = NodeId(id_first.0 + 1);
+                            v.insert(
+                                id_second,
+                                ViewTree::Pane {
+                                    relation_key: RelationKey("".to_string()),
+                                },
+                            );
+                            let val = v.get(&id).expect("node dissapered from tree").clone();
+                            v.insert(id_first, val);
+                            v.insert(
+                                id,
+                                ViewTree::Split {
+                                    direction: SplitDirection::Row,
+                                    ratio: 0.5,
+                                    first: id_first,
+                                    second: id_second,
+                                },
+                            );
+                        });
+                },
+                "+"
+            }
         }
     }
-    // let property = properties.get(i).unwrap().get(j).unwrap();
-    // let name = property().0.name;
-    // let mut mutate_settings = move |callback: Box<dyn FnOnce(&mut PropertySettings)>| {
-    //     properties.with_mut(|rows| {
-    //         if let Some(row) = rows.get_mut(i) {
-    //             if let Some((_, settings)) = row.get_mut(j) {
-    //                 callback(settings);
-    //             }
-    //         }
-    //     });
-    // };
-    // let edit = match property().1 {
-    // PropertySettings::Date(settings) => {
-    //     rsx! {
-    //         DateSettingsEdit {
-    //             format: settings.date_format,
-    //             on_change: move |  new_format : DateTimeFormat | mutate_settings(Box::new(
-    //             move | s | { if
-    //                 Box::new(move |s| {
-    //                     if let PropertySettings::Date(d) = s {
-    //                         d.date_format = new_format;
-    //                     }
-    //                 }),
-    //             ),
-    //         }
-    //         GeneralPropertyEdit {
-    //             settings: settings.general,
-    //             on_change: move |new_settings : GeneralPropertySettings | mutate_settings(Box::new(move |
-    //                 Box::new(move |s| {
-    //                     if let PropertySettings::Date(d) = s {
-    //                         d.general = new_settings;
-    //                     }
-    //                 }),
-    //             ),
-    //         }
-    //     }
-    // }
-    // PropertySettings::General(settings) => {
-    //     rsx! {
-    //         GeneralPropertyEdit {
-    //             settings,
-    //             on_change: move | new_settings :GeneralPropertySettings | mutate_settings(Box::new(move | s | { if let
-    //                 Box::new(move |s| {
-    //                     if let PropertySettings::General(g) = s {
-    //                         *g = new_settings;
-    //                     }
-    //                 }),
-    //             ),
-    //         }
-    //     }
-    // }
-    // PropertySettings::Checkbox(settings) => {
-    //     rsx! {
-    //         SizeSlider {
-    //             size: settings.size,
-    //             on_change: move | new_size : f64 |
-    //                             mutate_settings(Box::new(move | s | { if let
-    //                 Box::new(move |s| {
-    //                     if let PropertySettings::Checkbox(c) = s {
-    //                         c.size = new_size;
-    //                     }
-    //                 }),
-    //             ),
-    //         }
-    //     }
-    // }
-    // };
-    // rsx! {
-    //     Row { position: Position::Middle,
-    //         Button { variant: ButtonVariant::Secondary, "{name}" }
-    //         Button {
-    //             variant: ButtonVariant::Destructive,
-    //             onclick: move |_| {
-    //                 properties
-    //                     .with_mut(|v| {
-    //                         if j < v.len() {
-    //                             v.remove(j);
-    //                         }
-    //                     });
-    //             },
-    //             "X"
-    //         }
-    //     }
-    //     // { edit
-    //     //         }
-    //     Row { position: Position::Middle,
-    //         Button {
-    //             variant: if 0 < j { ButtonVariant::Primary } else { ButtonVariant::Ghost },
-    //             onclick: move |_| {
-    //                 properties
-    //                     .with_mut(|v| {
-    //                         if 0 < j {
-    //                             v[i].swap(j - 1, j);
-    //                         }
-    //                     });
-    //             },
-    //             "<"
-    //         }
-    //         Column {
-    //             Button {
-    //                 onclick: move |_| {
-    //                     properties
-    //                         .with_mut(|rows| {
-    //                             let item = rows
-    //                                 .get_mut(i)
-    //                                 .and_then(|row| {
-    //                                     if j < row.len() { Some(row.remove(j)) } else { None }
-    //                                 });
-    //                             if let Some(extracted_item) = item {
-    //                                 if 0 < i {
-    //                                     let prev_row = &mut rows[i - 1];
-    //                                     if j <= prev_row.len() {
-    //                                         prev_row.insert(j, extracted_item);
-    //                                     } else {
-    //                                         prev_row.push(extracted_item);
-    //                                     }
-    //                                 } else {
-    //                                     rows.push(vec![extracted_item]);
-    //                                 }
-    //                             }
-    //                         });
-    //                 },
-    //                 "^"
-    //             }
-    //             Button {
-    //                 onclick: move |_| {
-    //                     properties
-    //                         .with_mut(|rows| {
-    //                             let item = rows
-    //                                 .get_mut(i)
-    //                                 .and_then(|row| {
-    //                                     if j < row.len() { Some(row.remove(j)) } else { None }
-    //                                 });
-    //                             if let Some(extracted_item) = item {
-    //                                 if i + 1 < rows.len() {
-    //                                     let next_row = &mut rows[i + 1];
-    //                                     if j <= next_row.len() {
-    //                                         next_row.insert(j, extracted_item);
-    //                                     } else {
-    //                                         next_row.push(extracted_item);
-    //                                     }
-    //                                 } else {
-    //                                     rows.push(vec![extracted_item]);
-    //                                 }
-    //                             }
-    //                         });
-    //                 },
-    //                 "V"
-    //             }
-    //         }
-    //         Button {
-    //             variant: if j + 1 < properties.read()[i].len() { ButtonVariant::Primary } else { ButtonVariant::Ghost },
-    //             onclick: move |_| {
-    //                 properties
-    //                     .with_mut(|v| {
-    //                         if j + 1 < v[i].len() {
-    //                             v[i].swap(j, j + 1);
-    //                         }
-    //                     });
-    //             },
-    //             ">"
-    //         }
-    //     }
-    // }
 }
-// #[component]
-// pub fn GeneralPropertyEdit(
-//     settings: GeneralPropertySettings,
-//     on_change: EventHandler<GeneralPropertySettings>,
-// ) -> Element {
-//     let window = use_window();
-//     let window_width = window.inner_size().width as f64;
-//     let window_height = window.inner_size().height as f64;
-//     rsx! {
-//         PropertySlider {
-//             id: "width_slider",
-//             label: "Width",
-//             value: settings.width,
-//             min: 10.0,
-//             max: window_width,
-//             on_change: move |v| {
-//                 let mut new_settings = settings.clone();
-//                 new_settings.width = v;
-//                 on_change.call(new_settings);
-//             },
-//         }
-//         PropertySlider {
-//             id: "height_slider",
-//             label: "Height",
-//             value: settings.height,
-//             min: 10.0,
-//             max: window_height,
-//             on_change: move |v| {
-//                 let mut new_settings = settings.clone();
-//                 new_settings.height = v;
-//                 on_change.call(new_settings);
-//             },
-//         }
-//     }
-// }
-// #[component]
-// fn SizeSlider(size: f64, on_change: EventHandler<f64>) -> Element {
-//     rsx! {
-//         PropertySlider {
-//             id: "size_slider",
-//             label: "Size",
-//             value: size,
-//             min: 5.0,
-//             max: 30.0,
-//             on_change: move |v| on_change.call(v),
-//         }
-//     }
-// }
-// #[component]
-// fn PropertySlider(
-//     id: String,
-//     label: String,
-//     value: f64,
-//     min: f64,
-//     max: f64,
-//     on_change: EventHandler<f64>,
-// ) -> Element {
-//     rsx! {
-//         Label { html_for: "{id}", "{label}" }
-//         Slider {
-//             id: "{id}",
-//             label: "{label}",
-//             width: "50vw",
-//             horizontal: true,
-//             min,
-//             max,
-//             step: 1.0,
-//             default_value: value,
-//             on_value_change: move |val: f64| {
-//                 on_change.call(val);
-//             },
-//             SliderTrack {
-//                 SliderRange {}
-//                 SliderThumb {}
-//             }
-//         }
-//     }
-// }
+
+#[component]
+fn PropertyOptions(all_properties: ReadSignal<Vec<RelationInfo>>) -> Element {
+    rsx! {
+        for (i, info) in all_properties.read().iter().enumerate() {
+            ComboboxOption::<RelationKey> {
+                index: i,
+                value: info.key.clone(),
+                text_value: info.name.clone(),
+                {info.name.clone()}
+            }
+        }
+    }
+}

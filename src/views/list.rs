@@ -3,7 +3,7 @@ use crate::components::action::{ActionHolder, BaseActions};
 use crate::components::base::message;
 use crate::components::edit_view::*;
 use crate::components::header::{Header, Title};
-use crate::components::object_view::*;
+use crate::components::object::*;
 use crate::components::separator::Separator;
 use crate::helpers::*;
 use crate::protos::anytype_model::*;
@@ -30,7 +30,7 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
                 RelationInfo {
                     name: NAME_RELATION_KEY.to_string(),
                     key: RelationKey("name".to_string()),
-                    optional: OptionalInfo::Other,
+                    // optional: OptionalInfo::Other,
                 },
                 NAME_PROPERTY_SETTINGS,
             ),
@@ -43,19 +43,41 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
         *properties.write() = store_value;
     });
 
-    let mut positions =
-        use_synced_storage::<LocalStorage, ViewTree>(storage_view_tree_key.clone(), || {
-            ViewTree::Pane {
-                relation_key: RelationKey("name".to_string()),
-            }
-        });
+    let mut positions = use_synced_storage::<LocalStorage, HashMap<NodeId, ViewTree>>(
+        storage_view_tree_key.clone(),
+        || {
+            HashMap::from([
+                (
+                    NodeId(0),
+                    ViewTree::Split {
+                        direction: SplitDirection::Row,
+                        ratio: 0.5,
+                        first: NodeId(1),
+                        second: NodeId(2),
+                    },
+                ),
+                (
+                    NodeId(1),
+                    ViewTree::Pane {
+                        relation_key: RelationKey("name".to_string()),
+                    },
+                ),
+                (
+                    NodeId(2),
+                    ViewTree::Pane {
+                        relation_key: RelationKey("description".to_string()),
+                    },
+                ),
+            ])
+        },
+    );
     let positions_store = use_store(|| positions.read().clone());
+
     use_effect(move || {
         let store_value = positions_store.read().clone();
         tracing::info!("saved the properties: {:#?}", store_value);
         *positions.write() = store_value;
     });
-
     let all_properties_res = use_resource(move || async move {
         let client_guard = API_CLIENT.read();
         let client = client_guard
@@ -76,14 +98,7 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
             .as_ref()
             .and_then(|r| r.as_ref().ok())
             .map(|props| {
-                let mut sorted_props: Vec<RelationInfo> = props
-                    .iter()
-                    .map(|(_id, name, key, _format)| RelationInfo {
-                        name: name.clone(),
-                        key: RelationKey(key.clone()),
-                        optional: OptionalInfo::Other,
-                    })
-                    .collect();
+                let mut sorted_props: Vec<RelationInfo> = props.to_vec();
                 sorted_props.sort_by_cached_key(|prop| prop.name.to_lowercase());
                 sorted_props
             })
@@ -114,7 +129,7 @@ pub fn ListHeader(
     list_id: ReadSignal<String>,
     view_id: Store<String>,
     properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
-    positions: Store<ViewTree>,
+    positions: Store<HashMap<NodeId, ViewTree>>,
     all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
     let resp = use_resource({
@@ -150,7 +165,7 @@ pub fn Objects(
     space_id: ReadSignal<String>,
     list_id: ReadSignal<String>,
     view_id: ReadSignal<String>,
-    positions: ReadSignal<ViewTree>,
+    positions: Store<HashMap<NodeId, ViewTree>>,
     properties: ReadSignal<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
 ) -> Element {
     let resp = use_resource({
@@ -175,7 +190,7 @@ pub fn Objects(
                 horizontal: true,
                 decorative: true,
             }
-            ObjectView {
+            Object {
                 positions,
                 space_id,
                 id,

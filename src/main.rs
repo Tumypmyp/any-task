@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use views::*;
 mod components;
 mod views;
-use helpers::*;
+use helpers::API_CLIENT;
 mod helpers;
 use serde::{Deserialize, Serialize};
 mod persistent_history;
@@ -123,7 +123,7 @@ fn App() -> Element {
         document::Link { rel: "icon", href: FAVICON }
         document::Stylesheet { href: MAIN_CSS }
         document::Stylesheet { href: THEME_CSS }
-        // document::Stylesheet { href: asset!("/src/components/button/style.css") }
+        document::Stylesheet { href: asset!("/src/components/button/style.css") }
         ToastProvider {
             HistoryProvider {
                 history: move |_| {

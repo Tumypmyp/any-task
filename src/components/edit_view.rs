@@ -16,7 +16,7 @@ pub fn EditView(
     space_id: String,
     list_id: String,
     view_id: Store<String>,
-    positions: Store<ViewTree>,
+    positions: Store<HashMap<NodeId, ViewTree>>,
     properties: Store<HashMap<RelationKey, (RelationInfo, PropertySettings)>>,
     all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
@@ -36,8 +36,14 @@ pub fn EditView(
                         ChooseView { space_id, list_id, view_id }
                     }
                     Separator {}
-                    EditRelations { positions, properties }
-                    AddRelations { properties, all_properties }
+                    if positions.contains_key(&NodeId(0)) {
+                        EditRelations {
+                            id: NodeId(0),
+                            positions,
+                            all_properties,
+                        }
+                    }
+                    AddRelations { positions, properties, all_properties }
                 }
             }
         }
