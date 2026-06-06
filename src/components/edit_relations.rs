@@ -99,37 +99,83 @@ pub fn Property(
     let mut query = use_signal(String::new);
     let mut value = use_signal(|| Some(relation_key));
     rsx! {
-        Row { position: Position::Middle,
-            Combobox::<RelationKey> {
-                value: Some(value.into()),
-                query: Some(query()),
-                on_value_change: move |next: Option<RelationKey>| {
-                    value.set(next.clone());
-                    positions
-                        .with_mut(|v| {
-                            v.insert(
-                                id,
-                                ViewTree::Pane {
-                                    relation_key: next.unwrap_or(RelationKey("".to_string())),
-                                },
-                            );
-                        });
-                },
-                on_query_change: move |next| query.set(next),
-                placeholder: "Search relations...",
-                aria_label: "Switch relation",
-                list_aria_label: "Relations",
-                ComboboxEmpty { "No relations match." }
-                PropertyOptions { all_properties }
+        Column {
+            Row { position: Position::Middle,
+                Combobox::<RelationKey> {
+                    value: Some(value.into()),
+                    query: Some(query()),
+                    on_value_change: move |next: Option<RelationKey>| {
+                        value.set(next.clone());
+                        positions
+                            .with_mut(|v| {
+                                v.insert(
+                                    id,
+                                    ViewTree::Pane {
+                                        relation_key: next.unwrap_or_default(),
+                                    },
+                                );
+                            });
+                    },
+                    on_query_change: move |next| query.set(next),
+                    placeholder: "Search relations...",
+                    aria_label: "Switch relation",
+                    list_aria_label: "Relations",
+                    ComboboxEmpty { "No relations match." }
+                    PropertyOptions { all_properties }
 
-            }
-            Button {
-                variant: ButtonVariant::Destructive,
-                onclick: move |_| {
-                    positions
-                            .remove(&id);
-                },
-                "X"
+                }
+                Button {
+                    variant: ButtonVariant::Destructive,
+                    onclick: move |_| {
+                        positions
+                            .with_mut(|v| {
+                                if id == NodeId(0) {
+                                    v.insert(
+                                        id,
+                                        ViewTree::Pane {
+                                            relation_key: RelationKey::default(),
+                                        },
+                                    );
+                                } else {
+                                    v.remove(&id);
+                                }
+                            });
+                    },
+                    "X"
+                }
+                Button {
+                    variant: ButtonVariant::Primary,
+                    onclick: move |_| {
+                        positions
+                            .with_mut(|v| {
+                                let id_first = v
+                                    .keys()
+                                    .map(|node_id| node_id.0)
+                                    .max()
+                                    .map(|max_val| NodeId(max_val + 1))
+                                    .unwrap();
+                                let id_second = NodeId(id_first.0 + 1);
+                                v.insert(
+                                    id_second,
+                                    ViewTree::Pane {
+                                        relation_key: RelationKey::default(),
+                                    },
+                                );
+                                let val = v.get(&id).expect("node dissapered from tree").clone();
+                                v.insert(id_first, val);
+                                v.insert(
+                                    id,
+                                    ViewTree::Split {
+                                        direction: SplitDirection::Row,
+                                        ratio: 0.5,
+                                        first: id_first,
+                                        second: id_second,
+                                    },
+                                );
+                            });
+                    },
+                    "+"
+                }
             }
             Button {
                 variant: ButtonVariant::Primary,
@@ -141,12 +187,12 @@ pub fn Property(
                                 .map(|node_id| node_id.0)
                                 .max()
                                 .map(|max_val| NodeId(max_val + 1))
-                                .unwrap_or(NodeId(0));
+                                .unwrap();
                             let id_second = NodeId(id_first.0 + 1);
                             v.insert(
                                 id_second,
                                 ViewTree::Pane {
-                                    relation_key: RelationKey("".to_string()),
+                                    relation_key: RelationKey::default(),
                                 },
                             );
                             let val = v.get(&id).expect("node dissapered from tree").clone();
@@ -154,7 +200,7 @@ pub fn Property(
                             v.insert(
                                 id,
                                 ViewTree::Split {
-                                    direction: SplitDirection::Row,
+                                    direction: SplitDirection::Column,
                                     ratio: 0.5,
                                     first: id_first,
                                     second: id_second,

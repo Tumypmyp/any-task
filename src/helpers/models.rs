@@ -6,7 +6,17 @@ impl RelationKey {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+    pub fn empty() -> Self {
+        Self(String::new())
+    }
 }
+
+impl Default for RelationKey {
+    fn default() -> Self {
+        Self::empty()
+    }
+}
+
 #[derive(Copy, PartialEq, Eq, Hash, Clone, Debug, Serialize, Deserialize)]
 pub struct NodeId(pub u32);
 

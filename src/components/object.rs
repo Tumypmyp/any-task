@@ -78,10 +78,33 @@ pub fn ObjectRelations(
             ratio,
             first,
             second,
-        } => rsx! {
-            ObjectRelations { id: first.clone(), positions, values: values.clone() }
-            ObjectRelations { id: second.clone(), positions, values: values.clone() }
-        },
+        } => {
+            let children = rsx! {
+                if positions.read().contains_key(&first) {
+                    ObjectRelations {
+                        id: first.clone(),
+                        positions,
+                        values: values.clone(),
+                    }
+                }
+                if positions.read().contains_key(&second) {
+                    ObjectRelations {
+                        id: second.clone(),
+                        positions,
+                        values: values.clone(),
+                    }
+                }
+            };
+
+            match direction {
+                SplitDirection::Row => rsx! {
+                    Row { {children} }
+                },
+                SplitDirection::Column => rsx! {
+                    Column { {children} }
+                },
+            }
+        }
         ViewTree::Pane { relation_key } => {
             let val = values
                 .get(relation_key.as_str())

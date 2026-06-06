@@ -20,6 +20,7 @@ pub fn EditView(
     all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
     let mut open = use_signal(|| false);
+    tracing::debug!("positions: {:#?}", positions);
     rsx! {
         ButtonHolder {
             Button {
@@ -39,6 +40,7 @@ pub fn EditView(
                         ChooseView { space_id, list_id, view_id }
                     }
                     Separator {}
+
                     if positions.contains_key(&NodeId(0)) {
                         EditRelations {
                             id: NodeId(0),

@@ -17,7 +17,7 @@ use std::vec;
 pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Element {
     tracing::info!("loading space {space_id}, list {list_id}");
     let view_id = use_store(|| "".to_string());
-    let storage_view_tree_key = format!("list-view-relations-tree-{}", list_id());
+    let storage_view_tree_key = format!("list-view-relations-tree-{}-12", list_id());
 
     let mut positions = use_synced_storage::<LocalStorage, HashMap<NodeId, ViewTree>>(
         storage_view_tree_key.clone(),
