@@ -64,6 +64,7 @@ pub struct ComboboxProps<T: Clone + PartialEq + 'static = String> {
 #[component]
 pub fn Combobox<T: Clone + PartialEq + 'static>(props: ComboboxProps<T>) -> Element {
     let base = attributes!(div {
+        style: "max-width: 100%; min-width: 0;",
         class: Styles::dx_combobox
     });
     let merged = merge_attributes(vec![base, props.attributes]);
@@ -83,8 +84,11 @@ pub fn Combobox<T: Clone + PartialEq + 'static>(props: ComboboxProps<T>) -> Elem
             roving_loop: props.roving_loop,
             filter: props.filter,
             attributes: merged,
-            div { class: Styles::dx_combobox_input_wrapper,
+            div {
+                style: "max-width: 100%; min-width: 0;",
+                class: Styles::dx_combobox_input_wrapper,
                 combobox::ComboboxInput {
+                    style: "max-width: 100%; min-width: 0;",
                     class: Styles::dx_combobox_input,
                     placeholder: props.placeholder,
                     aria_label: props.aria_label.clone(),

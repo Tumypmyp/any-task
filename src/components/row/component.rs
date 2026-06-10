@@ -1,29 +1,30 @@
 use dioxus::prelude::*;
 #[derive(Default, PartialEq, Clone, Copy)]
-pub enum Position {
+pub enum RowPosition {
     #[default]
     Left,
     Middle,
     Right,
 }
-impl Position {
+impl RowPosition {
     pub fn as_str(&self) -> &'static str {
         match self {
-            Position::Left => "left",
-            Position::Middle => "middle",
-            Position::Right => "right",
+            RowPosition::Left => "left",
+            RowPosition::Middle => "middle",
+            RowPosition::Right => "right",
         }
     }
 }
 #[component]
 pub fn Row(
-    #[props(default)] position: Position,
+    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
+    #[props(default)] position: RowPosition,
     onclick: Option<EventHandler<MouseEvent>>,
     children: Element,
 ) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
-        button {
+        div {
             class: "row",
             "data-position": position.as_str(),
             onclick: move |event| {
@@ -31,6 +32,7 @@ pub fn Row(
                     f.call(event);
                 }
             },
+            ..attributes,
             {children}
         }
     }

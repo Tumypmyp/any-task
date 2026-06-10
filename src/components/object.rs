@@ -11,11 +11,10 @@ use std::collections::HashMap;
 pub struct ObjectProps {
     pub space_id: ReadSignal<String>,
     pub id: ReadSignal<String>,
-    pub positions: Store<HashMap<NodeId, ViewTree>>,
+    pub positions: Store<TileTree>,
 }
 #[component]
 pub fn Object(props: ObjectProps) -> Element {
-    let nav = navigator();
     let resp = use_resource({
         move || async move {
             let client_guard = API_CLIENT.read();
@@ -33,7 +32,6 @@ pub fn Object(props: ObjectProps) -> Element {
         None => return rsx! { "Loading..." },
         Some(Ok(props)) => props,
     };
-    // view
     rsx! {
         ObjectRelations {
             id: NodeId(0),
@@ -41,57 +39,43 @@ pub fn Object(props: ObjectProps) -> Element {
             values: property_values.clone(),
         }
     }
-    // let rows: Vec<Element> = (props.properties)()
-    //     .into_iter()
-    //     .filter_map(|(key, property)| {
-    //         let val = property_values.get(key.as_str())?.clone();
-    //         Some(rsx! {
-    //             Column {
-    //                 PropertyValue {
-    //                     space_id: props.space_id,
-    //                     object_id: props.id,
-    //                     data: val,
-    //                     info: property,
-    //                 }
-    //             }
-    //         })
-    //     })
-    //     .collect();
-
-    // rsx! {
-    //     Row { {rows.into_iter()} }
-    // }
 }
 
 #[component]
 pub fn ObjectRelations(
     id: NodeId,
-    positions: Store<HashMap<NodeId, ViewTree>>,
+    positions: Store<TileTree>,
     values: HashMap<String, prost_types::Value>,
 ) -> Element {
-    if !positions.contains_key(&id.clone()) {
+    if !positions().0.contains_key(&id.clone()) {
         return rsx! {};
     }
-    match &**&positions.get(id).expect("corrupted tile tree").read() {
-        ViewTree::Split {
+    match &**&positions().0.get(&id).expect("corrupted tile tree") {
+        Node::Split {
             direction,
             ratio,
             first,
             second,
         } => {
             let children = rsx! {
-                if positions.read().contains_key(&first) {
-                    ObjectRelations {
-                        id: first.clone(),
-                        positions,
-                        values: values.clone(),
+                if positions.read().0.contains_key(&first) {
+                    div { style: "flex: {ratio}; min-width: 0; min-height: 0; \
+                        box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
+                        ObjectRelations {
+                            id: first.clone(),
+                            positions,
+                            values: values.clone(),
+                        }
                     }
                 }
-                if positions.read().contains_key(&second) {
-                    ObjectRelations {
-                        id: second.clone(),
-                        positions,
-                        values: values.clone(),
+                if positions.read().0.contains_key(&second) {
+                    div { style: "flex: calc(1 - {ratio}); min-width: 0; min-height: 0; \
+                        box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
+                        ObjectRelations {
+                            id: second.clone(),
+                            positions,
+                            values: values.clone(),
+                        }
                     }
                 }
             };
@@ -105,17 +89,21 @@ pub fn ObjectRelations(
                 },
             }
         }
-        ViewTree::Pane { relation_key } => {
+        Node::Pane { relation_key } => {
             let val = values
                 .get(relation_key.as_str())
                 .unwrap_or(&prost_types::Value { kind: None })
                 .clone();
             rsx! {
-                PropertyValue {
-                    //   space_id: props.space_id,
-                    //   object_id: props.id,
-                    data: val,
-                    // info: property,
+                div { style: "display: flex; align-items: center; justify-content: center; \
+                                                                  width: 100%; height: 100%; min-width: 0; min-height: 0; \
+                                                                  box-sizing: border-box;",
+                    PropertyValue {
+                        //   space_id: props.space_id,
+                        //   object_id: props.id,
+                        data: val,
+                        // info: property,
+                    }
                 }
             }
         }

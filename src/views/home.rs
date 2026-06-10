@@ -8,6 +8,8 @@ use crate::components::button::ButtonVariant;
 use crate::components::column::Column;
 use crate::components::header::{Header, Title};
 use crate::components::input::*;
+use crate::components::row::RowPosition;
+use crate::components::row::*;
 use dioxus::prelude::*;
 #[component]
 pub fn Home() -> Element {
@@ -40,7 +42,7 @@ fn Spaces() -> Element {
         Some(Ok(spaces)) => spaces.clone(),
     };
     rsx! {
-        Column {
+        Column { style: "align-items: center;",
             for (id, name) in spaces {
                 SpaceButton { id, name }
             }
@@ -53,7 +55,7 @@ fn SpaceButton(id: String, name: String) -> Element {
     rsx! {
         Button {
             id: "{id}",
-            width: "90vw",
+            width: "87vw",
             height: "8vh",
             variant: ButtonVariant::Primary,
             style: "font-size: 1.1rem;",

@@ -16,7 +16,7 @@ pub fn EditView(
     space_id: String,
     list_id: String,
     view_id: Store<String>,
-    positions: Store<HashMap<NodeId, ViewTree>>,
+    positions: Store<TileTree>,
     all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
     let mut open = use_signal(|| false);
@@ -36,12 +36,12 @@ pub fn EditView(
                 ScrollArea {
                     direction: ScrollDirection::Vertical,
                     style: "min-height: 50vh; max-height: 70vh;",
-                    Row { position: Position::Middle,
+                    Row { position: RowPosition::Middle,
                         ChooseView { space_id, list_id, view_id }
                     }
                     Separator {}
 
-                    if positions.contains_key(&NodeId(0)) {
+                    if positions.read().0.contains_key(&NodeId(0)) {
                         EditRelations {
                             id: NodeId(0),
                             positions,

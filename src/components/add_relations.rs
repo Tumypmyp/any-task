@@ -6,11 +6,11 @@ use std::collections::HashMap;
 use std::vec;
 #[component]
 pub fn AddRelations(
-    positions: Store<HashMap<NodeId, ViewTree>>,
+    positions: Store<TileTree>,
     all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
     rsx! {
-        Row { position: Position::Middle,
+        Row { position: RowPosition::Middle,
             Button { variant: ButtonVariant::Secondary, "Add Properties" }
         }
         ShowProperty {
@@ -24,10 +24,7 @@ pub fn AddRelations(
     }
 }
 #[component]
-pub fn ShowProperty(
-    positions: Store<HashMap<NodeId, ViewTree>>,
-    property: RelationInfo,
-) -> Element {
+pub fn ShowProperty(positions: Store<TileTree>, property: RelationInfo) -> Element {
     let name = property.clone().name;
     rsx! {
         Button {
@@ -35,12 +32,13 @@ pub fn ShowProperty(
             onclick: move |_| {
                 positions
                     .with_mut(|v| {
-                        v.insert(
-                            NodeId(0),
-                            ViewTree::Pane {
-                                relation_key: property.clone().key,
-                            },
-                        );
+                        v.0
+                            .insert(
+                                NodeId(0),
+                                Node::Pane {
+                                    relation_key: property.clone().key,
+                                },
+                            );
                     });
             },
             "{name}"

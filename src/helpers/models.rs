@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 #[derive(Eq, Hash, PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct RelationKey(pub String);
 impl RelationKey {
@@ -17,17 +18,115 @@ impl Default for RelationKey {
     }
 }
 
-#[derive(Copy, PartialEq, Eq, Hash, Clone, Debug, Serialize, Deserialize)]
-pub struct NodeId(pub u32);
-
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
-pub enum SplitDirection {
-    Row,
-    Column,
+pub struct TileTree(pub HashMap<NodeId, Node>);
+impl TileTree {
+    fn generate_2_ids(&self) -> (NodeId, NodeId) {
+        let max_val = self.0.keys().map(|node_id| node_id.0).max().unwrap_or(0);
+        (NodeId(max_val + 1), NodeId(max_val + 2))
+    }
+    pub fn add_right(&mut self, parent_id: NodeId) -> () {
+        let (id_first, id_second) = self.generate_2_ids();
+        let val = self
+            .0
+            .get(&parent_id)
+            .expect("parent node dissapered from tree")
+            .clone();
+        self.0.insert(
+            id_second,
+            Node::Pane {
+                relation_key: RelationKey::default(),
+            },
+        );
+        self.0.insert(id_first, val);
+        self.0.insert(
+            parent_id,
+            Node::Split {
+                direction: SplitDirection::Row,
+                ratio: 0.5,
+                first: id_first,
+                second: id_second,
+            },
+        );
+    }
+    pub fn add_up(&mut self, parent_id: NodeId) -> () {
+        let (id_first, id_second) = self.generate_2_ids();
+        let val = self
+            .0
+            .get(&parent_id)
+            .expect("parent node dissapered from tree")
+            .clone();
+        self.0.insert(
+            id_first,
+            Node::Pane {
+                relation_key: RelationKey::default(),
+            },
+        );
+        self.0.insert(id_second, val);
+        self.0.insert(
+            parent_id,
+            Node::Split {
+                direction: SplitDirection::Column,
+                ratio: 0.5,
+                first: id_first,
+                second: id_second,
+            },
+        );
+    }
+    pub fn add_down(&mut self, parent_id: NodeId) -> () {
+        let (id_first, id_second) = self.generate_2_ids();
+        let val = self
+            .0
+            .get(&parent_id)
+            .expect("parent node dissapered from tree")
+            .clone();
+
+        self.0.insert(
+            id_second,
+            Node::Pane {
+                relation_key: RelationKey::default(),
+            },
+        );
+        self.0.insert(id_first, val);
+        self.0.insert(
+            parent_id,
+            Node::Split {
+                direction: SplitDirection::Column,
+                ratio: 0.5,
+                first: id_first,
+                second: id_second,
+            },
+        );
+    }
+    pub fn add_left(&mut self, parent_id: NodeId) -> () {
+        let (id_first, id_second) = self.generate_2_ids();
+        let val = self
+            .0
+            .get(&parent_id)
+            .expect("parent node dissapered from tree")
+            .clone();
+
+        self.0.insert(
+            id_first,
+            Node::Pane {
+                relation_key: RelationKey::default(),
+            },
+        );
+        self.0.insert(id_second, val);
+        self.0.insert(
+            parent_id,
+            Node::Split {
+                direction: SplitDirection::Row,
+                ratio: 0.5,
+                first: id_first,
+                second: id_second,
+            },
+        );
+    }
 }
 
 #[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
-pub enum ViewTree {
+pub enum Node {
     Split {
         direction: SplitDirection,
         ratio: f32,
@@ -37,6 +136,15 @@ pub enum ViewTree {
     Pane {
         relation_key: RelationKey,
     },
+}
+
+#[derive(Copy, PartialEq, Eq, Hash, Clone, Debug, Serialize, Deserialize)]
+pub struct NodeId(pub u32);
+
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+pub enum SplitDirection {
+    Row,
+    Column,
 }
 
 // #[derive(Eq, Hash, PartialEq, Clone, Debug, Serialize, Deserialize)]

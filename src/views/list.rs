@@ -1,6 +1,7 @@
 use crate::API_CLIENT;
 use crate::components::action::{ActionHolder, BaseActions};
 use crate::components::base::message;
+use crate::components::column::*;
 use crate::components::edit_view::*;
 use crate::components::header::{Header, Title};
 use crate::components::object::*;
@@ -19,13 +20,12 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
     let view_id = use_store(|| "".to_string());
     let storage_view_tree_key = format!("list-view-relations-tree-{}-12", list_id());
 
-    let mut positions = use_synced_storage::<LocalStorage, HashMap<NodeId, ViewTree>>(
-        storage_view_tree_key.clone(),
-        || {
-            HashMap::from([
+    let mut positions =
+        use_synced_storage::<LocalStorage, TileTree>(storage_view_tree_key.clone(), || {
+            TileTree(HashMap::from([
                 (
                     NodeId(0),
-                    ViewTree::Split {
+                    Node::Split {
                         direction: SplitDirection::Row,
                         ratio: 0.5,
                         first: NodeId(1),
@@ -34,19 +34,18 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
                 ),
                 (
                     NodeId(1),
-                    ViewTree::Pane {
+                    Node::Pane {
                         relation_key: RelationKey("name".to_string()),
                     },
                 ),
                 (
                     NodeId(2),
-                    ViewTree::Pane {
+                    Node::Pane {
                         relation_key: RelationKey("description".to_string()),
                     },
                 ),
-            ])
-        },
-    );
+            ]))
+        });
     let positions_store = use_store(|| positions.read().clone());
 
     use_effect(move || {
@@ -102,7 +101,7 @@ pub fn ListHeader(
     space_id: ReadSignal<String>,
     list_id: ReadSignal<String>,
     view_id: Store<String>,
-    positions: Store<HashMap<NodeId, ViewTree>>,
+    positions: Store<TileTree>,
     all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
     let resp = use_resource({
@@ -137,7 +136,7 @@ pub fn Objects(
     space_id: ReadSignal<String>,
     list_id: ReadSignal<String>,
     view_id: ReadSignal<String>,
-    positions: Store<HashMap<NodeId, ViewTree>>,
+    positions: Store<TileTree>,
 ) -> Element {
     let resp = use_resource({
         move || async move {
@@ -155,13 +154,15 @@ pub fn Objects(
         Some(Ok(objs)) => objs.clone(),
     };
     rsx! {
-        for id in objects {
-            Separator {
-                style: "margin: 2px 0; width: 95vw;",
-                horizontal: true,
-                decorative: true,
+        Column { style: "width: 98vw;",
+            for id in objects {
+                Separator {
+                    style: "margin: 2px 0; width: 95vw;",
+                    horizontal: true,
+                    decorative: true,
+                }
+                Object { positions, space_id, id }
             }
-            Object { positions, space_id, id }
         }
     }
 }

@@ -14,20 +14,21 @@ use std::vec;
 #[component]
 pub fn EditRelations(
     id: NodeId,
-    positions: Store<HashMap<NodeId, ViewTree>>,
+    positions: Store<TileTree>,
+
     all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
-    let node = positions
-        .get(id)
+    let node = positions()
+        .0
+        .get(&id)
         .context("corrupted tile tree")?
-        .read()
         .clone();
 
     use_effect(move || {
-        let ViewTree::Split { first, second, .. } = positions
-            .get(id)
+        let Node::Split { first, second, .. } = positions()
+            .0
+            .get(&id)
             .expect("got corrupted tile tree")
-            .read()
             .clone()
         else {
             return;
@@ -35,55 +36,76 @@ pub fn EditRelations(
         if id.0 == 0 {
             return;
         }
-        let first_exists = positions.contains_key(&first);
-        let second_exists = positions.contains_key(&second);
+        let first_exists = positions().0.contains_key(&first);
+        let second_exists = positions().0.contains_key(&second);
         match (first_exists, second_exists) {
             (false, true) => {
-                let val = positions.get(second.clone()).expect("").read().clone();
-                positions.write().insert(id, val);
+                let val = positions().0.get(&second.clone()).expect("").clone();
+                positions.write().0.insert(id, val);
             }
             (true, false) => {
-                let val = positions.get(first.clone()).expect("").read().clone();
-                positions.write().insert(id, val);
+                let val = positions().0.get(&first.clone()).expect("").clone();
+                positions.write().0.insert(id, val);
             }
             (false, false) => {
-                positions.remove(&id);
+                positions.write().0.remove(&id);
             }
             _ => {}
         }
     });
 
     match node {
-        ViewTree::Split {
+        Node::Split {
+            direction,
+            ratio,
             first,
             second,
-            direction,
-            ..
         } => {
+            let child_width = match direction {
+                SplitDirection::Row => "50%",
+                SplitDirection::Column => "100%",
+            };
             let children = rsx! {
-                if positions.read().contains_key(&first) {
-                    EditRelations { id: first, positions, all_properties }
+
+                if positions.read().0.contains_key(&first) {
+                    div { style: "flex: {ratio}; min-width: 0; min-height: 0; \
+                        box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
+
+                        EditRelations { id: first, positions, all_properties }
+                    }
                 }
-                if positions.read().contains_key(&second) {
-                    EditRelations { id: second, positions, all_properties }
+                if positions.read().0.contains_key(&second) {
+                    div { style: "flex: calc(1 - {ratio}); min-width: 0; min-height: 0; \
+                        box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
+                        EditRelations { id: second, positions, all_properties }
+                    }
                 }
             };
 
             match direction {
                 SplitDirection::Row => rsx! {
-                    Row { {children} }
+                    Row { style: "box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
+                        {children}
+                    }
                 },
                 SplitDirection::Column => rsx! {
-                    Column { {children} }
+                    Column { style: "box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
+                        {children}
+                    }
                 },
             }
         }
-        ViewTree::Pane { relation_key } => rsx! {
-            Property {
-                id,
-                positions,
-                relation_key,
-                all_properties,
+        Node::Pane { relation_key } => rsx! {
+            div { style: "display: flex; align-items: center; justify-content: center; \
+                                                              width: 100%; height: 100%; min-width: 0; min-height: 0; \
+                                                              box-sizing: border-box;",
+
+                Property {
+                    id,
+                    positions,
+                    relation_key,
+                    all_properties,
+                }
             }
         },
     }
@@ -92,7 +114,7 @@ pub fn EditRelations(
 #[component]
 pub fn Property(
     id: NodeId,
-    positions: Store<HashMap<NodeId, ViewTree>>,
+    positions: Store<TileTree>,
     relation_key: RelationKey,
     all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
@@ -100,20 +122,44 @@ pub fn Property(
     let mut value = use_signal(|| Some(relation_key));
     rsx! {
         Column {
-            Row { position: Position::Middle,
+
+            button {
+                // variant: ButtonVariant::Primary,
+                onclick: move |_| {
+                    positions
+                        .with_mut(|v| {
+                            v.add_up(id);
+                        });
+                },
+                "+"
+            }
+            Row { position: RowPosition::Middle,
+
+                button {
+                    // variant: ButtonVariant::Primary,
+                    onclick: move |_| {
+                        positions
+                            .with_mut(|v| {
+                                v.add_left(id);
+                            });
+                    },
+                    "+"
+                }
                 Combobox::<RelationKey> {
+                    // style: "display: flex; align-items: center; justify-content: center; flex: 1 1 auto; min-width: 1;",
                     value: Some(value.into()),
                     query: Some(query()),
                     on_value_change: move |next: Option<RelationKey>| {
                         value.set(next.clone());
                         positions
                             .with_mut(|v| {
-                                v.insert(
-                                    id,
-                                    ViewTree::Pane {
-                                        relation_key: next.unwrap_or_default(),
-                                    },
-                                );
+                                v.0
+                                    .insert(
+                                        id,
+                                        Node::Pane {
+                                            relation_key: next.unwrap_or_default(),
+                                        },
+                                    );
                             });
                     },
                     on_query_change: move |next| query.set(next),
@@ -124,91 +170,46 @@ pub fn Property(
                     PropertyOptions { all_properties }
 
                 }
-                Button {
-                    variant: ButtonVariant::Destructive,
+                button {
+                    // variant: ButtonVariant::Destructive,
                     onclick: move |_| {
                         positions
                             .with_mut(|v| {
                                 if id == NodeId(0) {
-                                    v.insert(
-                                        id,
-                                        ViewTree::Pane {
-                                            relation_key: RelationKey::default(),
-                                        },
-                                    );
+                                    v.0
+                                        .insert(
+                                            id,
+                                            Node::Pane {
+                                                relation_key: RelationKey::default(),
+                                            },
+                                        );
                                 } else {
-                                    v.remove(&id);
+                                    v.0.remove(&id);
                                 }
                             });
                     },
                     "X"
                 }
-                Button {
-                    variant: ButtonVariant::Primary,
+                button {
+                    // variant: ButtonVariant::Primary,
                     onclick: move |_| {
                         positions
                             .with_mut(|v| {
-                                let id_first = v
-                                    .keys()
-                                    .map(|node_id| node_id.0)
-                                    .max()
-                                    .map(|max_val| NodeId(max_val + 1))
-                                    .unwrap();
-                                let id_second = NodeId(id_first.0 + 1);
-                                v.insert(
-                                    id_second,
-                                    ViewTree::Pane {
-                                        relation_key: RelationKey::default(),
-                                    },
-                                );
-                                let val = v.get(&id).expect("node dissapered from tree").clone();
-                                v.insert(id_first, val);
-                                v.insert(
-                                    id,
-                                    ViewTree::Split {
-                                        direction: SplitDirection::Row,
-                                        ratio: 0.5,
-                                        first: id_first,
-                                        second: id_second,
-                                    },
-                                );
+                                v.add_right(id);
                             });
                     },
                     "+"
                 }
             }
-            Button {
-                variant: ButtonVariant::Primary,
+            button {
                 onclick: move |_| {
                     positions
                         .with_mut(|v| {
-                            let id_first = v
-                                .keys()
-                                .map(|node_id| node_id.0)
-                                .max()
-                                .map(|max_val| NodeId(max_val + 1))
-                                .unwrap();
-                            let id_second = NodeId(id_first.0 + 1);
-                            v.insert(
-                                id_second,
-                                ViewTree::Pane {
-                                    relation_key: RelationKey::default(),
-                                },
-                            );
-                            let val = v.get(&id).expect("node dissapered from tree").clone();
-                            v.insert(id_first, val);
-                            v.insert(
-                                id,
-                                ViewTree::Split {
-                                    direction: SplitDirection::Column,
-                                    ratio: 0.5,
-                                    first: id_first,
-                                    second: id_second,
-                                },
-                            );
+                            v.add_down(id);
                         });
                 },
                 "+"
+
             }
         }
     }
@@ -219,6 +220,7 @@ fn PropertyOptions(all_properties: ReadSignal<Vec<RelationInfo>>) -> Element {
     rsx! {
         for (i, info) in all_properties.read().iter().enumerate() {
             ComboboxOption::<RelationKey> {
+                style: "max-width: 100%;",
                 index: i,
                 value: info.key.clone(),
                 text_value: info.name.clone(),
