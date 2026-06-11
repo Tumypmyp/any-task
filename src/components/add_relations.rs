@@ -2,17 +2,10 @@ use crate::components::button::*;
 use crate::components::row::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
-use std::collections::HashMap;
 use std::vec;
 #[component]
-pub fn AddRelations(
-    positions: Store<TileTree>,
-    all_properties: ReadSignal<Vec<RelationInfo>>,
-) -> Element {
+pub fn CleanRealtions(positions: Store<TileTree>) -> Element {
     rsx! {
-        Row { position: RowPosition::Middle,
-            Button { variant: ButtonVariant::Secondary, "Add Properties" }
-        }
         ShowProperty {
             positions,
             property: RelationInfo {
@@ -25,23 +18,25 @@ pub fn AddRelations(
 }
 #[component]
 pub fn ShowProperty(positions: Store<TileTree>, property: RelationInfo) -> Element {
-    let name = property.clone().name;
     rsx! {
         Button {
             variant: ButtonVariant::Ghost,
             onclick: move |_| {
                 positions
                     .with_mut(|v| {
-                        v.0
+                        v.root = NodeId(0);
+                        v.nodes.clear();
+                        v.nodes
                             .insert(
                                 NodeId(0),
                                 Node::Pane {
+                                    parent: None,
                                     relation_key: property.clone().key,
                                 },
                             );
                     });
             },
-            "{name}"
+            "Clean"
         }
     }
 }

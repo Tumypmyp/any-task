@@ -21,11 +21,13 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
     let storage_view_tree_key = format!("list-view-relations-tree-{}-12", list_id());
 
     let mut positions =
-        use_synced_storage::<LocalStorage, TileTree>(storage_view_tree_key.clone(), || {
-            TileTree(HashMap::from([
+        use_synced_storage::<LocalStorage, TileTree>(storage_view_tree_key.clone(), || TileTree {
+            root: NodeId(0),
+            nodes: HashMap::from([
                 (
                     NodeId(0),
                     Node::Split {
+                        parent: None,
                         direction: SplitDirection::Row,
                         ratio: 0.5,
                         first: NodeId(1),
@@ -35,22 +37,43 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
                 (
                     NodeId(1),
                     Node::Pane {
+                        parent: Some(NodeId(0)),
                         relation_key: RelationKey("name".to_string()),
                     },
                 ),
                 (
                     NodeId(2),
                     Node::Pane {
+                        parent: Some(NodeId(0)),
                         relation_key: RelationKey("description".to_string()),
                     },
                 ),
-            ]))
+            ]),
         });
     let positions_store = use_store(|| positions.read().clone());
 
+    // use_effect(move || {
+    //     let store_value = positions_store.read().clone();
+
+    //     let mut cleaned = store_value.0;
+
+    //     // Remove panes with empty relation keys.
+    //     // NodeId(0) is the root — keep it even if empty to avoid a blank tree.
+    //     cleaned.retain(|id, node| {
+    //         if id.0 == 0 {
+    //             return true;
+    //         }
+    //         match node {
+    //             Node::Pane { relation_key } => !relation_key.0.is_empty(),
+    //             Node::Split { .. } => true,
+    //         }
+    //     });
+
+    //     *positions.write() = TileTree(cleaned);
+    // });
     use_effect(move || {
         let store_value = positions_store.read().clone();
-        tracing::debug!("Saved the relation positions tree: {:#?}", store_value);
+        // tracing::debug!("Saved the relation positions tree: {:#?}", store_value);
         *positions.write() = store_value;
     });
     let all_properties_res = use_resource(move || async move {

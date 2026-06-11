@@ -47,18 +47,19 @@ pub fn ObjectRelations(
     positions: Store<TileTree>,
     values: HashMap<String, prost_types::Value>,
 ) -> Element {
-    if !positions().0.contains_key(&id.clone()) {
+    if !positions().nodes.contains_key(&id.clone()) {
         return rsx! {};
     }
-    match &**&positions().0.get(&id).expect("corrupted tile tree") {
+    match &**&positions().nodes.get(&id).expect("corrupted tile tree") {
         Node::Split {
+            parent,
             direction,
             ratio,
             first,
             second,
         } => {
             let children = rsx! {
-                if positions.read().0.contains_key(&first) {
+                if positions.read().nodes.contains_key(&first) {
                     div { style: "flex: {ratio}; min-width: 0; min-height: 0; \
                         box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
                         ObjectRelations {
@@ -68,7 +69,7 @@ pub fn ObjectRelations(
                         }
                     }
                 }
-                if positions.read().0.contains_key(&second) {
+                if positions.read().nodes.contains_key(&second) {
                     div { style: "flex: calc(1 - {ratio}); min-width: 0; min-height: 0; \
                         box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
                         ObjectRelations {
@@ -89,7 +90,10 @@ pub fn ObjectRelations(
                 },
             }
         }
-        Node::Pane { relation_key } => {
+        Node::Pane {
+            parent,
+            relation_key,
+        } => {
             let val = values
                 .get(relation_key.as_str())
                 .unwrap_or(&prost_types::Value { kind: None })

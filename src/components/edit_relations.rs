@@ -2,11 +2,11 @@ use crate::components::button::*;
 use crate::components::column::*;
 use crate::components::combobox::*;
 use crate::components::label::*;
-use std::collections::HashMap;
+use dioxus_html::MountedData;
+use dioxus_html::geometry::PixelsRect;
+use std::rc::Rc;
 // use crate::components::properties::*;
 use crate::components::row::*;
-use crate::components::separator::*;
-use crate::components::slider::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
 use std::vec;
@@ -15,44 +15,17 @@ use std::vec;
 pub fn EditRelations(
     id: NodeId,
     positions: Store<TileTree>,
-
     all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
     let node = positions()
-        .0
+        .nodes
         .get(&id)
         .context("corrupted tile tree")?
         .clone();
 
-    use_effect(move || {
-        let Node::Split { first, second, .. } = positions()
-            .0
-            .get(&id)
-            .expect("got corrupted tile tree")
-            .clone()
-        else {
-            return;
-        };
-        if id.0 == 0 {
-            return;
-        }
-        let first_exists = positions().0.contains_key(&first);
-        let second_exists = positions().0.contains_key(&second);
-        match (first_exists, second_exists) {
-            (false, true) => {
-                let val = positions().0.get(&second.clone()).expect("").clone();
-                positions.write().0.insert(id, val);
-            }
-            (true, false) => {
-                let val = positions().0.get(&first.clone()).expect("").clone();
-                positions.write().0.insert(id, val);
-            }
-            (false, false) => {
-                positions.write().0.remove(&id);
-            }
-            _ => {}
-        }
-    });
+    let mut dragging = use_signal(|| false);
+    let mut container_mounted = use_signal(|| None::<Rc<MountedData>>);
+    let mut cached_rect = use_signal(|| None::<PixelsRect>);
 
     match node {
         Node::Split {
@@ -60,68 +33,176 @@ pub fn EditRelations(
             ratio,
             first,
             second,
+            ..
         } => {
-            let child_width = match direction {
-                SplitDirection::Row => "50%",
-                SplitDirection::Column => "100%",
+            let divider_style = match direction {
+                SplitDirection::Row => {
+                    "width: 5px; cursor: col-resize; background: var(--secondary-color-6); \
+                   flex-shrink: 0; z-index: 1; touch-action: none;"
+                }
+                SplitDirection::Column => {
+                    "height: 5px; cursor: row-resize; background: var(--secondary-color-6); \
+                   flex-shrink: 0; z-index: 1; touch-action: none;"
+                }
             };
+
             let children = rsx! {
-
-                if positions.read().0.contains_key(&first) {
+                if positions.read().nodes.contains_key(&first) {
                     div { style: "flex: {ratio}; min-width: 0; min-height: 0; \
-                        box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
-
-                        EditRelations { id: first, positions, all_properties }
+                            box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
+                        EditRelations {
+                            key: "{first:#?}",
+                            id: first,
+                            positions,
+                            all_properties,
+                        }
                     }
                 }
-                if positions.read().0.contains_key(&second) {
+
+                div {
+                    style: "{divider_style}",
+                    prevent_default: "onpointerdown",
+                    onpointerdown: move |e: PointerEvent| {
+                        e.stop_propagation();
+                        tracing::info!("[drag] pointerdown (type={})", e.pointer_type());
+
+                        // Set dragging=true IMMEDIATELY before the async rect fetch.
+                        // Without this, onpointermove fires while dragging() is still
+                        // false and every move event is silently dropped.
+                        dragging.set(true);
+
+                        let Some(mounted) = container_mounted.read().clone() else {
+                            tracing::warn!(
+                                "[drag] pointerdown: container_mounted is None — onmounted never fired!"
+                            );
+                            dragging.set(false);
+                            return;
+                        };
+                        spawn(async move {
+                            match mounted.get_client_rect().await {
+                                Ok(rect) => {
+                                    tracing::info!(
+                                        "[drag] rect cached: origin=({:.1},{:.1}) size={:.1}x{:.1}", rect
+                                        .origin.x, rect.origin.y, rect.size.width, rect.size.height
+                                    );
+                                    cached_rect.set(Some(rect));
+                                }
+                                Err(e) => {
+                                    tracing::error!("[drag] get_client_rect failed: {}", e);
+                                    dragging.set(false);
+                                }
+                            }
+                        });
+                    },
+                }
+
+                if positions.read().nodes.contains_key(&second) {
                     div { style: "flex: calc(1 - {ratio}); min-width: 0; min-height: 0; \
-                        box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
-                        EditRelations { id: second, positions, all_properties }
+                            box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
+                        EditRelations {
+                            key: "{second:#?}",
+                            id: second,
+                            positions,
+                            all_properties,
+                        }
                     }
                 }
             };
 
-            match direction {
-                SplitDirection::Row => rsx! {
-                    Row { style: "box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
-                        {children}
+            let on_pointer_move = move |e: PointerEvent| {
+                if !dragging() {
+                    return;
+                }
+                // Prevent the browser from panning/scrolling the page
+                e.prevent_default();
+                e.stop_propagation();
+                let Some(rect) = cached_rect() else {
+                    // dragging=true but rect not yet fetched — skip this frame
+                    tracing::info!("[drag] pointermove: waiting for rect...");
+                    return;
+                };
+
+                let client_pos = e.client_coordinates();
+                let direction = direction; // copy
+                let new_ratio = match direction {
+                    SplitDirection::Row => (client_pos.x - rect.origin.x) / rect.size.width,
+                    SplitDirection::Column => (client_pos.y - rect.origin.y) / rect.size.height,
+                };
+                let new_ratio = new_ratio.clamp(0.05, 0.95);
+                tracing::info!(
+                    "[drag] pointermove: pos=({:.1},{:.1}) → ratio={:.3}",
+                    client_pos.x,
+                    client_pos.y,
+                    new_ratio
+                );
+                positions.with_mut(|tree| {
+                    if let Some(node) = tree.nodes.get_mut(&id) {
+                        if let Node::Split { ratio, .. } = node {
+                            *ratio = new_ratio as f32;
+                        }
                     }
-                },
-                SplitDirection::Column => rsx! {
-                    Column { style: "box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
-                        {children}
-                    }
-                },
+                });
+            };
+
+            let on_pointer_up = move |e: PointerEvent| {
+                if dragging() {
+                    e.stop_propagation();
+                    tracing::info!("[drag] pointerup: drag ended");
+                    dragging.set(false);
+                    cached_rect.set(None);
+                }
+            };
+
+            let flex_direction = match direction {
+                SplitDirection::Row => "row",
+                SplitDirection::Column => "column",
+            };
+
+            rsx! {
+                div {
+                    style: "display: flex; flex-direction: {flex_direction}; \
+                            width: 100%; height: 100%; \
+                            box-shadow: inset 0 0 0 1px var(--secondary-color-6); \
+                            user-select: none; touch-action: none;",
+                    onmounted: move |e: MountedEvent| {
+                        tracing::info!("[drag] container mounted");
+                        container_mounted.set(Some(e.data()));
+                    },
+                    onpointermove: on_pointer_move,
+                    onpointerup: on_pointer_up,
+                    {children}
+                }
             }
         }
-        Node::Pane { relation_key } => rsx! {
+        Node::Pane { .. } => rsx! {
             div { style: "display: flex; align-items: center; justify-content: center; \
-                                                              width: 100%; height: 100%; min-width: 0; min-height: 0; \
-                                                              box-sizing: border-box;",
-
+                        width: 100%; height: 100%; min-width: 0; min-height: 0; \
+                        box-sizing: border-box;",
                 Property {
+                    key: "{id:#?}",
                     id,
                     positions,
-                    relation_key,
                     all_properties,
                 }
             }
         },
     }
 }
-
 #[component]
 pub fn Property(
     id: NodeId,
     positions: Store<TileTree>,
-    relation_key: RelationKey,
     all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
     let mut query = use_signal(String::new);
-    let mut value = use_signal(|| Some(relation_key));
+    let current_relation = use_memo(move || {
+        positions().nodes.get(&id).and_then(|n| match n {
+            Node::Pane { relation_key, .. } => Some(relation_key.clone()),
+            _ => None,
+        })
+    });
     rsx! {
-        Column {
+        Column { key: "{id:#?}",
 
             button {
                 // variant: ButtonVariant::Primary,
@@ -147,19 +228,16 @@ pub fn Property(
                 }
                 Combobox::<RelationKey> {
                     // style: "display: flex; align-items: center; justify-content: center; flex: 1 1 auto; min-width: 1;",
-                    value: Some(value.into()),
+                    value: Some(current_relation.into()),
                     query: Some(query()),
                     on_value_change: move |next: Option<RelationKey>| {
-                        value.set(next.clone());
                         positions
                             .with_mut(|v| {
-                                v.0
-                                    .insert(
-                                        id,
-                                        Node::Pane {
-                                            relation_key: next.unwrap_or_default(),
-                                        },
-                                    );
+                                if let Some(Node::Pane { relation_key,.. }) = v.nodes
+                                    .get_mut(
+                                        &id){
+                                    *relation_key = next.unwrap_or_default();
+                                }
                             });
                     },
                     on_query_change: move |next| query.set(next),
@@ -175,17 +253,10 @@ pub fn Property(
                     onclick: move |_| {
                         positions
                             .with_mut(|v| {
-                                if id == NodeId(0) {
-                                    v.0
-                                        .insert(
-                                            id,
-                                            Node::Pane {
-                                                relation_key: RelationKey::default(),
-                                            },
-                                        );
-                                } else {
-                                    v.0.remove(&id);
+                                if v.root != id {
+                                    v.remove_node(id);
                                 }
+                                tracing::debug!("map: {:#?}", v);
                             });
                     },
                     "X"

@@ -93,7 +93,11 @@ pub fn Combobox<T: Clone + PartialEq + 'static>(props: ComboboxProps<T>) -> Elem
                     placeholder: props.placeholder,
                     aria_label: props.aria_label.clone(),
                 }
-                ChevronsUpDown { class: Styles::dx_combobox_expand_icon, size: "16px" }
+                ChevronsUpDown {
+                    class: Styles::dx_combobox_expand_icon,
+                    style: "max-width: 100%; min-width: 0;",
+                    size: "16px",
+                }
             }
             combobox::ComboboxList {
                 class: Styles::dx_combobox_list,
@@ -107,6 +111,7 @@ pub fn Combobox<T: Clone + PartialEq + 'static>(props: ComboboxProps<T>) -> Elem
 #[component]
 pub fn ComboboxEmpty(props: ComboboxEmptyProps) -> Element {
     let base = attributes!(div {
+        style: "max-width: 100%; min-width: 0;",
         class: Styles::dx_combobox_empty
     });
     let merged = merge_attributes(vec![base, props.attributes]);
@@ -119,12 +124,14 @@ pub fn ComboboxEmpty(props: ComboboxEmptyProps) -> Element {
 #[component]
 pub fn ComboboxOption<T: Clone + PartialEq + 'static>(props: ComboboxOptionProps<T>) -> Element {
     let base = attributes!(div {
+        style: "max-width: 100%; min-width: 0;",
         class: Styles::dx_combobox_option
     });
     let merged = merge_attributes(vec![base, props.attributes]);
 
     rsx! {
         combobox::ComboboxOption::<T> {
+            style: "max-width: 100%; min-width: 0;",
             value: props.value,
             text_value: props.text_value,
             disabled: props.disabled,

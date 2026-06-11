@@ -1,6 +1,7 @@
 use crate::components::add_relations::*;
 use crate::components::button::*;
 use crate::components::choose_view::ChooseView;
+use crate::components::column::*;
 use crate::components::edit_relations::*;
 use crate::components::row::*;
 use crate::components::scroll_area::*;
@@ -20,7 +21,6 @@ pub fn EditView(
     all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
     let mut open = use_signal(|| false);
-    tracing::debug!("positions: {:#?}", positions);
     rsx! {
         ButtonHolder {
             Button {
@@ -33,23 +33,24 @@ pub fn EditView(
             SheetContent {
                 side: SheetSide::Bottom,
                 style: "min-height: 50vh; max-height: 70vh;",
-                ScrollArea {
-                    direction: ScrollDirection::Vertical,
-                    style: "min-height: 50vh; max-height: 70vh;",
+                // ScrollArea {
+                //     direction: ScrollDirection::Vertical,
+                //     style: "min-height: 50vh; max-height: 70vh;",
+                Column {
                     Row { position: RowPosition::Middle,
                         ChooseView { space_id, list_id, view_id }
+                        CleanRealtions { positions }
                     }
                     Separator {}
 
-                    if positions.read().0.contains_key(&NodeId(0)) {
-                        EditRelations {
-                            id: NodeId(0),
-                            positions,
-                            all_properties,
-                        }
+                    EditRelations {
+                        key: "{positions().root:#?}",
+                        id: positions().root,
+                        positions,
+                        all_properties,
                     }
-                    AddRelations { positions, all_properties }
                 }
+                // }
             }
         }
     }
