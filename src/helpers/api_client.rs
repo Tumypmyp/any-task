@@ -1,4 +1,6 @@
+use crate::helpers::models::*;
 use crate::protos::anytype_model::RelationFormat;
+use crate::protos::anytype_model::block::content::dataview;
 use crate::protos::anytype_model::block::*;
 use crate::protos::anytype_model::object_type::*;
 use crate::protos::client_commands_client::ClientCommandsClient;
@@ -182,9 +184,9 @@ impl Client {
             space_id: self.tech_space_id.clone(),
             sub_id: "space".to_string(),
             filters: vec![content::dataview::Filter {
-                operator: 0,
+                operator: content::dataview::filter::Operator::No.into(),
                 relation_key: "spaceLocalStatus".to_string(),
-                condition: 1,
+                condition: content::dataview::filter::Condition::Equal.into(),
                 value: Some(prost_types::Value {
                     kind: Some(prost_types::value::Kind::NumberValue(2.0)),
                 }),
@@ -254,34 +256,23 @@ impl Client {
         let mut grpc_client = self.client.clone();
         let req = Request::new(object::search::Request {
             space_id: space_id.to_string(),
-            filters: vec![
-                content::dataview::Filter {
-                    operator: 0,
-                    relation_key: "resolvedLayout".to_string(),
-                    condition: 9,
-                    value: Some(prost_types::Value {
-                        kind: Some(prost_types::value::Kind::ListValue(
-                            prost_types::ListValue {
-                                values: vec![prost_types::Value {
-                                    kind: Some(prost_types::value::Kind::NumberValue(
-                                        Layout::Set as i32 as f64,
-                                    )),
-                                }],
-                            },
-                        )),
-                    }),
-                    ..Default::default()
-                },
-                content::dataview::Filter {
-                    operator: 0,
-                    relation_key: "isHidden".to_string(),
-                    condition: 2,
-                    value: Some(prost_types::Value {
-                        kind: Some(prost_types::value::Kind::BoolValue(true)),
-                    }),
-                    ..Default::default()
-                },
-            ],
+            filters: vec![content::dataview::Filter {
+                operator: content::dataview::filter::Operator::No.into(),
+                relation_key: "resolvedLayout".to_string(),
+                condition: content::dataview::filter::Condition::In.into(),
+                value: Some(prost_types::Value {
+                    kind: Some(prost_types::value::Kind::ListValue(
+                        prost_types::ListValue {
+                            values: vec![prost_types::Value {
+                                kind: Some(prost_types::value::Kind::NumberValue(
+                                    Layout::Set as i32 as f64,
+                                )),
+                            }],
+                        },
+                    )),
+                }),
+                ..Default::default()
+            }],
             keys: vec![
                 "id".to_string(),
                 "name".to_string(),
@@ -305,33 +296,20 @@ impl Client {
             })
             .collect())
     }
-    pub async fn fetch_properties(
-        &self,
-        space_id: &str,
-    ) -> Result<Vec<(String, String, String, RelationFormat)>> {
+    pub async fn fetch_properties(&self, space_id: &str) -> Result<Vec<RelationInfo>> {
         let mut grpc_client = self.client.clone();
         let req = Request::new(object::search::Request {
             space_id: space_id.to_string(),
-            filters: vec![
-                content::dataview::Filter {
-                    operator: 0,
-                    relation_key: "resolvedLayout".to_string(),
-                    condition: 1,
-                    value: Some(prost_types::Value {
-                        kind: Some(prost_types::value::Kind::NumberValue(5.0)),
-                    }),
-                    ..Default::default()
-                },
-                content::dataview::Filter {
-                    operator: 0,
-                    relation_key: "isHidden".to_string(),
-                    condition: 2,
-                    value: Some(prost_types::Value {
-                        kind: Some(prost_types::value::Kind::BoolValue(true)),
-                    }),
-                    ..Default::default()
-                },
-            ],
+            filters: vec![content::dataview::Filter {
+                operator: content::dataview::filter::Operator::No.into(),
+                relation_key: "resolvedLayout".to_string(),
+                condition: content::dataview::filter::Condition::Equal.into(),
+
+                value: Some(prost_types::Value {
+                    kind: Some(prost_types::value::Kind::NumberValue(5.0)),
+                }),
+                ..Default::default()
+            }],
             keys: vec![
                 "id".to_string(),
                 "name".to_string(),
@@ -361,7 +339,11 @@ impl Client {
                 let format =
                     RelationFormat::try_from(extract_number(record.fields.get("relationFormat")))
                         .unwrap_or(RelationFormat::Longtext);
-                (id, name, key, format)
+                RelationInfo {
+                    name: name.clone(),
+                    key: RelationKey(key.clone()),
+                    // optional: OptionalInfo::Other,
+                }
             })
             .collect();
         Ok(properties)

@@ -2,7 +2,7 @@ use crate::API_CLIENT;
 use crate::AppSettings;
 use crate::Route;
 use crate::components::base::message;
-use crate::components::button::{Button, ButtonHolder, ButtonVariant};
+use crate::components::button::{Button, ButtonVariant};
 use crate::components::column::Column;
 use crate::components::input::Input;
 use crate::helpers::api_client::Client;

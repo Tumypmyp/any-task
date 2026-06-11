@@ -78,7 +78,7 @@ in {
   # https://devenv.sh/basics/
   enterShell = '''';
 
-  tasks."proto:load" = {
+  tasks."proto:download" = {
     env = {
       BASE = "https://raw.githubusercontent.com/anyproto/anytype-heart/main";
       DEST = "./protos";

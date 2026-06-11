@@ -12,13 +12,13 @@ use std::path::PathBuf;
 use views::*;
 mod components;
 mod views;
-use helpers::*;
+use helpers::API_CLIENT;
 mod helpers;
 use serde::{Deserialize, Serialize};
 mod persistent_history;
 use persistent_history::*;
 use std::rc::Rc;
-pub const USER_SETTINGS_KEY: &str = "settings_654";
+pub const USER_SETTINGS_KEY: &str = "settings";
 use crate::helpers::api_client::Client;
 use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
@@ -95,6 +95,7 @@ pub fn get_app_data_dir() -> PathBuf {
 }
 #[component]
 fn App() -> Element {
+    set_theme(true);
     tracing::info!("App is started");
     let settings =
         use_synced_storage::<LocalStorage, AppSettings>(USER_SETTINGS_KEY.into(), || AppSettings {
@@ -133,4 +134,11 @@ fn App() -> Element {
             }
         }
     }
+}
+
+fn set_theme(dark_mode: bool) {
+    let theme = if dark_mode { "dark" } else { "light" };
+    _ = document::eval(&format!(
+        "document.documentElement.setAttribute('data-theme', '{theme}');",
+    ));
 }

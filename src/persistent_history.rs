@@ -2,7 +2,7 @@ use dioxus_history::History;
 use dioxus_sdk_storage::{LocalStorage, StorageBacking};
 use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
-const HISTORY_KEY: &str = "dioxus_history_state789";
+const HISTORY_KEY: &str = "dioxus_history_state";
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct PersistentState {
     current: String,
