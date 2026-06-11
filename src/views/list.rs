@@ -7,7 +7,6 @@ use crate::components::header::{Header, Title};
 use crate::components::object::*;
 use crate::components::separator::Separator;
 use crate::helpers::*;
-use crate::protos::anytype_model::*;
 use dioxus::prelude::*;
 use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
@@ -18,7 +17,7 @@ use std::vec;
 pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Element {
     tracing::info!("loading space {space_id}, list {list_id}");
     let view_id = use_store(|| "".to_string());
-    let storage_view_tree_key = format!("list-view-relations-tree-{}-12", list_id());
+    let storage_view_tree_key = format!("list-view-relations-tree-{}", list_id());
 
     let mut positions =
         use_synced_storage::<LocalStorage, TileTree>(storage_view_tree_key.clone(), || TileTree {
@@ -52,30 +51,11 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
         });
     let positions_store = use_store(|| positions.read().clone());
 
-    // use_effect(move || {
-    //     let store_value = positions_store.read().clone();
-
-    //     let mut cleaned = store_value.0;
-
-    //     // Remove panes with empty relation keys.
-    //     // NodeId(0) is the root — keep it even if empty to avoid a blank tree.
-    //     cleaned.retain(|id, node| {
-    //         if id.0 == 0 {
-    //             return true;
-    //         }
-    //         match node {
-    //             Node::Pane { relation_key } => !relation_key.0.is_empty(),
-    //             Node::Split { .. } => true,
-    //         }
-    //     });
-
-    //     *positions.write() = TileTree(cleaned);
-    // });
     use_effect(move || {
         let store_value = positions_store.read().clone();
-        // tracing::debug!("Saved the relation positions tree: {:#?}", store_value);
         *positions.write() = store_value;
     });
+
     let all_properties_res = use_resource(move || async move {
         let client_guard = API_CLIENT.read();
         let client = client_guard
@@ -180,7 +160,7 @@ pub fn Objects(
         Column { style: "width: 98vw;",
             for id in objects {
                 Separator {
-                    style: "margin: 2px 0; width: 95vw;",
+                    style: "margin: 2px 5px; width: 95vw;",
                     horizontal: true,
                     decorative: true,
                 }

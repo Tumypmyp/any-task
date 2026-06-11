@@ -12,7 +12,7 @@ use dioxus::prelude::*;
 use std::vec;
 
 #[component]
-pub fn EditRelations(
+pub fn EditPositions(
     id: NodeId,
     positions: Store<TileTree>,
     all_properties: ReadSignal<Vec<RelationInfo>>,
@@ -41,21 +41,16 @@ pub fn EditRelations(
                    flex-shrink: 0; z-index: 1; touch-action: none;"
                 }
                 SplitDirection::Column => {
-                    "height: 5px; cursor: row-resize; background: var(--secondary-color-6); \
+                    "height: 7px; cursor: row-resize; background: var(--secondary-color-6); \
                    flex-shrink: 0; z-index: 1; touch-action: none;"
                 }
             };
 
             let children = rsx! {
                 if positions.read().nodes.contains_key(&first) {
-                    div { style: "flex: {ratio}; min-width: 0; min-height: 0; \
-                            box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
-                        EditRelations {
-                            key: "{first:#?}",
-                            id: first,
-                            positions,
-                            all_properties,
-                        }
+                    div { style: "flex: {ratio}; min-width: 0; min-height: 0;",
+                        // box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
+                        EditPositions { id: first, positions, all_properties }
                     }
                 }
 
@@ -64,8 +59,7 @@ pub fn EditRelations(
                     prevent_default: "onpointerdown",
                     onpointerdown: move |e: PointerEvent| {
                         e.stop_propagation();
-                        tracing::info!("[drag] pointerdown (type={})", e.pointer_type());
-
+                        // tracing::info!("[drag] pointerdown (type={})", e.pointer_type());
                         // Set dragging=true IMMEDIATELY before the async rect fetch.
                         // Without this, onpointermove fires while dragging() is still
                         // false and every move event is silently dropped.
@@ -81,10 +75,10 @@ pub fn EditRelations(
                         spawn(async move {
                             match mounted.get_client_rect().await {
                                 Ok(rect) => {
-                                    tracing::info!(
-                                        "[drag] rect cached: origin=({:.1},{:.1}) size={:.1}x{:.1}", rect
-                                        .origin.x, rect.origin.y, rect.size.width, rect.size.height
-                                    );
+                                    // tracing::info!(
+                                    //     "[drag] rect cached: origin=({:.1},{:.1}) size={:.1}x{:.1}", rect
+                                    //     .origin.x, rect.origin.y, rect.size.width, rect.size.height
+                                    // );
                                     cached_rect.set(Some(rect));
                                 }
                                 Err(e) => {
@@ -97,14 +91,9 @@ pub fn EditRelations(
                 }
 
                 if positions.read().nodes.contains_key(&second) {
-                    div { style: "flex: calc(1 - {ratio}); min-width: 0; min-height: 0; \
-                            box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
-                        EditRelations {
-                            key: "{second:#?}",
-                            id: second,
-                            positions,
-                            all_properties,
-                        }
+                    div { style: "flex: calc(1 - {ratio}); min-width: 0; min-height: 0;",
+                        // box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
+                        EditPositions { id: second, positions, all_properties }
                     }
                 }
             };
@@ -118,7 +107,7 @@ pub fn EditRelations(
                 e.stop_propagation();
                 let Some(rect) = cached_rect() else {
                     // dragging=true but rect not yet fetched — skip this frame
-                    tracing::info!("[drag] pointermove: waiting for rect...");
+                    // tracing::info!("[drag] pointermove: waiting for rect...");
                     return;
                 };
 
@@ -129,12 +118,12 @@ pub fn EditRelations(
                     SplitDirection::Column => (client_pos.y - rect.origin.y) / rect.size.height,
                 };
                 let new_ratio = new_ratio.clamp(0.05, 0.95);
-                tracing::info!(
-                    "[drag] pointermove: pos=({:.1},{:.1}) → ratio={:.3}",
-                    client_pos.x,
-                    client_pos.y,
-                    new_ratio
-                );
+                // tracing::info!(
+                //     "[drag] pointermove: pos=({:.1},{:.1}) → ratio={:.3}",
+                //     client_pos.x,
+                //     client_pos.y,
+                //     new_ratio
+                // );
                 positions.with_mut(|tree| {
                     if let Some(node) = tree.nodes.get_mut(&id) {
                         if let Node::Split { ratio, .. } = node {
@@ -147,7 +136,7 @@ pub fn EditRelations(
             let on_pointer_up = move |e: PointerEvent| {
                 if dragging() {
                     e.stop_propagation();
-                    tracing::info!("[drag] pointerup: drag ended");
+                    // tracing::info!("[drag] pointerup: drag ended");
                     dragging.set(false);
                     cached_rect.set(None);
                 }
@@ -165,7 +154,7 @@ pub fn EditRelations(
                             box-shadow: inset 0 0 0 1px var(--secondary-color-6); \
                             user-select: none; touch-action: none;",
                     onmounted: move |e: MountedEvent| {
-                        tracing::info!("[drag] container mounted");
+                        // tracing::info!("[drag] container mounted");
                         container_mounted.set(Some(e.data()));
                     },
                     onpointermove: on_pointer_move,
@@ -202,11 +191,9 @@ pub fn Property(
         })
     });
     rsx! {
-        Column { key: "{id:#?}",
-
+        Column {
             Button {
                 size: ButtonSize::Xs,
-                // variant: ButtonVariant::Primary,
                 onclick: move |_| {
                     positions
                         .with_mut(|v| {
@@ -266,7 +253,6 @@ pub fn Property(
                 Button {
                     size: ButtonSize::Xs,
                     style: "align-self: stretch; height: auto;",
-                    // variant: ButtonVariant::Primary,
                     onclick: move |_| {
                         positions
                             .with_mut(|v| {

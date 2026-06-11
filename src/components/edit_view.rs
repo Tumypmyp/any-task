@@ -1,6 +1,6 @@
-use crate::components::add_relations::*;
 use crate::components::button::*;
 use crate::components::choose_view::ChooseView;
+use crate::components::clean_positions::*;
 use crate::components::column::*;
 use crate::components::edit_relations::*;
 use crate::components::row::*;
@@ -10,7 +10,6 @@ use crate::components::sheet::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
 use dioxus_primitives::scroll_area::ScrollDirection;
-use std::collections::HashMap;
 use std::vec;
 #[component]
 pub fn EditView(
@@ -30,19 +29,18 @@ pub fn EditView(
         Sheet { open: open(), on_open_change: move |v| open.set(v),
             SheetContent {
                 side: SheetSide::Bottom,
-                style: "min-height: 50vh; max-height: 70vh;",
+                style: "min-height: 50vh; max-height: 80vh;",
                 // ScrollArea {
                 //     direction: ScrollDirection::Vertical,
                 //     style: "min-height: 50vh; max-height: 70vh;",
                 Column {
                     Row { position: RowPosition::Middle,
                         ChooseView { space_id, list_id, view_id }
-                        CleanRealtions { positions }
+                        CleanPositions { positions }
                     }
                     Separator {}
 
-                    EditRelations {
-                        key: "{positions().root:#?}",
+                    EditPositions {
                         id: positions().root,
                         positions,
                         all_properties,

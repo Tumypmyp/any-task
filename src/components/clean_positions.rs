@@ -4,20 +4,11 @@ use crate::helpers::*;
 use dioxus::prelude::*;
 use std::vec;
 #[component]
-pub fn CleanRealtions(positions: Store<TileTree>) -> Element {
-    rsx! {
-        ShowProperty {
-            positions,
-            property: RelationInfo {
-                key: RelationKey("name".to_string()),
-                name: "Name".to_string(),
-            },
-        }
-
-    }
-}
-#[component]
-pub fn ShowProperty(positions: Store<TileTree>, property: RelationInfo) -> Element {
+pub fn CleanPositions(positions: Store<TileTree>) -> Element {
+    let property = RelationInfo {
+        key: RelationKey("name".to_string()),
+        name: "Name".to_string(),
+    };
     rsx! {
         Button {
             variant: ButtonVariant::Ghost,
