@@ -12,7 +12,31 @@ use dioxus::prelude::*;
 use std::vec;
 
 #[component]
-pub fn EditPositions(
+pub fn RelationPositionsCleaner(positions: Store<TileTree>) -> Element {
+    rsx! {
+        Button {
+            variant: ButtonVariant::Destructive,
+            onclick: move |_| {
+                positions
+                    .with_mut(|v| {
+                        v.root = NodeId(0);
+                        v.nodes.clear();
+                        v.nodes
+                            .insert(
+                                NodeId(0),
+                                Node::Pane {
+                                    parent: None,
+                                    relation_key: RelationKey("name".to_string()),
+                                },
+                            );
+                    });
+            },
+            "Clean"
+        }
+    }
+}
+#[component]
+pub fn RelationPositionsEditor(
     id: NodeId,
     positions: Store<TileTree>,
     all_properties: ReadSignal<Vec<RelationInfo>>,
@@ -50,7 +74,7 @@ pub fn EditPositions(
                 if positions.read().nodes.contains_key(&first) {
                     div { style: "flex: {ratio}; min-width: 0; min-height: 0;",
                         // box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
-                        EditPositions { id: first, positions, all_properties }
+                        RelationPositionsEditor { id: first, positions, all_properties }
                     }
                 }
 
@@ -93,7 +117,7 @@ pub fn EditPositions(
                 if positions.read().nodes.contains_key(&second) {
                     div { style: "flex: calc(1 - {ratio}); min-width: 0; min-height: 0;",
                         // box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
-                        EditPositions { id: second, positions, all_properties }
+                        RelationPositionsEditor { id: second, positions, all_properties }
                     }
                 }
             };

@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 mod persistent_history;
 use persistent_history::*;
 use std::rc::Rc;
-pub const USER_SETTINGS_KEY: &str = "settings_65lkj4";
+pub const USER_SETTINGS_KEY: &str = "settings";
 use crate::helpers::api_client::Client;
 use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;

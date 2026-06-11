@@ -45,7 +45,7 @@ devenv tasks run engine:build           # build anytype-heart library
 devenv tasks run proto:download         # download anytype-heart proto files for communication
 ```
 
-### Manual install for others: Windows, Linux, Mac
+### Manual install for Windows, Linux, Mac
 
 - [dioxus-cli](https://github.com/DioxusLabs/dioxus)
 

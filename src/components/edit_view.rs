@@ -1,8 +1,7 @@
 use crate::components::button::*;
 use crate::components::choose_view::ChooseView;
-use crate::components::clean_positions::*;
 use crate::components::column::*;
-use crate::components::edit_relations::*;
+use crate::components::relation_positions::*;
 use crate::components::row::*;
 use crate::components::scroll_area::*;
 use crate::components::separator::Separator;
@@ -36,11 +35,11 @@ pub fn EditView(
                 Column {
                     Row { position: RowPosition::Middle,
                         ChooseView { space_id, list_id, view_id }
-                        CleanPositions { positions }
+                        RelationPositionsCleaner { positions }
                     }
                     Separator {}
 
-                    EditPositions {
+                    RelationPositionsEditor {
                         id: positions().root,
                         positions,
                         all_properties,
