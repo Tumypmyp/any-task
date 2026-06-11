@@ -13,9 +13,15 @@ pub fn PropertyValue(
     };
     // let (p_info, settings) = info();
     rsx! {
-        button { style: "width: 100%; min-width: 0; overflow: hidden; \
-                                        text-overflow: ellipsis; white-space: nowrap; \
-                                        box-sizing: border-box;",
+        Button {
+            style: "height: 100%; min-height: 0; \
+                    width: 100%; min-width: 0; \
+                    white-space: normal;
+                    overflow: visible;
+                    text-overflow: ellipsis;  \
+                    box-sizing: border-box;\
+                    ",
+            variant: ButtonVariant::Outline,
             "{s}"
         }
     }

@@ -2,37 +2,6 @@ use dioxus::prelude::*;
 use dioxus_primitives::dioxus_attributes::attributes;
 use dioxus_primitives::merge_attributes;
 
-#[component]
-pub fn ButtonHolder(
-    children: Element,
-    #[props(extends = GlobalAttributes)] attributes: Vec<Attribute>,
-) -> Element {
-    rsx! {
-        div { ..attributes,{children} }
-    }
-}
-#[component]
-pub fn ButtonWithHolder(
-    #[props(default)] variant: ButtonVariant,
-    #[props(extends = GlobalAttributes)]
-    #[props(extends = button)]
-    attributes: Vec<Attribute>,
-    onclick: Option<EventHandler<MouseEvent>>,
-    onmousedown: Option<EventHandler<MouseEvent>>,
-    onmouseup: Option<EventHandler<MouseEvent>>,
-    children: Element,
-) -> Element {
-    rsx! {
-        Button {
-            variant,
-            attributes,
-            onclick,
-            onmousedown,
-            onmouseup,
-            children,
-        }
-    }
-}
 #[css_module("/src/components/button/style.css")]
 struct Styles;
 

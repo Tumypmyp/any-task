@@ -3,7 +3,6 @@ use crate::Logout;
 use crate::Route;
 use crate::components::action::*;
 use crate::components::button::Button;
-use crate::components::button::ButtonHolder;
 use crate::components::button::ButtonVariant;
 use crate::components::column::Column;
 use crate::components::header::{Header, Title};
@@ -110,22 +109,20 @@ pub fn JoinSpace() -> Element {
             Header {
                 Title { title: "Join a Space" }
             }
-            ButtonHolder {
-                Input {
-                    r#type: "text",
-                    value: "{invite_url}",
-                    oninput: move |e: FormEvent| invite_url.set(e.value()),
-                    placeholder: "Paste anytype:// or invite.any.coop link",
-                    disabled: is_loading,
-                }
-                Button {
-                    onclick: on_join,
-                    disabled: is_loading || invite_url.read().is_empty(),
-                    if is_loading {
-                        "Processing..."
-                    } else {
-                        "Join"
-                    }
+            Input {
+                r#type: "text",
+                value: "{invite_url}",
+                oninput: move |e: FormEvent| invite_url.set(e.value()),
+                placeholder: "Paste anytype:// or invite.any.coop link",
+                disabled: is_loading,
+            }
+            Button {
+                onclick: on_join,
+                disabled: is_loading || invite_url.read().is_empty(),
+                if is_loading {
+                    "Processing..."
+                } else {
+                    "Join"
                 }
             }
             match &*status.read() {

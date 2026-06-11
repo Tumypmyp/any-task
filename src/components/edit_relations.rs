@@ -204,7 +204,8 @@ pub fn Property(
     rsx! {
         Column { key: "{id:#?}",
 
-            button {
+            Button {
+                size: ButtonSize::Xs,
                 // variant: ButtonVariant::Primary,
                 onclick: move |_| {
                     positions
@@ -215,9 +216,9 @@ pub fn Property(
                 "+"
             }
             Row { position: RowPosition::Middle,
-
-                button {
-                    // variant: ButtonVariant::Primary,
+                Button {
+                    size: ButtonSize::Xs,
+                    style: "align-self: stretch; height: auto;",
                     onclick: move |_| {
                         positions
                             .with_mut(|v| {
@@ -227,7 +228,6 @@ pub fn Property(
                     "+"
                 }
                 Combobox::<RelationKey> {
-                    // style: "display: flex; align-items: center; justify-content: center; flex: 1 1 auto; min-width: 1;",
                     value: Some(current_relation.into()),
                     query: Some(query()),
                     on_value_change: move |next: Option<RelationKey>| {
@@ -248,8 +248,10 @@ pub fn Property(
                     PropertyOptions { all_properties }
 
                 }
-                button {
-                    // variant: ButtonVariant::Destructive,
+                Button {
+                    size: ButtonSize::Xs,
+                    style: "align-self: center;",
+                    variant: ButtonVariant::Destructive,
                     onclick: move |_| {
                         positions
                             .with_mut(|v| {
@@ -261,7 +263,9 @@ pub fn Property(
                     },
                     "X"
                 }
-                button {
+                Button {
+                    size: ButtonSize::Xs,
+                    style: "align-self: stretch; height: auto;",
                     // variant: ButtonVariant::Primary,
                     onclick: move |_| {
                         positions
@@ -272,7 +276,8 @@ pub fn Property(
                     "+"
                 }
             }
-            button {
+            Button {
+                size: ButtonSize::Xs,
                 onclick: move |_| {
                     positions
                         .with_mut(|v| {

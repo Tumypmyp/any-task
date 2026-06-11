@@ -1,7 +1,6 @@
 pub mod action;
 pub mod add_relations;
 pub mod base;
-pub mod button;
 pub mod checkbox;
 pub mod choose_view;
 pub mod column;
@@ -21,3 +20,4 @@ pub mod switch;
 pub mod toast;
 pub mod combobox;
 pub mod sheet;
+pub mod button;

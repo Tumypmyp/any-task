@@ -22,12 +22,10 @@ pub fn EditView(
 ) -> Element {
     let mut open = use_signal(|| false);
     rsx! {
-        ButtonHolder {
-            Button {
-                variant: ButtonVariant::Secondary,
-                onclick: move |_| open.set(true),
-                "Edit view"
-            }
+        Button {
+            variant: ButtonVariant::Secondary,
+            onclick: move |_| open.set(true),
+            "Edit view"
         }
         Sheet { open: open(), on_open_change: move |v| open.set(v),
             SheetContent {
