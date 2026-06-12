@@ -385,3 +385,45 @@ pub struct ViewInfo {
     pub id: String,
     pub name: String,
 }
+
+#[derive(Clone, PartialEq, Default)]
+pub struct SpacesState {
+    pub order: Vec<String>,
+    pub details: HashMap<String, SpaceDetails>,
+}
+
+#[derive(Clone, PartialEq)]
+pub struct SpaceDetails {
+    pub object_id: String,
+    pub target_space_id: String,
+    pub name: String,
+    pub icon_image: String,
+    pub description: String,
+}
+
+#[derive(Clone, PartialEq, Default)]
+pub struct SetsState {
+    pub order: Vec<String>,
+    pub details: HashMap<String, SetDetails>,
+}
+
+#[derive(Clone, PartialEq)]
+pub struct SetDetails {
+    pub object_id: String,
+    pub name: String,
+    pub layout: i32,
+}
+#[derive(Clone, PartialEq, Default)]
+pub struct ListObjectsState {
+    pub order: Vec<String>,
+    pub details: HashMap<String, ObjectDetails>,
+}
+
+#[derive(Clone, PartialEq, Default)]
+pub struct ObjectDetails {
+    pub object_id: String,
+    pub name: String,
+    pub layout: i64,
+    // add more fields as needed
+    pub fields: std::collections::BTreeMap<String, prost_types::Value>,
+}

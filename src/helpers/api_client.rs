@@ -1,24 +1,33 @@
 use crate::helpers::models::*;
+use crate::protos::Event;
+use crate::protos::StreamRequest;
 use crate::protos::anytype_model::RelationFormat;
 use crate::protos::anytype_model::block::content::dataview;
 use crate::protos::anytype_model::block::*;
 use crate::protos::anytype_model::object_type::*;
 use crate::protos::client_commands_client::ClientCommandsClient;
+use crate::protos::client_commands_client::*;
+use crate::protos::event::Message;
+use crate::protos::event::message::Value::*;
 use crate::protos::rpc::*;
 use anyhow::Context;
 use anyhow::Result;
 use dioxus::prelude::*;
+use std::collections::HashMap;
 use tonic::Request;
 use tonic::metadata::MetadataValue;
 use tonic::service::interceptor::InterceptedService;
 use tonic::transport::Channel;
 pub static API_CLIENT: GlobalSignal<Option<Client>> = Signal::global(|| None);
+pub static RECONNECT_COUNT: GlobalSignal<u32> = Signal::global(|| 0);
+
 #[derive(Clone, Debug)]
 pub struct Client {
     pub client: ClientCommandsClient<InterceptedService<Channel, AuthInterceptor>>,
     pub account_id: String,
     pub tech_space_id: String,
     pub network_id: String,
+    pub token: String,
 }
 use tonic::Status;
 use tonic::service::Interceptor;
@@ -32,7 +41,8 @@ impl Interceptor for AuthInterceptor {
         Ok(request)
     }
 }
-fn extract_string(val: Option<&prost_types::Value>) -> String {
+
+pub fn extract_string(val: Option<&prost_types::Value>) -> String {
     if let Some(prost_types::Value {
         kind: Some(prost_types::value::Kind::StringValue(s)),
     }) = val
@@ -42,7 +52,7 @@ fn extract_string(val: Option<&prost_types::Value>) -> String {
         String::new()
     }
 }
-fn extract_number(val: Option<&prost_types::Value>) -> i32 {
+pub fn extract_number(val: Option<&prost_types::Value>) -> i32 {
     if let Some(prost_types::Value {
         kind: Some(prost_types::value::Kind::NumberValue(n)),
     }) = val
@@ -113,6 +123,7 @@ impl Client {
                 account_id: account.id,
                 tech_space_id,
                 network_id,
+                token: session_res.token.clone(),
             },
         ))
     }
@@ -175,41 +186,19 @@ impl Client {
             account_id: account.id,
             tech_space_id,
             network_id,
+            token: session_res.token.clone(),
         })
     }
-    /// Subscribes to the object search and parses out the target space IDs.
-    pub async fn fetch_spaces(&self) -> Result<Vec<(String, String)>> {
-        let mut grpc_client = self.client.clone();
-        let req = Request::new(object::search_subscribe::Request {
-            space_id: self.tech_space_id.clone(),
-            sub_id: "space".to_string(),
-            filters: vec![content::dataview::Filter {
-                operator: content::dataview::filter::Operator::No.into(),
-                relation_key: "spaceLocalStatus".to_string(),
-                condition: content::dataview::filter::Condition::Equal.into(),
-                value: Some(prost_types::Value {
-                    kind: Some(prost_types::value::Kind::NumberValue(2.0)),
-                }),
-                ..Default::default()
-            }],
-            keys: vec!["targetSpaceId".to_string(), "name".to_string()],
-            ..Default::default()
-        });
-        let response = grpc_client
-            .object_search_subscribe(req)
-            .await
-            .context("Search subscribe error")?
-            .into_inner();
-        Ok(response
-            .records
-            .into_iter()
-            .map(|record| {
-                let id = extract_string(record.fields.get("targetSpaceId"));
-                let name = extract_string(record.fields.get("name"));
-                (id, name)
+    pub async fn listen_session_events(
+        &mut self,
+    ) -> Result<tonic::Response<tonic::codec::Streaming<Event>>, tonic::Status> {
+        self.client
+            .listen_session_events(StreamRequest {
+                token: self.token.clone(),
             })
-            .collect())
+            .await
     }
+
     pub async fn join_space_from_link(&self, url: &str) -> Result<String> {
         let mut client = self.client.clone();
         let invite = parse_invite_url(url)?;
@@ -251,50 +240,6 @@ impl Client {
             }
         }
         Ok(preview_res.space_name)
-    }
-    pub async fn fetch_sets(&self, space_id: &str) -> Result<Vec<(String, String, i32)>> {
-        let mut grpc_client = self.client.clone();
-        let req = Request::new(object::search::Request {
-            space_id: space_id.to_string(),
-            filters: vec![content::dataview::Filter {
-                operator: content::dataview::filter::Operator::No.into(),
-                relation_key: "resolvedLayout".to_string(),
-                condition: content::dataview::filter::Condition::In.into(),
-                value: Some(prost_types::Value {
-                    kind: Some(prost_types::value::Kind::ListValue(
-                        prost_types::ListValue {
-                            values: vec![prost_types::Value {
-                                kind: Some(prost_types::value::Kind::NumberValue(
-                                    Layout::Set as i32 as f64,
-                                )),
-                            }],
-                        },
-                    )),
-                }),
-                ..Default::default()
-            }],
-            keys: vec![
-                "id".to_string(),
-                "name".to_string(),
-                "resolvedLayout".to_string(),
-            ],
-            ..Default::default()
-        });
-        let response = grpc_client
-            .object_search(req)
-            .await
-            .context("ObjectSearch error")?
-            .into_inner();
-        Ok(response
-            .records
-            .into_iter()
-            .filter_map(|record| {
-                let id = extract_string(record.fields.get("id"));
-                let name = extract_string(record.fields.get("name"));
-                let layout = extract_number(record.fields.get("resolvedLayout"));
-                Some((id, name, layout))
-            })
-            .collect())
     }
     pub async fn fetch_properties(&self, space_id: &str) -> Result<Vec<RelationInfo>> {
         let mut grpc_client = self.client.clone();
@@ -492,6 +437,131 @@ impl Client {
             .unwrap_or_default();
         Ok(fields.into_iter().collect())
     }
+    /// Registers the spaces subscription and returns the initial snapshot.
+    /// The subscription stays alive server-side until `unsubscribe_spaces` is called.
+    pub async fn subscribe_spaces(&self) -> Result<object::search_subscribe::Response> {
+        let mut grpc_client = self.client.clone();
+        let req = Request::new(object::search_subscribe::Request {
+            space_id: self.tech_space_id.clone(),
+            sub_id: SPACES_SUB.to_string(),
+            filters: vec![
+                content::dataview::Filter {
+                    relation_key: "resolvedLayout".to_string(),
+                    condition: content::dataview::filter::Condition::Equal.into(),
+                    value: Some(prost_types::Value {
+                        kind: Some(prost_types::value::Kind::NumberValue(
+                            Layout::SpaceView as i32 as f64,
+                        )),
+                    }),
+                    ..Default::default()
+                },
+                // spaceAccountStatus NOT IN [SpaceDeleted(7), SpaceRemoving(10)]
+                // content::dataview::Filter {
+                //     relation_key: "spaceAccountStatus".to_string(),
+                //     condition: content::dataview::filter::Condition::NotIn.into(),
+                //     value: Some(prost_types::Value {
+                //         kind: Some(prost_types::value::Kind::ListValue(
+                //             prost_types::ListValue {
+                //                 values: vec![
+                //                     prost_types::Value {
+                //                         kind: Some(prost_types::value::Kind::NumberValue(7.0)),
+                //                     },
+                //                     prost_types::Value {
+                //                         kind: Some(prost_types::value::Kind::NumberValue(10.0)),
+                //                     },
+                //                 ],
+                //             },
+                //         )),
+                //     }),
+                //     ..Default::default()
+                // },
+            ],
+            sorts: vec![/* spaceOrder asc if you want ordering */],
+            keys: vec![
+                "id".to_string(),
+                "targetSpaceId".to_string(),
+                "name".to_string(),
+                "iconImage".to_string(),
+                "iconOption".to_string(),
+                "description".to_string(),
+                "spaceLocalStatus".to_string(),
+                "spaceOrder".to_string(),
+            ],
+            ..Default::default()
+        });
+        Ok(grpc_client
+            .object_search_subscribe(req)
+            .await
+            .context("Search subscribe error")?
+            .into_inner())
+    }
+
+    /// Cancels the spaces subscription.
+    pub async fn unsubscribe_spaces(&self) -> Result<()> {
+        let mut grpc_client = self.client.clone();
+        let req = Request::new(object::search_unsubscribe::Request {
+            sub_ids: vec![SPACES_SUB.to_string()],
+        });
+        grpc_client
+            .object_search_unsubscribe(req)
+            .await
+            .context("Search unsubscribe error")?;
+        Ok(())
+    }
+    pub async fn subscribe_sets(
+        &self,
+        space_id: String,
+        sub_id: &str,
+    ) -> Result<object::search_subscribe::Response> {
+        let mut grpc_client = self.client.clone();
+        let req = Request::new(object::search_subscribe::Request {
+            space_id: space_id.to_string(),
+            sub_id: sub_id.to_string(),
+            filters: vec![content::dataview::Filter {
+                relation_key: "resolvedLayout".to_string(),
+                condition: content::dataview::filter::Condition::In.into(),
+                value: Some(prost_types::Value {
+                    kind: Some(prost_types::value::Kind::ListValue(
+                        prost_types::ListValue {
+                            values: vec![
+                                prost_types::Value {
+                                    kind: Some(prost_types::value::Kind::NumberValue(3.0)), // Set
+                                },
+                                prost_types::Value {
+                                    kind: Some(prost_types::value::Kind::NumberValue(14.0)), // Collection
+                                },
+                            ],
+                        },
+                    )),
+                }),
+                ..Default::default()
+            }],
+            keys: vec![
+                "id".to_string(),
+                "name".to_string(),
+                "resolvedLayout".to_string(),
+                "iconEmoji".to_string(),
+                "iconImage".to_string(),
+            ],
+            ..Default::default()
+        });
+        grpc_client
+            .object_search_subscribe(req)
+            .await
+            .context("subscribe_sets error")
+            .map(|r| r.into_inner())
+    }
+
+    pub async fn unsubscribe_sets(&self, sub_id: String) -> Result<()> {
+        let mut grpc_client = self.client.clone();
+        grpc_client
+            .object_search_unsubscribe(Request::new(object::search_unsubscribe::Request {
+                sub_ids: vec![sub_id.to_string()],
+            }))
+            .await
+            .context("unsubscribe_sets error")?;
+        Ok(())
+    }
 }
 use url::Url;
 pub struct ParsedInvite {
@@ -529,3 +599,185 @@ pub fn parse_invite_url(invite_url: &str) -> Result<ParsedInvite> {
     }
     anyhow::bail!("Invalid invite url scheme: {}", invite_url)
 }
+
+fn get_string(v: prost_types::Value) -> String {
+    match v.kind {
+        Some(prost_types::value::Kind::StringValue(s)) => s,
+        _ => String::new(),
+    }
+}
+pub fn handle_msg(msg: Message) {
+    match msg.value {
+        // Fires before subscriptionAdd — store details by object id
+        Some(ObjectDetailsSet(v)) if v.sub_ids.iter().any(|s| s == SPACES_SUB) => {
+            let det = parse_space_details(&v.id, &v.details.unwrap_or_default().fields);
+            SPACES.write().details.insert(v.id, det);
+        }
+        // Patch changed keys
+        Some(ObjectDetailsAmend(v)) if v.sub_ids.iter().any(|s| s == SPACES_SUB) => {
+            let mut state = SPACES.write();
+            if let Some(det) = state.details.get_mut(&v.id) {
+                tracing::debug!("amend: {:#?}", v.details);
+                for kv in v.details {
+                    match kv.key.as_str() {
+                        "name" => det.name = get_string(kv.value.unwrap()),
+                        "iconImage" => det.icon_image = get_string(kv.value.unwrap()),
+                        "description" => det.description = get_string(kv.value.unwrap()),
+                        "targetSpaceId" => det.target_space_id = get_string(kv.value.unwrap()),
+                        _ => {}
+                    }
+                }
+            }
+        }
+        // Insert into ordered list at the right position
+        Some(SubscriptionAdd(v)) if v.sub_id == SPACES_SUB => {
+            let mut state = SPACES.write();
+            state.order.retain(|id| id != &v.id); // remove if already present
+            if v.after_id.is_empty() {
+                state.order.insert(0, v.id);
+            } else {
+                let pos = state
+                    .order
+                    .iter()
+                    .position(|id| id == &v.after_id)
+                    .map(|i| i + 1)
+                    .unwrap_or(state.order.len());
+                state.order.insert(pos, v.id);
+            }
+        }
+        // Remove from both structures
+        Some(SubscriptionRemove(v)) if v.sub_id == SPACES_SUB => {
+            let mut state = SPACES.write();
+            state.order.retain(|id| id != &v.id);
+            state.details.remove(&v.id);
+        }
+        Some(ObjectDetailsSet(v)) if v.sub_ids.iter().any(|s| s.starts_with("sets-")) => {
+            let det = SetDetails {
+                object_id: v.id.clone(),
+                name: extract_string(v.details.as_ref().and_then(|d| d.fields.get("name"))),
+                layout: extract_number(
+                    v.details
+                        .as_ref()
+                        .and_then(|d| d.fields.get("resolvedLayout")),
+                ),
+            };
+            SETS.write().details.insert(v.id, det);
+        }
+        Some(ObjectDetailsAmend(v)) if v.sub_ids.iter().any(|s| s.starts_with("sets-")) => {
+            let mut state = SETS.write();
+            if let Some(det) = state.details.get_mut(&v.id) {
+                for kv in v.details {
+                    match kv.key.as_str() {
+                        "name" => det.name = get_string(kv.value.unwrap()),
+                        "resolvedLayout" => {
+                            if let Some(prost_types::value::Kind::NumberValue(n)) =
+                                kv.value.and_then(|v| v.kind)
+                            {
+                                det.layout = n as i32;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
+        Some(SubscriptionAdd(v)) if v.sub_id.starts_with("sets-") => {
+            let mut state = SETS.write();
+            state.order.retain(|id| id != &v.id);
+            if v.after_id.is_empty() {
+                state.order.insert(0, v.id);
+            } else {
+                let pos = state
+                    .order
+                    .iter()
+                    .position(|id| id == &v.after_id)
+                    .map(|i| i + 1)
+                    .unwrap_or(state.order.len());
+                state.order.insert(pos, v.id);
+            }
+        }
+        Some(SubscriptionRemove(v)) if v.sub_id.starts_with("sets-") => {
+            let mut state = SETS.write();
+            state.order.retain(|id| id != &v.id);
+            state.details.remove(&v.id);
+        }
+        // // objectDetailsSet — for any set-* subscription
+        // Some(ObjectDetailsSet(v)) if v.sub_ids.iter().any(|s| s.starts_with("set-")) => {
+        //     let mut states = LIST_STATES.write();
+        //     for sub_id in v.sub_ids.iter().filter(|s| s.starts_with("set-")) {
+        //         let state = states
+        //             .entry(sub_id["set-".len()..].to_string())
+        //             .or_default();
+        //         let det = parse_object_details(&v.id, &v.details.as_ref().unwrap().fields);
+        //         state.details.insert(v.id.clone(), det);
+        //     }
+        // }
+        // // objectDetailsAmend
+        // Some(ObjectDetailsAmend(v)) if v.sub_ids.iter().any(|s| s.starts_with("set-")) => {
+        //     let mut states = LIST_STATES.write();
+        //     for sub_id in v.sub_ids.iter().filter(|s| s.starts_with("set-")) {
+        //         let list_id = &sub_id["set-".len()..];
+        //         if let Some(state) = states.get_mut(list_id) {
+        //             if let Some(det) = state.details.get_mut(&v.id) {
+        //                 for kv in &v.details {
+        //                     match kv.key.as_str() {
+        //                         "name" => det.name = get_string(kv.value.clone().unwrap()),
+        //                         _ => {}
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+        // // subscriptionAdd
+        // Some(SubscriptionAdd(v)) if v.sub_id.starts_with("set-") => {
+        //     let list_id = v.sub_id["set-".len()..].to_string();
+        //     let mut states = LIST_STATES.write();
+        //     let state = states.entry(list_id).or_default();
+        //     state.order.retain(|id| id != &v.id);
+        //     if v.after_id.is_empty() {
+        //         state.order.insert(0, v.id);
+        //     } else {
+        //         let pos = state
+        //             .order
+        //             .iter()
+        //             .position(|id| id == &v.after_id)
+        //             .map(|i| i + 1)
+        //             .unwrap_or(state.order.len());
+        //         state.order.insert(pos, v.id);
+        //     }
+        // }
+        // // subscriptionRemove
+        // Some(SubscriptionRemove(v)) if v.sub_id.starts_with("set-") => {
+        //     let list_id = v.sub_id["set-".len()..].to_string();
+        //     let mut states = LIST_STATES.write();
+        //     if let Some(state) = states.get_mut(&list_id) {
+        //         state.order.retain(|id| id != &v.id);
+        //         state.details.remove(&v.id);
+        //     }
+        // }
+        _ => {}
+    }
+}
+
+pub static SPACES: GlobalSignal<SpacesState> = Signal::global(SpacesState::default);
+pub const SPACES_SUB: &str = "spaces";
+pub fn parse_space_details(
+    object_id: &str,
+    fields: &std::collections::BTreeMap<String, prost_types::Value>,
+) -> SpaceDetails {
+    SpaceDetails {
+        object_id: object_id.to_string(),
+        target_space_id: extract_string(fields.get("targetSpaceId")),
+        name: extract_string(fields.get("name")),
+        icon_image: extract_string(fields.get("iconImage")),
+        description: extract_string(fields.get("description")),
+    }
+}
+
+pub static SETS: GlobalSignal<SetsState> = Signal::global(SetsState::default);
+pub fn sets_sub_id(space_id: String) -> String {
+    format!("sets-{}", space_id)
+}
+
+pub static LIST_OBJECTS: GlobalSignal<ListObjectsState> = Signal::global(ListObjectsState::default);

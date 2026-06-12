@@ -1,7 +1,6 @@
 pub mod action;
 pub mod base;
 pub mod button;
-pub mod checkbox;
 pub mod choose_view;
 pub mod column;
 pub mod combobox;
@@ -20,3 +19,4 @@ pub mod sheet;
 pub mod slider;
 pub mod switch;
 pub mod toast;
+pub mod checkbox;

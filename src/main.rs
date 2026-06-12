@@ -1,4 +1,6 @@
 use crate::components::toast::ToastProvider;
+use futures_util::StreamExt;
+use tonic::Streaming;
 mod engine;
 use engine::*;
 mod protos;
@@ -9,10 +11,14 @@ use dioxus_desktop::{Config, WindowBuilder};
 use dioxus_router::components::{HistoryProvider, Router};
 use std::env;
 use std::path::PathBuf;
+use views::home::*;
+
+use crate::protos::Event;
 use views::*;
 mod components;
 mod views;
 use helpers::API_CLIENT;
+use helpers::*;
 mod helpers;
 use serde::{Deserialize, Serialize};
 mod persistent_history;
@@ -93,6 +99,7 @@ pub fn get_app_data_dir() -> PathBuf {
         PathBuf::from(".anytask")
     }
 }
+
 #[component]
 fn App() -> Element {
     set_theme(true);
@@ -119,6 +126,48 @@ fn App() -> Element {
     use_drop(move || {
         tracing::info!("App closing. Stopping engine...");
         stop_engine();
+    });
+
+    let event_loop = use_coroutine(|mut rx: UnboundedReceiver<Client>| async move {
+        let Some(mut client): Option<Client> = rx.next().await else {
+            return;
+        };
+
+        loop {
+            *RECONNECT_COUNT.write() += 1;
+            match client.clone().listen_session_events().await {
+                Ok(resp) => {
+                    let mut stream: Streaming<Event> = resp.into_inner();
+                    loop {
+                        tokio::select! {
+                            new_client = rx.next() => {
+                                match new_client {
+                                    Some(c) => { client = c; break; }
+                                    None => return,
+                                }
+                            }
+                            msg = stream.message() => {
+                                match msg {
+                                    Ok(Some(event)) => {
+                                        for msg in event.messages { handle_msg(msg); }
+                                    }
+                                    Ok(None) => { tracing::warn!("stream closed, reconnecting"); break; }
+                                    Err(e) => { tracing::warn!("stream error: {e}, reconnecting"); break; }
+                                }
+                            }
+                        }
+                    }
+                }
+                Err(e) => tracing::warn!("event stream error: {e}, reconnecting"),
+            }
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        }
+    });
+
+    use_effect(move || {
+        if let Some(client) = API_CLIENT.read().as_ref().cloned() {
+            event_loop.send(client);
+        }
     });
     rsx! {
         document::Link { rel: "icon", href: FAVICON }

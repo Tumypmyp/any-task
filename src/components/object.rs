@@ -96,7 +96,7 @@ pub fn ObjectRelations(
             rsx! {
                 div { style: "display: flex; justify-content: center; \
                                  width: 100%; height: 100%; min-width: 0; min-height: 0; \
-                             align-items: stretch; box-sizing: border-box;",
+                             align-items: center; box-sizing: border-box;",
                     PropertyValue {
                         //   space_id: props.space_id,
                         //   object_id: props.id,
