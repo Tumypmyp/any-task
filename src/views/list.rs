@@ -1,4 +1,3 @@
-use crate::API_CLIENT;
 use crate::components::action::{ActionHolder, BaseActions};
 use crate::components::base::message;
 use crate::components::column::*;
@@ -6,6 +5,7 @@ use crate::components::edit_view::*;
 use crate::components::header::{Header, Title};
 use crate::components::object::*;
 use crate::components::separator::Separator;
+use crate::helpers::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
 use dioxus_sdk_storage::LocalStorage;
@@ -107,20 +107,7 @@ pub fn ListHeader(
     positions: Store<TileTree>,
     all_properties: ReadSignal<Vec<RelationInfo>>,
 ) -> Element {
-    let resp = use_resource({
-        move || async move {
-            let client_guard = API_CLIENT.read();
-            let client = client_guard
-                .as_ref()
-                .ok_or_else(|| anyhow::anyhow!("No API client available, try reloading the app"))?;
-            client.get_list_name(&space_id(), &list_id()).await
-        }
-    });
-    let name = match &*resp.read() {
-        None => return rsx! { "Loading..." },
-        Some(Err(e)) => return rsx! { "Error: {e}" },
-        Some(Ok(name)) => name.clone(),
-    };
+    let name = SET_META.read().name.clone();
     rsx! {
         Header {
             Title { title: "{name}" }
@@ -141,31 +128,162 @@ pub fn Objects(
     view_id: ReadSignal<String>,
     positions: Store<TileTree>,
 ) -> Element {
-    let resp = use_resource({
-        move || async move {
-            let client_guard = API_CLIENT.read();
-            let client = client_guard
-                .as_ref()
-                .ok_or_else(|| anyhow::anyhow!("No API client available, try reloading the app"))?;
-            client.get_list_objects(&space_id(), &list_id()).await
+    use_resource(move || {
+        let _reconnect = RECONNECT_COUNT.read();
+        let sid = space_id.read().clone();
+        let lid = list_id.read().clone();
+        let client = API_CLIENT.read().as_ref().cloned();
+        async move {
+            let Some(client) = client else {
+                tracing::warn!("subscribe_set_meta: no client");
+                return;
+            };
+            match client.subscribe_set_meta(&sid, &lid).await {
+                Ok(resp) => {
+                    if let Some(record) = resp.records.first() {
+                        let mut state = SET_META.write();
+                        state.name = extract_string(record.fields.get("name"));
+                        state.set_of_ids = extract_list_strings(record.fields.get("setOf"));
+                    }
+                }
+                Err(e) => tracing::error!("subscribe_set_meta: {e:#}"),
+            }
         }
     });
-    let resp_value = resp.read();
-    let objects = match resp_value.as_ref() {
-        None => return rsx! { "Loading..." },
-        Some(Err(e)) => return rsx! { "Error: {e}" },
-        Some(Ok(objs)) => objs.clone(),
+    use_resource(move || {
+        let _reconnect = RECONNECT_COUNT.read();
+        let sid = space_id.read().clone();
+        let lid = list_id.read().clone();
+        let set_of_ids = SET_META.read().set_of_ids.clone(); // ← tracked dependency
+        let keys = pane_keys(&positions.read());
+        let client = API_CLIENT.read().as_ref().cloned();
+        async move {
+            let Some(client) = client else {
+                return;
+            };
+            if set_of_ids.is_empty() {
+                return; // wait until meta arrives
+            }
+            let mut state = LIST_OBJECTS.write();
+            state.order.clear();
+            state.details.clear();
+            drop(state);
+            match client
+                .subscribe_list_objects(&sid, &lid, set_of_ids, keys)
+                .await
+            {
+                Ok(resp) => {
+                    let mut state = LIST_OBJECTS.write();
+                    for record in resp.records {
+                        let id = extract_string(record.fields.get("id"));
+                        let det = parse_object_details(&id, &record.fields);
+                        state.order.push(id.clone());
+                        state.details.insert(id, det);
+                    }
+                }
+                Err(e) => tracing::error!("subscribe_list_objects: {e:#}"),
+            }
+        }
+    });
+
+    use_drop(move || {
+        *SET_META.write() = SetMetaState::default();
+        *LIST_OBJECTS.write() = ListObjectsState::default();
+        let lid = list_id.peek().clone();
+        spawn(async move {
+            if let Some(client) = API_CLIENT.read().as_ref().cloned() {
+                client.unsubscribe_set_meta(&lid).await.ok();
+                client.unsubscribe_list_objects(lid).await.ok();
+            }
+        });
+    });
+
+    // use_resource(move || {
+    //     let _reconnect = RECONNECT_COUNT.read();
+    //     let client = API_CLIENT.read().as_ref().cloned();
+    //     let sid = space_id();
+    //     let lid = list_id();
+    //     let sets = SETS.read().details.clone();
+    //     tracing::debug!("sets: {:#?}", sets);
+
+    //     let set_of = SETS
+    //         .read()
+    //         .details
+    //         .get(&list_id())
+    //         .unwrap_or(&SetDetails {
+    //             object_id: "".to_string(),
+    //             name: "".to_string(),
+    //             layout: 0,
+    //             set_of: vec![],
+    //         })
+    //         .set_of
+    //         .clone();
+
+    //     // Synchronous read — positions is tracked as a reactive dependency.
+    //     // When any Pane's relation_key changes or nodes are added/removed,
+    //     // use_resource cancels the old task and re-runs with the new keys.
+    //     let keys = pane_keys(&positions.read());
+    //     async move {
+    //         let Some(client) = client else {
+    //             tracing::warn!("subscribe_list_objects: no client yet");
+    //             return;
+    //         };
+    //         match client
+    //             .subscribe_list_objects(&sid, &lid, set_of, keys)
+    //             .await
+    //         {
+    //             Ok(resp) => {
+    //                 let mut state = LIST_OBJECTS.write();
+    //                 state.order.clear();
+    //                 state.details.clear();
+    //                 for record in resp.records {
+    //                     let id = extract_string(record.fields.get("id"));
+    //                     let det = parse_object_details(&id, &record.fields);
+    //                     state.order.push(id.clone());
+    //                     state.details.insert(id, det);
+    //                 }
+    //             }
+    //             Err(e) => tracing::error!("subscribe_list_objects: {e:#}"),
+    //         }
+    //     }
+    // });
+
+    // use_drop(move || {
+    //     *LIST_OBJECTS.write() = ListObjectsState::default();
+    //     spawn(async move {
+    //         if let Some(client) = API_CLIENT.read().as_ref().cloned() {
+    //             client.unsubscribe_list_objects(list_id()).await.ok();
+    //         }
+    //     });
+    // });
+
+    let items: Vec<ObjectDetails> = {
+        let state = LIST_OBJECTS.read();
+        state
+            .order
+            .iter()
+            .filter_map(|id| state.details.get(id).cloned())
+            .collect()
     };
+
     rsx! {
         Column { style: "width: 98vw;",
-            for id in objects {
-                Separator {
-                    style: "margin: 2px 5px; width: 95vw;",
-                    horizontal: true,
-                    decorative: true,
-                }
-                Object { positions, space_id, id }
+            for det in items {
+                Object { key: "{det.id}", positions, details: det }
             }
         }
     }
+}
+
+fn pane_keys(tree: &TileTree) -> Vec<String> {
+    let mut keys = vec!["id".to_string(), "name".to_string()];
+    for node in tree.nodes.values() {
+        if let Node::Pane { relation_key, .. } = node {
+            let k = relation_key.as_str().to_string();
+            if !keys.contains(&k.clone()) {
+                keys.push(k.to_string());
+            }
+        }
+    }
+    keys
 }

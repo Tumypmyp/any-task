@@ -7,35 +7,22 @@ use std::collections::HashMap;
 
 #[derive(Clone, Props, PartialEq)]
 pub struct ObjectProps {
-    pub space_id: ReadSignal<String>,
-    pub id: ReadSignal<String>,
+    // pub space_id: ReadSignal<String>,
+    // pub id: ReadSignal<String>,
     pub positions: Store<TileTree>,
+    pub details: ObjectDetails,
 }
 #[component]
 pub fn Object(props: ObjectProps) -> Element {
-    let resp = use_resource({
-        move || async move {
-            let client_guard = API_CLIENT.read();
-            let client = client_guard
-                .as_ref()
-                .ok_or_else(|| anyhow::anyhow!("No API client available, try reloading the app"))?;
-            client
-                .get_object_properties(&(props.space_id)(), &(props.id)())
-                .await
-        }
-    });
-    let resp_value = resp.read();
-    let property_values = match resp_value.as_ref() {
-        Some(Err(e)) => return rsx! { "Error: {e}" },
-        None => return rsx! { "Loading..." },
-        Some(Ok(props)) => props,
-    };
+    let values: HashMap<String, prost_types::Value> = props
+        .details
+        .fields
+        .iter()
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
+
     rsx! {
-        ObjectRelations {
-            id: NodeId(0),
-            positions: props.positions,
-            values: property_values.clone(),
-        }
+        ObjectRelations { id: NodeId(0), positions: props.positions, values }
     }
 }
 

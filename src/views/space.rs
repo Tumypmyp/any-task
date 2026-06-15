@@ -45,6 +45,7 @@ pub fn Collections(space_id: ReadSignal<String>) -> Element {
                     object_id: id.clone(),
                     name: extract_string(record.fields.get("name")),
                     layout: extract_number(record.fields.get("resolvedLayout")),
+                    set_of: extract_set_of_ids(&record.fields),
                 };
                 state.order.push(id.clone());
                 state.details.insert(id, det);
@@ -59,8 +60,9 @@ pub fn Collections(space_id: ReadSignal<String>) -> Element {
                 client.unsubscribe_sets(sub_id).await.ok();
             }
         });
+        // to fix. now it reusses this state in list view
         // Clear state so stale data doesn't show on next mount
-        *SETS.write() = SetsState::default();
+        // *SETS.write() = SetsState::default();
     });
 
     let items: Vec<(String, String)> = {

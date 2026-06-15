@@ -407,23 +407,28 @@ pub struct SetsState {
     pub details: HashMap<String, SetDetails>,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct SetDetails {
     pub object_id: String,
     pub name: String,
     pub layout: i32,
+    pub set_of: Vec<String>,
 }
+
 #[derive(Clone, PartialEq, Default)]
 pub struct ListObjectsState {
     pub order: Vec<String>,
     pub details: HashMap<String, ObjectDetails>,
 }
 
-#[derive(Clone, PartialEq, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct ObjectDetails {
-    pub object_id: String,
+    pub id: String,
     pub name: String,
-    pub layout: i64,
-    // add more fields as needed
     pub fields: std::collections::BTreeMap<String, prost_types::Value>,
+}
+#[derive(Clone, Default, PartialEq)]
+pub struct SetMetaState {
+    pub name: String,
+    pub set_of_ids: Vec<String>, // raw type object IDs from "setOf"
 }

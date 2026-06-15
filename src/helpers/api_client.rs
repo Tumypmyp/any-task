@@ -293,150 +293,6 @@ impl Client {
             .collect();
         Ok(properties)
     }
-    pub async fn get_list_name(&self, space_id: &str, list_id: &str) -> anyhow::Result<String> {
-        let mut client = self.client.clone();
-        let req = tonic::Request::new(object::show::Request {
-            object_id: list_id.to_string(),
-            space_id: space_id.to_string(),
-            ..Default::default()
-        });
-        let resp = client
-            .object_show(req)
-            .await
-            .context("get_list_name error")?
-            .into_inner();
-        if let Some(e) = &resp.error {
-            if e.code != 0 {
-                anyhow::bail!("ObjectShow error ({}): {}", e.code, e.description);
-            }
-        }
-        let name = extract_string(
-            resp.object_view.context("no details")?.details[0]
-                .details
-                .clone()
-                .context("no details 2")?
-                .fields
-                .get("name"),
-        );
-        Ok(name)
-    }
-    pub async fn get_list_objects(&self, space_id: &str, list_id: &str) -> Result<Vec<String>> {
-        let mut client = self.client.clone();
-        let show_req = tonic::Request::new(object::show::Request {
-            space_id: space_id.to_string(),
-            object_id: list_id.to_string(),
-            ..Default::default()
-        });
-        let show_res = client
-            .object_show(show_req)
-            .await
-            .context("get_list_name error")?
-            .into_inner();
-        if let Some(e) = &show_res.error {
-            if e.code != 0 {
-                anyhow::bail!("ObjectShow failed ({}): {}", e.code, e.description);
-            }
-        }
-        let details = show_res
-            .object_view
-            .as_ref()
-            .and_then(|v| v.details.first())
-            .and_then(|d| d.details.as_ref())
-            .ok_or_else(|| anyhow::anyhow!("no details in ObjectShow response"))?;
-        let set_of_ids: Vec<String> =
-            match details.fields.get("setOf").and_then(|v| v.kind.as_ref()) {
-                Some(prost_types::value::Kind::ListValue(list)) => list
-                    .values
-                    .iter()
-                    .map(|v| extract_string(Some(v)))
-                    .collect(),
-                _ => vec![],
-            };
-        let mut source_keys = Vec::new();
-        for type_id in &set_of_ids {
-            let req = tonic::Request::new(object::show::Request {
-                space_id: space_id.to_string(),
-                object_id: type_id.clone(),
-                ..Default::default()
-            });
-            let res = client.object_show(req).await?.into_inner();
-            let unique_key = res
-                .object_view
-                .as_ref()
-                .and_then(|v| v.details.first())
-                .and_then(|d| d.details.as_ref())
-                .and_then(|d| d.fields.get("uniqueKey"))
-                .and_then(|v| {
-                    if let Some(prost_types::value::Kind::StringValue(s)) = &v.kind {
-                        Some(s.clone())
-                    } else {
-                        None
-                    }
-                })
-                .unwrap_or_default();
-            if !unique_key.is_empty() {
-                source_keys.push(unique_key);
-            }
-        }
-        let search_req = tonic::Request::new(object::search_subscribe::Request {
-            space_id: space_id.to_string(),
-            sub_id: format!("set-{}", list_id),
-            source: source_keys,
-            keys: vec!["id".to_string()],
-            ..Default::default()
-        });
-        let search_res = client
-            .object_search_subscribe(search_req)
-            .await?
-            .into_inner();
-        if let Some(e) = &search_res.error {
-            if e.code != 0 {
-                anyhow::bail!(
-                    "ObjectSearchSubscribe failed ({}): {}",
-                    e.code,
-                    e.description
-                );
-            }
-        }
-        let results = search_res
-            .records
-            .into_iter()
-            .filter_map(|record| {
-                let id = extract_string(record.fields.get("id"));
-                Some(id)
-            })
-            .collect();
-        Ok(results)
-    }
-    pub async fn get_object_properties(
-        &self,
-        space_id: &str,
-        object_id: &str,
-    ) -> Result<std::collections::HashMap<String, prost_types::Value>> {
-        let mut client = self.client.clone();
-        let show_res = client
-            .object_show(tonic::Request::new(object::show::Request {
-                space_id: space_id.to_string(),
-                object_id: object_id.to_string(),
-                ..Default::default()
-            }))
-            .await
-            .context("get_object_properties: object_show failed")?
-            .into_inner();
-        if let Some(e) = &show_res.error {
-            if e.code != 0 {
-                anyhow::bail!("ObjectShow failed ({}): {}", e.code, e.description);
-            }
-        }
-        let fields = show_res
-            .object_view
-            .as_ref()
-            .and_then(|v| v.details.first())
-            .and_then(|d| d.details.as_ref())
-            .map(|d| d.fields.clone())
-            .unwrap_or_default();
-        Ok(fields.into_iter().collect())
-    }
     /// Registers the spaces subscription and returns the initial snapshot.
     /// The subscription stays alive server-side until `unsubscribe_spaces` is called.
     pub async fn subscribe_spaces(&self) -> Result<object::search_subscribe::Response> {
@@ -542,6 +398,7 @@ impl Client {
                 "resolvedLayout".to_string(),
                 "iconEmoji".to_string(),
                 "iconImage".to_string(),
+                "setOf".to_string(),
             ],
             ..Default::default()
         });
@@ -562,7 +419,87 @@ impl Client {
             .context("unsubscribe_sets error")?;
         Ok(())
     }
+
+    pub async fn subscribe_list_objects(
+        &self,
+        space_id: &str,
+        list_id: &str,
+        set_of: Vec<String>,
+        keys: Vec<String>,
+    ) -> Result<object::search_subscribe::Response> {
+        let mut client = self.client.clone();
+        let mut all_keys = keys;
+        if !all_keys.contains(&"id".to_string()) {
+            all_keys.insert(0, "id".to_string());
+        }
+
+        client
+            .object_search_subscribe(Request::new(object::search_subscribe::Request {
+                space_id: space_id.to_string(),
+                sub_id: format!("list-{}", list_id),
+                source: set_of,
+                keys: all_keys,
+                ..Default::default()
+            }))
+            .await
+            .context("subscribe_list_objects failed")
+            .map(|r| r.into_inner())
+    }
+
+    /// Re-subscribe with the same sub_id but different keys.
+    /// Server atomically replaces the subscription and returns a fresh snapshot.
+    pub async fn update_list_keys(
+        &self,
+        space_id: &str,
+        list_id: &str,
+        set_of: Vec<String>,
+        new_keys: Vec<String>,
+    ) -> Result<object::search_subscribe::Response> {
+        self.subscribe_list_objects(space_id, list_id, set_of, new_keys)
+            .await
+    }
+
+    pub async fn unsubscribe_list_objects(&self, list_id: String) -> Result<()> {
+        let mut client = self.client.clone();
+        client
+            .object_search_unsubscribe(Request::new(object::search_unsubscribe::Request {
+                sub_ids: vec![format!("list-{}", list_id)],
+            }))
+            .await
+            .context("unsubscribe_list_objects failed")?;
+        Ok(())
+    }
+    pub async fn subscribe_set_meta(
+        &self,
+        space_id: &str,
+        set_id: &str,
+    ) -> Result<object::subscribe_ids::Response> {
+        let mut client = self.client.clone();
+        client
+            .object_subscribe_ids(Request::new(object::subscribe_ids::Request {
+                space_id: space_id.to_string(),
+                sub_id: format!("set-meta-{}", set_id),
+                ids: vec![set_id.to_string()],
+                keys: vec!["id".into(), "name".into(), "setOf".into()],
+                ..Default::default()
+            }))
+            .await
+            .context("subscribe_set_meta failed")
+            .map(|r| r.into_inner())
+    }
+
+    pub async fn unsubscribe_set_meta(&self, set_id: &str) -> Result<()> {
+        let mut client = self.client.clone();
+        client
+            .object_search_unsubscribe(Request::new(object::search_unsubscribe::Request {
+                sub_ids: vec![format!("set-meta-{}", set_id)],
+            }))
+            .await
+            .context("unsubscribe_set_meta failed")?;
+        Ok(())
+    }
 }
+
 use url::Url;
 pub struct ParsedInvite {
     pub cid: String,
@@ -629,21 +566,11 @@ pub fn handle_msg(msg: Message) {
                 }
             }
         }
-        // Insert into ordered list at the right position
         Some(SubscriptionAdd(v)) if v.sub_id == SPACES_SUB => {
-            let mut state = SPACES.write();
-            state.order.retain(|id| id != &v.id); // remove if already present
-            if v.after_id.is_empty() {
-                state.order.insert(0, v.id);
-            } else {
-                let pos = state
-                    .order
-                    .iter()
-                    .position(|id| id == &v.after_id)
-                    .map(|i| i + 1)
-                    .unwrap_or(state.order.len());
-                state.order.insert(pos, v.id);
-            }
+            insert_ordered(&mut SPACES.write().order, v.id, &v.after_id);
+        }
+        Some(SubscriptionAdd(v)) if v.sub_id.starts_with("sets-") => {
+            insert_ordered(&mut SETS.write().order, v.id, &v.after_id);
         }
         // Remove from both structures
         Some(SubscriptionRemove(v)) if v.sub_id == SPACES_SUB => {
@@ -660,7 +587,9 @@ pub fn handle_msg(msg: Message) {
                         .as_ref()
                         .and_then(|d| d.fields.get("resolvedLayout")),
                 ),
+                set_of: extract_set_of_ids(&v.details.unwrap().fields),
             };
+            tracing::debug!("got set: {:#?}", det);
             SETS.write().details.insert(v.id, det);
         }
         Some(ObjectDetailsAmend(v)) if v.sub_ids.iter().any(|s| s.starts_with("sets-")) => {
@@ -676,24 +605,12 @@ pub fn handle_msg(msg: Message) {
                                 det.layout = n as i32;
                             }
                         }
+                        "setOf" => {
+                            tracing::warn!("got det update: {:#?}", kv.value); //det.set_of = extract_set_of_ids(&v.details.fields),
+                        }
                         _ => {}
                     }
                 }
-            }
-        }
-        Some(SubscriptionAdd(v)) if v.sub_id.starts_with("sets-") => {
-            let mut state = SETS.write();
-            state.order.retain(|id| id != &v.id);
-            if v.after_id.is_empty() {
-                state.order.insert(0, v.id);
-            } else {
-                let pos = state
-                    .order
-                    .iter()
-                    .position(|id| id == &v.after_id)
-                    .map(|i| i + 1)
-                    .unwrap_or(state.order.len());
-                state.order.insert(pos, v.id);
             }
         }
         Some(SubscriptionRemove(v)) if v.sub_id.starts_with("sets-") => {
@@ -701,61 +618,60 @@ pub fn handle_msg(msg: Message) {
             state.order.retain(|id| id != &v.id);
             state.details.remove(&v.id);
         }
-        // // objectDetailsSet — for any set-* subscription
-        // Some(ObjectDetailsSet(v)) if v.sub_ids.iter().any(|s| s.starts_with("set-")) => {
-        //     let mut states = LIST_STATES.write();
-        //     for sub_id in v.sub_ids.iter().filter(|s| s.starts_with("set-")) {
-        //         let state = states
-        //             .entry(sub_id["set-".len()..].to_string())
-        //             .or_default();
-        //         let det = parse_object_details(&v.id, &v.details.as_ref().unwrap().fields);
-        //         state.details.insert(v.id.clone(), det);
-        //     }
-        // }
-        // // objectDetailsAmend
-        // Some(ObjectDetailsAmend(v)) if v.sub_ids.iter().any(|s| s.starts_with("set-")) => {
-        //     let mut states = LIST_STATES.write();
-        //     for sub_id in v.sub_ids.iter().filter(|s| s.starts_with("set-")) {
-        //         let list_id = &sub_id["set-".len()..];
-        //         if let Some(state) = states.get_mut(list_id) {
-        //             if let Some(det) = state.details.get_mut(&v.id) {
-        //                 for kv in &v.details {
-        //                     match kv.key.as_str() {
-        //                         "name" => det.name = get_string(kv.value.clone().unwrap()),
-        //                         _ => {}
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-        // // subscriptionAdd
-        // Some(SubscriptionAdd(v)) if v.sub_id.starts_with("set-") => {
-        //     let list_id = v.sub_id["set-".len()..].to_string();
-        //     let mut states = LIST_STATES.write();
-        //     let state = states.entry(list_id).or_default();
-        //     state.order.retain(|id| id != &v.id);
-        //     if v.after_id.is_empty() {
-        //         state.order.insert(0, v.id);
-        //     } else {
-        //         let pos = state
-        //             .order
-        //             .iter()
-        //             .position(|id| id == &v.after_id)
-        //             .map(|i| i + 1)
-        //             .unwrap_or(state.order.len());
-        //         state.order.insert(pos, v.id);
-        //     }
-        // }
-        // // subscriptionRemove
-        // Some(SubscriptionRemove(v)) if v.sub_id.starts_with("set-") => {
-        //     let list_id = v.sub_id["set-".len()..].to_string();
-        //     let mut states = LIST_STATES.write();
-        //     if let Some(state) = states.get_mut(&list_id) {
-        //         state.order.retain(|id| id != &v.id);
-        //         state.details.remove(&v.id);
-        //     }
-        // }
+
+        Some(SubscriptionAdd(v)) if v.sub_id.starts_with(LIST_SUB_PREFIX) => {
+            insert_ordered(&mut LIST_OBJECTS.write().order, v.id, &v.after_id);
+        }
+        Some(SubscriptionRemove(v)) if v.sub_id.starts_with(LIST_SUB_PREFIX) => {
+            let mut state = LIST_OBJECTS.write();
+            state.order.retain(|id| id != &v.id);
+            state.details.remove(&v.id);
+        }
+        Some(ObjectDetailsSet(v)) if v.sub_ids.iter().any(|s| s.starts_with(LIST_SUB_PREFIX)) => {
+            let fields: std::collections::BTreeMap<String, prost_types::Value> = v
+                .details
+                .as_ref()
+                .map(|d| d.fields.clone().into_iter().collect())
+                .unwrap_or_default();
+            let det = ObjectDetails {
+                id: v.id.clone(),
+                name: extract_string(fields.get("name")),
+                fields,
+            };
+            LIST_OBJECTS.write().details.insert(v.id, det);
+        }
+        Some(ObjectDetailsAmend(v)) if v.sub_ids.iter().any(|s| s.starts_with(LIST_SUB_PREFIX)) => {
+            let mut state = LIST_OBJECTS.write();
+            if let Some(det) = state.details.get_mut(&v.id) {
+                for kv in v.details {
+                    let val = kv.value.unwrap_or_default();
+                    match kv.key.as_str() {
+                        "name" => det.name = get_string(val.clone()),
+                        _ => {}
+                    }
+                    det.fields.insert(kv.key, val);
+                }
+            }
+        }
+        Some(ObjectDetailsSet(v)) if v.sub_ids.iter().any(|s| s.starts_with("set-meta-")) => {
+            if let Some(fields) = v.details.map(|d| d.fields) {
+                let mut state = SET_META.write();
+                state.name = extract_string(fields.get("name"));
+                state.set_of_ids = extract_list_strings(fields.get("setOf"));
+            }
+        }
+        Some(ObjectDetailsAmend(v)) if v.sub_ids.iter().any(|s| s.starts_with("set-meta-")) => {
+            let mut state = SET_META.write();
+            for kv in v.details {
+                match kv.key.as_str() {
+                    "name" => state.name = get_string(kv.value.unwrap_or_default()),
+                    "setOf" => {
+                        state.set_of_ids = extract_list_strings_from_value(kv.value.as_ref())
+                    }
+                    _ => {}
+                }
+            }
+        }
         _ => {}
     }
 }
@@ -780,4 +696,84 @@ pub fn sets_sub_id(space_id: String) -> String {
     format!("sets-{}", space_id)
 }
 
+pub const LIST_SUB_PREFIX: &str = "list";
 pub static LIST_OBJECTS: GlobalSignal<ListObjectsState> = Signal::global(ListObjectsState::default);
+
+pub static SET_META: GlobalSignal<SetMetaState> = Signal::global(SetMetaState::default);
+
+fn insert_ordered(order: &mut Vec<String>, id: String, after_id: &str) {
+    order.retain(|existing| existing != &id);
+    if after_id.is_empty() {
+        order.insert(0, id);
+    } else {
+        let pos = order
+            .iter()
+            .position(|existing| existing == after_id)
+            .map(|i| i + 1)
+            .unwrap_or(order.len());
+        order.insert(pos, id);
+    }
+}
+pub fn parse_object_details(
+    object_id: &str,
+    fields: &std::collections::BTreeMap<String, prost_types::Value>,
+) -> ObjectDetails {
+    ObjectDetails {
+        id: object_id.to_string(),
+        name: extract_string(fields.get("name")),
+        fields: fields.clone(),
+    }
+}
+pub fn extract_set_of_ids(
+    fields: &std::collections::BTreeMap<String, prost_types::Value>,
+) -> Vec<String> {
+    fields
+        .get("setOf")
+        .and_then(|v| v.kind.as_ref())
+        .and_then(|k| {
+            if let prost_types::value::Kind::ListValue(l) = k {
+                Some(l)
+            } else {
+                None
+            }
+        })
+        .map(|l| {
+            l.values
+                .iter()
+                .filter_map(|v| {
+                    if let Some(prost_types::value::Kind::StringValue(s)) = &v.kind {
+                        Some(s.clone())
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+pub fn extract_list_strings(v: Option<&prost_types::Value>) -> Vec<String> {
+    v.and_then(|v| {
+        if let Some(prost_types::value::Kind::ListValue(lv)) = &v.kind {
+            Some(
+                lv.values
+                    .iter()
+                    .filter_map(|v| {
+                        if let Some(prost_types::value::Kind::StringValue(s)) = &v.kind {
+                            Some(s.clone())
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
+            )
+        } else {
+            None
+        }
+    })
+    .unwrap_or_default()
+}
+
+pub fn extract_list_strings_from_value(v: Option<&prost_types::Value>) -> Vec<String> {
+    extract_list_strings(v)
+}
