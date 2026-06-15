@@ -193,7 +193,7 @@ pub fn Objects(
         spawn(async move {
             if let Some(client) = API_CLIENT.read().as_ref().cloned() {
                 client.unsubscribe_set_meta(&lid).await.ok();
-                client.unsubscribe_list_objects(lid).await.ok();
+                client.unsubscribe_list_objects(&lid).await.ok();
             }
         });
     });

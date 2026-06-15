@@ -57,7 +57,7 @@ pub fn Collections(space_id: ReadSignal<String>) -> Element {
         let sub_id = sub_id_drop.clone();
         spawn(async move {
             if let Some(client) = API_CLIENT.read().as_ref().cloned() {
-                client.unsubscribe_sets(sub_id).await.ok();
+                client.unsubscribe_sets(&sub_id).await.ok();
             }
         });
         // to fix. now it reusses this state in list view

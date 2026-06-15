@@ -190,9 +190,10 @@ impl Client {
         })
     }
     pub async fn listen_session_events(
-        &mut self,
+        &self,
     ) -> Result<tonic::Response<tonic::codec::Streaming<Event>>, tonic::Status> {
         self.client
+            .clone()
             .listen_session_events(StreamRequest {
                 token: self.token.clone(),
             })
@@ -293,6 +294,35 @@ impl Client {
             .collect();
         Ok(properties)
     }
+    pub async fn get_object_properties(
+        &self,
+        space_id: &str,
+        object_id: &str,
+    ) -> Result<std::collections::HashMap<String, prost_types::Value>> {
+        let mut client = self.client.clone();
+        let show_res = client
+            .object_show(tonic::Request::new(object::show::Request {
+                space_id: space_id.to_string(),
+                object_id: object_id.to_string(),
+                ..Default::default()
+            }))
+            .await
+            .context("get_object_properties: object_show failed")?
+            .into_inner();
+        if let Some(e) = &show_res.error {
+            if e.code != 0 {
+                anyhow::bail!("ObjectShow failed ({}): {}", e.code, e.description);
+            }
+        }
+        let fields = show_res
+            .object_view
+            .as_ref()
+            .and_then(|v| v.details.first())
+            .and_then(|d| d.details.as_ref())
+            .map(|d| d.fields.clone())
+            .unwrap_or_default();
+        Ok(fields.into_iter().collect())
+    }
     /// Registers the spaces subscription and returns the initial snapshot.
     /// The subscription stays alive server-side until `unsubscribe_spaces` is called.
     pub async fn subscribe_spaces(&self) -> Result<object::search_subscribe::Response> {
@@ -352,18 +382,6 @@ impl Client {
             .into_inner())
     }
 
-    /// Cancels the spaces subscription.
-    pub async fn unsubscribe_spaces(&self) -> Result<()> {
-        let mut grpc_client = self.client.clone();
-        let req = Request::new(object::search_unsubscribe::Request {
-            sub_ids: vec![SPACES_SUB.to_string()],
-        });
-        grpc_client
-            .object_search_unsubscribe(req)
-            .await
-            .context("Search unsubscribe error")?;
-        Ok(())
-    }
     pub async fn subscribe_sets(
         &self,
         space_id: String,
@@ -409,17 +427,6 @@ impl Client {
             .map(|r| r.into_inner())
     }
 
-    pub async fn unsubscribe_sets(&self, sub_id: String) -> Result<()> {
-        let mut grpc_client = self.client.clone();
-        grpc_client
-            .object_search_unsubscribe(Request::new(object::search_unsubscribe::Request {
-                sub_ids: vec![sub_id.to_string()],
-            }))
-            .await
-            .context("unsubscribe_sets error")?;
-        Ok(())
-    }
-
     pub async fn subscribe_list_objects(
         &self,
         space_id: &str,
@@ -446,29 +453,6 @@ impl Client {
             .map(|r| r.into_inner())
     }
 
-    /// Re-subscribe with the same sub_id but different keys.
-    /// Server atomically replaces the subscription and returns a fresh snapshot.
-    pub async fn update_list_keys(
-        &self,
-        space_id: &str,
-        list_id: &str,
-        set_of: Vec<String>,
-        new_keys: Vec<String>,
-    ) -> Result<object::search_subscribe::Response> {
-        self.subscribe_list_objects(space_id, list_id, set_of, new_keys)
-            .await
-    }
-
-    pub async fn unsubscribe_list_objects(&self, list_id: String) -> Result<()> {
-        let mut client = self.client.clone();
-        client
-            .object_search_unsubscribe(Request::new(object::search_unsubscribe::Request {
-                sub_ids: vec![format!("list-{}", list_id)],
-            }))
-            .await
-            .context("unsubscribe_list_objects failed")?;
-        Ok(())
-    }
     pub async fn subscribe_set_meta(
         &self,
         space_id: &str,
@@ -488,15 +472,28 @@ impl Client {
             .map(|r| r.into_inner())
     }
 
-    pub async fn unsubscribe_set_meta(&self, set_id: &str) -> Result<()> {
-        let mut client = self.client.clone();
-        client
+    async fn unsubscribe(&self, sub_id: &str) -> Result<()> {
+        self.client
+            .clone()
             .object_search_unsubscribe(Request::new(object::search_unsubscribe::Request {
-                sub_ids: vec![format!("set-meta-{}", set_id)],
+                sub_ids: vec![sub_id.to_string()],
             }))
             .await
-            .context("unsubscribe_set_meta failed")?;
+            .context(format!("Failed to unsubscribe from {}", sub_id))?;
         Ok(())
+    }
+
+    pub async fn unsubscribe_spaces(&self) -> Result<()> {
+        self.unsubscribe(SPACES_SUB).await
+    }
+    pub async fn unsubscribe_sets(&self, sub_id: &str) -> Result<()> {
+        self.unsubscribe(sub_id).await
+    }
+    pub async fn unsubscribe_list_objects(&self, list_id: &str) -> Result<()> {
+        self.unsubscribe(&format!("list-{}", list_id)).await
+    }
+    pub async fn unsubscribe_set_meta(&self, set_id: &str) -> Result<()> {
+        self.unsubscribe(&format!("set-meta-{}", set_id)).await
     }
 }
 
