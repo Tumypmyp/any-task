@@ -17,7 +17,7 @@ pub fn Space(space_id: String) -> Element {
 }
 #[component]
 pub fn Collections(space_id: ReadSignal<String>) -> Element {
-    let sub_id = sets_sub_id(space_id());
+    let sub_id = SetsState::sub_id(&space_id());
     let sub_id_drop = sub_id.clone();
 
     use_resource(move || {
