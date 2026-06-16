@@ -276,37 +276,7 @@ impl Client {
             .collect();
         Ok(properties)
     }
-    pub async fn get_object_properties(
-        &self,
-        space_id: &str,
-        object_id: &str,
-    ) -> Result<std::collections::HashMap<String, prost_types::Value>> {
-        let mut client = self.client.clone();
-        let show_res = client
-            .object_show(tonic::Request::new(object::show::Request {
-                space_id: space_id.to_string(),
-                object_id: object_id.to_string(),
-                ..Default::default()
-            }))
-            .await
-            .context("get_object_properties: object_show failed")?
-            .into_inner();
-        if let Some(e) = &show_res.error {
-            if e.code != 0 {
-                anyhow::bail!("ObjectShow failed ({}): {}", e.code, e.description);
-            }
-        }
-        let fields = show_res
-            .object_view
-            .as_ref()
-            .and_then(|v| v.details.first())
-            .and_then(|d| d.details.as_ref())
-            .map(|d| d.fields.clone())
-            .unwrap_or_default();
-        Ok(fields.into_iter().collect())
-    }
-    /// Registers the spaces subscription and returns the initial snapshot.
-    /// The subscription stays alive server-side until `unsubscribe_spaces` is called.
+
     pub async fn subscribe_spaces(&self) -> Result<object::search_subscribe::Response> {
         let mut grpc_client = self.client.clone();
         let req = Request::new(object::search_subscribe::Request {
@@ -458,7 +428,7 @@ impl Client {
         self.client
             .clone()
             .object_search_unsubscribe(Request::new(object::search_unsubscribe::Request {
-                sub_ids: vec![sub_id.to_string()],
+                sub_ids: vec![sub_id.clone()],
             }))
             .await
             .context(format!("Failed to unsubscribe from {}", sub_id))?;
