@@ -282,38 +282,16 @@ impl Client {
         let req = Request::new(object::search_subscribe::Request {
             space_id: self.tech_space_id.clone(),
             sub_id: SPACES_SUB.to_string(),
-            filters: vec![
-                content::dataview::Filter {
-                    relation_key: "resolvedLayout".to_string(),
-                    condition: content::dataview::filter::Condition::Equal.into(),
-                    value: Some(prost_types::Value {
-                        kind: Some(prost_types::value::Kind::NumberValue(
-                            Layout::SpaceView as i32 as f64,
-                        )),
-                    }),
-                    ..Default::default()
-                },
-                // spaceAccountStatus NOT IN [SpaceDeleted(7), SpaceRemoving(10)]
-                // content::dataview::Filter {
-                //     relation_key: "spaceAccountStatus".to_string(),
-                //     condition: content::dataview::filter::Condition::NotIn.into(),
-                //     value: Some(prost_types::Value {
-                //         kind: Some(prost_types::value::Kind::ListValue(
-                //             prost_types::ListValue {
-                //                 values: vec![
-                //                     prost_types::Value {
-                //                         kind: Some(prost_types::value::Kind::NumberValue(7.0)),
-                //                     },
-                //                     prost_types::Value {
-                //                         kind: Some(prost_types::value::Kind::NumberValue(10.0)),
-                //                     },
-                //                 ],
-                //             },
-                //         )),
-                //     }),
-                //     ..Default::default()
-                // },
-            ],
+            filters: vec![content::dataview::Filter {
+                relation_key: "resolvedLayout".to_string(),
+                condition: content::dataview::filter::Condition::Equal.into(),
+                value: Some(prost_types::Value {
+                    kind: Some(prost_types::value::Kind::NumberValue(
+                        Layout::SpaceView as i32 as f64,
+                    )),
+                }),
+                ..Default::default()
+            }],
             sorts: vec![/* spaceOrder asc if you want ordering */],
             keys: vec![
                 "id".to_string(),

@@ -55,9 +55,7 @@ pub fn Collections(space_id: ReadSignal<String>) -> Element {
                 client.unsubscribe_sets(&space_id()).await.ok();
             }
         });
-        // to fix. now it reusses this state in list view
-        // Clear state so stale data doesn't show on next mount
-        // *SETS.write() = SetsState::default();
+        *SETS.write() = SetsState::default();
     });
 
     let items: Vec<(String, String)> = {

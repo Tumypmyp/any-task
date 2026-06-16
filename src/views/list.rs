@@ -197,66 +197,6 @@ pub fn Objects(
             }
         });
     });
-
-    // use_resource(move || {
-    //     let _reconnect = RECONNECT_COUNT.read();
-    //     let client = API_CLIENT.read().as_ref().cloned();
-    //     let sid = space_id();
-    //     let lid = list_id();
-    //     let sets = SETS.read().details.clone();
-    //     tracing::debug!("sets: {:#?}", sets);
-
-    //     let set_of = SETS
-    //         .read()
-    //         .details
-    //         .get(&list_id())
-    //         .unwrap_or(&SetDetails {
-    //             object_id: "".to_string(),
-    //             name: "".to_string(),
-    //             layout: 0,
-    //             set_of: vec![],
-    //         })
-    //         .set_of
-    //         .clone();
-
-    //     // Synchronous read — positions is tracked as a reactive dependency.
-    //     // When any Pane's relation_key changes or nodes are added/removed,
-    //     // use_resource cancels the old task and re-runs with the new keys.
-    //     let keys = pane_keys(&positions.read());
-    //     async move {
-    //         let Some(client) = client else {
-    //             tracing::warn!("subscribe_list_objects: no client yet");
-    //             return;
-    //         };
-    //         match client
-    //             .subscribe_list_objects(&sid, &lid, set_of, keys)
-    //             .await
-    //         {
-    //             Ok(resp) => {
-    //                 let mut state = LIST_OBJECTS.write();
-    //                 state.order.clear();
-    //                 state.details.clear();
-    //                 for record in resp.records {
-    //                     let id = extract_string(record.fields.get("id"));
-    //                     let det = parse_object_details(&id, &record.fields);
-    //                     state.order.push(id.clone());
-    //                     state.details.insert(id, det);
-    //                 }
-    //             }
-    //             Err(e) => tracing::error!("subscribe_list_objects: {e:#}"),
-    //         }
-    //     }
-    // });
-
-    // use_drop(move || {
-    //     *LIST_OBJECTS.write() = ListObjectsState::default();
-    //     spawn(async move {
-    //         if let Some(client) = API_CLIENT.read().as_ref().cloned() {
-    //             client.unsubscribe_list_objects(list_id()).await.ok();
-    //         }
-    //     });
-    // });
-
     let items: Vec<ObjectDetails> = {
         let state = LIST_OBJECTS.read();
         state
