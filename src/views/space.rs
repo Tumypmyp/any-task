@@ -17,19 +17,15 @@ pub fn Space(space_id: String) -> Element {
 }
 #[component]
 pub fn Collections(space_id: ReadSignal<String>) -> Element {
-    let sub_id = SetsState::sub_id(&space_id());
-    let sub_id_drop = sub_id.clone();
-
     use_resource(move || {
         let _reconnect = RECONNECT_COUNT.read();
         let client = API_CLIENT.read().as_ref().cloned();
         let space_id = space_id.clone();
-        let sub_id = sub_id.clone();
         async move {
             let Some(client) = client else {
                 return;
             };
-            let resp = match client.subscribe_sets(space_id(), &sub_id).await {
+            let resp = match client.subscribe_sets(&space_id()).await {
                 Ok(r) => r,
                 Err(e) => {
                     tracing::error!("subscribe_sets failed: {e:#}");
@@ -54,10 +50,9 @@ pub fn Collections(space_id: ReadSignal<String>) -> Element {
     });
 
     use_drop(move || {
-        let sub_id = sub_id_drop.clone();
         spawn(async move {
             if let Some(client) = API_CLIENT.read().as_ref().cloned() {
-                client.unsubscribe_sets(&sub_id).await.ok();
+                client.unsubscribe_sets(&space_id()).await.ok();
             }
         });
         // to fix. now it reusses this state in list view

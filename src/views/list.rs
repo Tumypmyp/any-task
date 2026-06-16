@@ -143,7 +143,7 @@ pub fn Objects(
                     if let Some(record) = resp.records.first() {
                         let mut state = SET_META.write();
                         state.name = extract_string(record.fields.get("name"));
-                        state.set_of_ids = extract_list_strings(record.fields.get("setOf"));
+                        state.set_of = extract_list_strings(record.fields.get("setOf"));
                     }
                 }
                 Err(e) => tracing::error!("subscribe_set_meta: {e:#}"),
@@ -154,7 +154,7 @@ pub fn Objects(
         let _reconnect = RECONNECT_COUNT.read();
         let sid = space_id.read().clone();
         let lid = list_id.read().clone();
-        let set_of_ids = SET_META.read().set_of_ids.clone(); // ← tracked dependency
+        let set_of_ids = SET_META.read().set_of.clone(); // ← tracked dependency
         let keys = pane_keys(&positions.read());
         let client = API_CLIENT.read().as_ref().cloned();
         async move {

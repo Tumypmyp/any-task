@@ -366,9 +366,9 @@ impl Client {
 
     pub async fn subscribe_sets(
         &self,
-        space_id: String,
-        sub_id: &str,
+        space_id: &str,
     ) -> Result<object::search_subscribe::Response> {
+        let sub_id = SetsState::sub_id(space_id);
         let mut grpc_client = self.client.clone();
         let req = Request::new(object::search_subscribe::Request {
             space_id: space_id.to_string(),
@@ -454,7 +454,7 @@ impl Client {
             .map(|r| r.into_inner())
     }
 
-    async fn unsubscribe(&self, sub_id: &str) -> Result<()> {
+    async fn unsubscribe(&self, sub_id: String) -> Result<()> {
         self.client
             .clone()
             .object_search_unsubscribe(Request::new(object::search_unsubscribe::Request {
@@ -466,16 +466,17 @@ impl Client {
     }
 
     pub async fn unsubscribe_spaces(&self) -> Result<()> {
-        self.unsubscribe(SPACES_SUB).await
+        self.unsubscribe(SPACES_SUB.to_string()).await
     }
-    pub async fn unsubscribe_sets(&self, sub_id: &str) -> Result<()> {
+    pub async fn unsubscribe_sets(&self, space_id: &str) -> Result<()> {
+        let sub_id = SetsState::sub_id(space_id);
         self.unsubscribe(sub_id).await
     }
     pub async fn unsubscribe_list_objects(&self, list_id: &str) -> Result<()> {
-        self.unsubscribe(&format!("list-{}", list_id)).await
+        self.unsubscribe(format!("list-{}", list_id)).await
     }
     pub async fn unsubscribe_set_meta(&self, set_id: &str) -> Result<()> {
-        self.unsubscribe(&format!("set-meta-{}", set_id)).await
+        self.unsubscribe(format!("set-meta-{}", set_id)).await
     }
 }
 
@@ -539,7 +540,7 @@ pub fn handle_msg(msg: Message) {
                 if let Some(fields) = v.details.map(|d| d.fields) {
                     let mut state = SET_META.write();
                     state.name = extract_string(fields.get("name"));
-                    state.set_of_ids = extract_list_strings(fields.get("setOf"));
+                    state.set_of = extract_list_strings(fields.get("setOf"));
                 }
             }
         }
@@ -566,7 +567,7 @@ pub fn handle_msg(msg: Message) {
                     match kv.key.as_str() {
                         "name" => state.name = get_string(kv.value.unwrap_or_default()),
                         "setOf" => {
-                            state.set_of_ids = extract_list_strings_from_value(kv.value.as_ref())
+                            state.set_of = extract_list_strings_from_value(kv.value.as_ref())
                         }
                         _ => {}
                     }

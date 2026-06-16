@@ -265,13 +265,13 @@ impl TileTree {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Default, Serialize, Deserialize)]
-pub enum DateTimeFormat {
-    #[default]
-    DateTime,
-    Date,
-    Time,
-}
+// #[derive(Clone, Copy, Debug, PartialEq, Default, Serialize, Deserialize)]
+// pub enum DateTimeFormat {
+//     #[default]
+//     DateTime,
+//     Date,
+//     Time,
+// }
 pub const NAME_RELATION_KEY: &str = "name";
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct RelationInfo {
@@ -280,111 +280,74 @@ pub struct RelationInfo {
     // pub optional: OptionalInfo,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-pub enum OptionalInfo {
-    Date,
-    Checkbox,
-    #[default]
-    Other,
-}
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub struct GeneralPropertySettings {
-    pub width: f64,
-    pub height: f64,
-}
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub struct DateSettings {
-    pub general: GeneralPropertySettings,
-    pub date_format: DateTimeFormat,
-}
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-pub struct CheckboxSettings {
-    pub size: f64,
-}
-impl Default for CheckboxSettings {
-    fn default() -> Self {
-        Self { size: 40.0 }
-    }
-}
-impl Default for DateSettings {
-    fn default() -> Self {
-        Self {
-            date_format: DateTimeFormat::Date,
-            general: GeneralPropertySettings {
-                width: 70.0,
-                height: 50.0,
-            },
-        }
-    }
-}
-impl Default for GeneralPropertySettings {
-    fn default() -> Self {
-        Self {
-            width: 60.0,
-            height: 40.0,
-        }
-    }
-}
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub enum PropertySettings {
-    General(GeneralPropertySettings),
-    Date(DateSettings),
-    Checkbox(CheckboxSettings),
-}
-impl Default for PropertySettings {
-    fn default() -> Self {
-        Self::General(GeneralPropertySettings::default())
-    }
-}
-pub const NAME_PROPERTY_SETTINGS: PropertySettings =
-    PropertySettings::General(GeneralPropertySettings {
-        width: 100.0,
-        height: 40.0,
-    });
-impl PropertySettings {
-    pub fn height(&self) -> f64 {
-        match self {
-            Self::General(s) => s.height,
-            Self::Date(s) => s.general.height,
-            Self::Checkbox(s) => s.size,
-        }
-    }
-    pub fn width(&self) -> f64 {
-        match self {
-            Self::General(s) => s.width,
-            Self::Date(s) => s.general.width,
-            Self::Checkbox(s) => s.size,
-        }
-    }
-    pub fn set_height(&mut self, val: f64) {
-        match self {
-            Self::General(s) => s.height = val,
-            Self::Date(s) => s.general.height = val,
-            _ => {}
-        }
-    }
-    pub fn set_width(&mut self, val: f64) {
-        match self {
-            Self::General(s) => s.width = val,
-            Self::Date(s) => s.general.width = val,
-            _ => {}
-        }
-    }
-}
-pub trait PropertyRenderer {
-    fn render(
-        &self,
-        space_id: String,
-        object_id: String,
-        info: RelationInfo,
-        settings: PropertySettings,
-    ) -> Element;
-}
-#[derive(Clone, Debug, PartialEq)]
-pub struct ViewInfo {
-    pub id: String,
-    pub name: String,
-}
+// #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+// pub enum OptionalInfo {
+//     Date,
+//     Checkbox,
+//     #[default]
+//     Other,
+// }
+// #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+// pub struct GeneralPropertySettings {
+// }
+// #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+// pub struct DateSettings {
+//     pub general: GeneralPropertySettings,
+//     pub date_format: DateTimeFormat,
+// }
+// #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+// pub struct CheckboxSettings {
+//     pub size: f64,
+// }
+// impl Default for CheckboxSettings {
+//     fn default() -> Self {
+//         Self { size: 40.0 }
+//     }
+// }
+// impl Default for DateSettings {
+//     fn default() -> Self {
+//         Self {
+//             date_format: DateTimeFormat::Date,
+//             general: GeneralPropertySettings {
+//            },
+//         }
+//     }
+// }
+// impl Default for GeneralPropertySettings {
+//     fn default() -> Self {
+//         Self {
+//        }
+//     }
+// }
+// #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// pub enum PropertySettings {
+//     General(GeneralPropertySettings),
+//     Date(DateSettings),
+//     Checkbox(CheckboxSettings),
+// }
+// impl Default for PropertySettings {
+//     fn default() -> Self {
+//         Self::General(GeneralPropertySettings::default())
+//     }
+// }
+// pub const NAME_PROPERTY_SETTINGS: PropertySettings =
+//     PropertySettings::General(GeneralPropertySettings {
+//    });
+
+// pub trait PropertyRenderer {
+//     fn render(
+//         &self,
+//         space_id: String,
+//         object_id: String,
+//         info: RelationInfo,
+//         settings: PropertySettings,
+//     ) -> Element;
+// }
+// #[derive(Clone, Debug, PartialEq)]
+// pub struct ViewInfo {
+//     pub id: String,
+//     pub name: String,
+// }
 
 #[derive(Clone, PartialEq, Default)]
 pub struct SpacesState {
@@ -430,5 +393,5 @@ pub struct ObjectDetails {
 #[derive(Clone, Default, PartialEq)]
 pub struct SetMetaState {
     pub name: String,
-    pub set_of_ids: Vec<String>, // raw type object IDs from "setOf"
+    pub set_of: Vec<String>,
 }
