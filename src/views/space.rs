@@ -1,12 +1,11 @@
 use crate::API_CLIENT;
 use crate::Route;
 use crate::components::action::*;
-use crate::components::combobox::*;
-
 use crate::components::button::Button;
 use crate::components::button::ButtonVariant;
 use crate::components::column::Column;
 use crate::components::header::{Header, Title};
+use crate::helpers::*;
 use dioxus::prelude::*;
 #[component]
 pub fn Space(space_id: String) -> Element {
@@ -18,27 +17,67 @@ pub fn Space(space_id: String) -> Element {
 }
 #[component]
 pub fn Collections(space_id: ReadSignal<String>) -> Element {
-    let resp = use_resource(move || async move {
-        let client_guard = API_CLIENT.read();
-        let client = client_guard
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("No API client available, try reloading the app"))?;
-        client.fetch_sets(&space_id()).await
+    use_resource(move || {
+        let _reconnect = RECONNECT_COUNT.read();
+        let client = API_CLIENT.read().as_ref().cloned();
+        let space_id = space_id.clone();
+        async move {
+            let Some(client) = client else {
+                return;
+            };
+            let resp = match client.subscribe_sets(&space_id()).await {
+                Ok(r) => r,
+                Err(e) => {
+                    tracing::error!("subscribe_sets failed: {e:#}");
+                    return;
+                }
+            };
+            let mut state = SETS.write();
+            state.order.clear();
+            state.details.clear();
+            for record in resp.records {
+                let id = extract_string(record.fields.get("id"));
+                let det = SetDetails {
+                    object_id: id.clone(),
+                    name: extract_string(record.fields.get("name")),
+                    layout: extract_number(record.fields.get("resolvedLayout")),
+                    set_of: extract_set_of_ids(&record.fields),
+                };
+                state.order.push(id.clone());
+                state.details.insert(id, det);
+            }
+        }
     });
-    let collections = match &*resp.read() {
-        None => return rsx! { "Loading..." },
-        Some(Err(e)) => return rsx! { "Error: {e}" },
-        Some(Ok(collections)) => collections.clone(),
+
+    use_drop(move || {
+        spawn(async move {
+            if let Some(client) = API_CLIENT.read().as_ref().cloned() {
+                client.unsubscribe_sets(&space_id()).await.ok();
+            }
+        });
+        *SETS.write() = SetsState::default();
+    });
+
+    let items: Vec<(String, String)> = {
+        let sets = SETS.read();
+        sets.order
+            .iter()
+            .filter_map(|id| {
+                sets.details
+                    .get(id)
+                    .map(|det| (det.object_id.clone(), det.name.clone()))
+            })
+            .collect()
     };
     let nav = navigator();
     rsx! {
-        Column {
-            for (id, name, _) in collections {
+        Column { style: "align-items: center; gap: 6px;",
+            for (object_id, name) in items {
                 Button {
                     onclick: move |_| {
                         nav.push(Route::List {
                             space_id: space_id(),
-                            list_id: id.clone(),
+                            list_id: object_id.clone(),
                         });
                     },
                     "{name}"

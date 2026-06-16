@@ -29,4 +29,5 @@ dist
 # part of anytype-heart
 protos/
 
+.git*
 .env*

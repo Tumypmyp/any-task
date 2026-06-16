@@ -200,6 +200,10 @@ in {
 
   pre-commit.hooks = {
     alejandra.enable = true;
+    prettier = {
+      enable = true;
+      files = "\\.css$";
+    };
     dx-fmt = {
       enable = true;
       name = "Dioxus Format";

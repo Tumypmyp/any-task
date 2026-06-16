@@ -1,5 +1,5 @@
-mod home;
-pub use home::Home;
+pub mod home;
+pub use home::*;
 mod login;
 pub use login::*;
 mod space;

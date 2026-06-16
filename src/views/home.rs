@@ -9,6 +9,7 @@ use crate::components::header::{Header, Title};
 use crate::components::input::*;
 use crate::components::row::RowPosition;
 use crate::components::row::*;
+use crate::helpers::*;
 use dioxus::prelude::*;
 #[component]
 pub fn Home() -> Element {
@@ -23,27 +24,51 @@ pub fn Home() -> Element {
 }
 #[component]
 fn Spaces() -> Element {
-    let resp = use_resource(move || async move {
-        let client_guard = API_CLIENT.read();
-        let client = client_guard
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("No API client available, try reloading the app"))?;
-        client.fetch_spaces().await
+    use_resource(move || {
+        let _reconnect = RECONNECT_COUNT.read();
+        let client = API_CLIENT.read().as_ref().cloned();
+        async move {
+            let Some(client) = client else {
+                tracing::warn!("subscribe_spaces: no client yet");
+                return;
+            };
+
+            let resp = match client.subscribe_spaces().await {
+                Ok(r) => r,
+                Err(e) => {
+                    tracing::error!("subscribe_spaces failed: {e:#}");
+                    return;
+                }
+            };
+
+            let mut state = SPACES.write();
+            state.order.clear();
+            state.details.clear();
+            for record in resp.records {
+                let id = extract_string(record.fields.get("id"));
+                let det = parse_space_details(&id, &record.fields);
+                state.order.push(det.object_id.clone());
+                state.details.insert(det.object_id.clone(), det);
+            }
+        }
     });
-    let spaces = match &*resp.read() {
-        None => {
-            return rsx! { "Loading..." };
-        }
-        Some(Err(err)) => {
-            tracing::debug!("Got error loading spaces: {:#?}", err);
-            return rsx! { "Error: {err}" };
-        }
-        Some(Ok(spaces)) => spaces.clone(),
-    };
+    use_drop(move || {
+        spawn(async move {
+            if let Some(client) = API_CLIENT.read().as_ref().cloned() {
+                client.unsubscribe_spaces().await.ok();
+            }
+        });
+    });
+    let spaces = SPACES.read();
     rsx! {
-        Column { style: "align-items: center;",
-            for (id, name) in spaces {
-                SpaceButton { id, name }
+        Column { style: "align-items: center; gap: 6px;",
+            for obj_id in &spaces.order {
+                if let Some(det) = spaces.details.get(obj_id) {
+                    SpaceButton {
+                        id: det.target_space_id.clone(),
+                        name: det.name.clone(),
+                    }
+                }
             }
         }
     }
