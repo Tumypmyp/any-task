@@ -9,6 +9,7 @@ use crate::components::sheet::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
 use dioxus_primitives::scroll_area::ScrollDirection;
+use std::collections::HashMap;
 use std::vec;
 #[component]
 pub fn EditView(
@@ -16,7 +17,7 @@ pub fn EditView(
     list_id: String,
     view_id: Store<String>,
     positions: Store<TileTree>,
-    all_properties: ReadSignal<Vec<RelationInfo>>,
+    all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
     let mut open = use_signal(|| false);
     rsx! {

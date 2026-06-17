@@ -32,23 +32,8 @@ fn Spaces() -> Element {
                 tracing::warn!("subscribe_spaces: no client yet");
                 return;
             };
-
-            let resp = match client.subscribe_spaces().await {
-                Ok(r) => r,
-                Err(e) => {
-                    tracing::error!("subscribe_spaces failed: {e:#}");
-                    return;
-                }
-            };
-
-            let mut state = SPACES.write();
-            state.order.clear();
-            state.details.clear();
-            for record in resp.records {
-                let id = extract_string(record.fields.get("id"));
-                let det = parse_space_details(&id, &record.fields);
-                state.order.push(det.object_id.clone());
-                state.details.insert(det.object_id.clone(), det);
+            if let Err(e) = client.subscribe_spaces().await {
+                tracing::error!("subscribe_spaces failed: {e:#}");
             }
         }
     });

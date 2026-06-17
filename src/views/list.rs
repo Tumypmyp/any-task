@@ -70,18 +70,15 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
         Some(Ok(_)) => {}
     }
 
-    let all_properties: Memo<Vec<RelationInfo>> = use_memo(move || {
+    let all_properties: Memo<HashMap<RelationKey, RelationInfo>> = use_memo(move || {
         all_properties_res
             .read()
             .as_ref()
             .and_then(|r| r.as_ref().ok())
-            .map(|props| {
-                let mut sorted_props: Vec<RelationInfo> = props.to_vec();
-                sorted_props.sort_by_cached_key(|prop| prop.name.to_lowercase());
-                sorted_props
-            })
+            .cloned()
             .unwrap_or_default()
     });
+
     rsx! {
         ListHeader {
             space_id,
@@ -94,6 +91,7 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
             space_id,
             list_id,
             view_id,
+            all_properties,
             positions: positions_store,
         }
         ActionHolder { BaseActions {} }
@@ -105,7 +103,7 @@ pub fn ListHeader(
     list_id: ReadSignal<String>,
     view_id: Store<String>,
     positions: Store<TileTree>,
-    all_properties: ReadSignal<Vec<RelationInfo>>,
+    all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
     let name = SET_META.read().name.clone();
     rsx! {
@@ -127,6 +125,7 @@ pub fn Objects(
     list_id: ReadSignal<String>,
     view_id: ReadSignal<String>,
     positions: Store<TileTree>,
+    all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
     use_resource(move || {
         let _reconnect = RECONNECT_COUNT.read();
@@ -209,7 +208,12 @@ pub fn Objects(
     rsx! {
         Column { style: "width: 98vw;",
             for det in items {
-                Object { key: "{det.id}", positions, details: det }
+                Object {
+                    key: "{det.id}",
+                    positions,
+                    details: det,
+                    all_properties,
+                }
             }
         }
     }
