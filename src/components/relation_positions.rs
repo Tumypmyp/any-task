@@ -4,6 +4,7 @@ use crate::components::combobox::*;
 use crate::components::label::*;
 use dioxus_html::MountedData;
 use dioxus_html::geometry::PixelsRect;
+use std::collections::HashMap;
 use std::rc::Rc;
 // use crate::components::properties::*;
 use crate::components::row::*;
@@ -39,7 +40,7 @@ pub fn RelationPositionsCleaner(positions: Store<TileTree>) -> Element {
 pub fn RelationPositionsEditor(
     id: NodeId,
     positions: Store<TileTree>,
-    all_properties: ReadSignal<Vec<RelationInfo>>,
+    all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
     let node = positions()
         .nodes
@@ -205,7 +206,7 @@ pub fn RelationPositionsEditor(
 pub fn Property(
     id: NodeId,
     positions: Store<TileTree>,
-    all_properties: ReadSignal<Vec<RelationInfo>>,
+    all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
     let mut query = use_signal(String::new);
     let current_relation = use_memo(move || {
@@ -302,9 +303,9 @@ pub fn Property(
 }
 
 #[component]
-fn PropertyOptions(all_properties: ReadSignal<Vec<RelationInfo>>) -> Element {
+fn PropertyOptions(all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>) -> Element {
     rsx! {
-        for (i, info) in all_properties.read().iter().enumerate() {
+        for (i, info) in all_properties.read().values().enumerate() {
             ComboboxOption::<RelationKey> {
                 style: "max-width: 100%;",
                 index: i,

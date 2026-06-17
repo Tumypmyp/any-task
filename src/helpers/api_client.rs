@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::helpers::models::*;
 use crate::protos::Event;
 use crate::protos::StreamRequest;
@@ -224,7 +226,10 @@ impl Client {
         }
         Ok(preview_res.space_name)
     }
-    pub async fn fetch_properties(&self, space_id: &str) -> Result<Vec<RelationInfo>> {
+    pub async fn fetch_properties(
+        &self,
+        space_id: &str,
+    ) -> Result<HashMap<RelationKey, RelationInfo>> {
         let mut grpc_client = self.client.clone();
         let req = Request::new(object::search::Request {
             space_id: space_id.to_string(),
@@ -264,16 +269,20 @@ impl Client {
                 // let id = extract_string(record.fields.get("id"));
                 let name = extract_string(record.fields.get("name"));
                 let key = extract_string(record.fields.get("relationKey"));
-                // let format =
-                //     RelationFormat::try_from(extract_number(record.fields.get("relationFormat")))
-                //         .unwrap_or(RelationFormat::Longtext);
-                RelationInfo {
-                    name: name.clone(),
-                    key: RelationKey(key.clone()),
-                    // optional: OptionalInfo::Other,
-                }
+                let format =
+                    RelationFormat::try_from(extract_number(record.fields.get("relationFormat")))
+                        .unwrap_or(RelationFormat::Longtext);
+                (
+                    RelationKey(key.clone()),
+                    RelationInfo {
+                        name: name.clone(),
+                        key: RelationKey(key.clone()),
+                        format,
+                        // optional: OptionalInfo::Other,
+                    },
+                )
             })
-            .collect();
+            .collect::<HashMap<RelationKey, RelationInfo>>();
         Ok(properties)
     }
 

@@ -1,6 +1,8 @@
+use crate::protos::anytype_model::*;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
 #[derive(Eq, Hash, PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct RelationKey(pub String);
 impl RelationKey {
@@ -277,6 +279,7 @@ pub const NAME_RELATION_KEY: &str = "name";
 pub struct RelationInfo {
     pub key: RelationKey,
     pub name: String,
+    pub format: RelationFormat,
     // pub optional: OptionalInfo,
 }
 

@@ -1,4 +1,5 @@
 use crate::components::checkbox::*;
+use crate::protos::anytype_model::RelationFormat;
 use crate::{
     components::button::*,
     helpers::*, //protos::anytype_model::block::content::text::Style::Checkbox,
@@ -6,13 +7,18 @@ use crate::{
 use dioxus::prelude::*;
 #[component]
 pub fn PropertyValue(
+    relation_key: RelationKey,
     data: ReadSignal<prost_types::Value>,
-    // info: ReadSignal<(RelationInfo, PropertySettings)>,
+    all_properties: ReadSignal<std::collections::HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
     let checked = use_memo(move || match data().kind {
         Some(prost_types::value::Kind::BoolValue(true)) => "checked".to_string(),
         _ => "unchecked".to_string(),
     });
+    match all_properties.get(&relation_key) {
+        Some(info) if info.format == RelationFormat::Date => return rsx! { "date" },
+        _ => {}
+    }
     let s = match data().kind {
         Some(prost_types::value::Kind::StringValue(s)) => s,
         Some(prost_types::value::Kind::NumberValue(n)) => n.to_string(),

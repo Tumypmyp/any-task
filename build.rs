@@ -110,6 +110,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     tonic_prost_build::configure()
         .build_server(false)
         .build_client(false)
+        .enum_attribute(
+            "anytype.model.RelationFormat",
+            "#[derive(serde::Serialize, serde::Deserialize)]",
+        )
         .compile_protos(
             &[
                 "protos/pkg/lib/pb/model/protos/models.proto",

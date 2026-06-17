@@ -11,6 +11,7 @@ pub struct ObjectProps {
     // pub id: ReadSignal<String>,
     pub positions: Store<TileTree>,
     pub details: ObjectDetails,
+    pub all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 }
 #[component]
 pub fn Object(props: ObjectProps) -> Element {
@@ -22,7 +23,12 @@ pub fn Object(props: ObjectProps) -> Element {
         .collect();
 
     rsx! {
-        ObjectRelations { id: NodeId(0), positions: props.positions, values }
+        ObjectRelations {
+            id: NodeId(0),
+            positions: props.positions,
+            values,
+            all_properties: props.all_properties,
+        }
     }
 }
 
@@ -31,6 +37,7 @@ pub fn ObjectRelations(
     id: NodeId,
     positions: Store<TileTree>,
     values: HashMap<String, prost_types::Value>,
+    all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
     if !positions().nodes.contains_key(&id.clone()) {
         return rsx! {};
@@ -51,6 +58,7 @@ pub fn ObjectRelations(
                             id: first.clone(),
                             positions,
                             values: values.clone(),
+                            all_properties,
                         }
                     }
                 }
@@ -61,6 +69,7 @@ pub fn ObjectRelations(
                             id: second.clone(),
                             positions,
                             values: values.clone(),
+                            all_properties,
                         }
                     }
                 }
@@ -85,10 +94,9 @@ pub fn ObjectRelations(
                                  width: 100%; height: 100%; min-width: 0; min-height: 0; \
                              align-items: center; box-sizing: border-box;",
                     PropertyValue {
-                        //   space_id: props.space_id,
-                        //   object_id: props.id,
+                        relation_key: relation_key.clone(),
                         data: val,
-                        // info: property,
+                        all_properties,
                     }
                 }
             }
