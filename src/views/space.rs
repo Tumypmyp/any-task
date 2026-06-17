@@ -25,26 +25,8 @@ pub fn Collections(space_id: ReadSignal<String>) -> Element {
             let Some(client) = client else {
                 return;
             };
-            let resp = match client.subscribe_sets(&space_id()).await {
-                Ok(r) => r,
-                Err(e) => {
-                    tracing::error!("subscribe_sets failed: {e:#}");
-                    return;
-                }
-            };
-            let mut state = SETS.write();
-            state.order.clear();
-            state.details.clear();
-            for record in resp.records {
-                let id = extract_string(record.fields.get("id"));
-                let det = SetDetails {
-                    object_id: id.clone(),
-                    name: extract_string(record.fields.get("name")),
-                    layout: extract_number(record.fields.get("resolvedLayout")),
-                    set_of: extract_set_of_ids(&record.fields),
-                };
-                state.order.push(id.clone());
-                state.details.insert(id, det);
+            if let Err(e) = client.subscribe_sets(&space_id()).await {
+                tracing::error!("subscribe_sets failed: {e:#}");
             }
         }
     });

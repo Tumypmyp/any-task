@@ -1,5 +1,4 @@
 use crate::protos::anytype_model::*;
-use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -280,7 +279,6 @@ pub struct RelationInfo {
     pub key: RelationKey,
     pub name: String,
     pub format: RelationFormat,
-    // pub optional: OptionalInfo,
 }
 
 // #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

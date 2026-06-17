@@ -237,9 +237,10 @@ impl Client {
                 operator: content::dataview::filter::Operator::No.into(),
                 relation_key: "resolvedLayout".to_string(),
                 condition: content::dataview::filter::Condition::Equal.into(),
-
                 value: Some(prost_types::Value {
-                    kind: Some(prost_types::value::Kind::NumberValue(5.0)),
+                    kind: Some(prost_types::value::Kind::NumberValue(
+                        Layout::Relation as i32 as f64,
+                    )),
                 }),
                 ..Default::default()
             }],
@@ -278,7 +279,6 @@ impl Client {
                         name: name.clone(),
                         key: RelationKey(key.clone()),
                         format,
-                        // optional: OptionalInfo::Other,
                     },
                 )
             })
@@ -286,7 +286,7 @@ impl Client {
         Ok(properties)
     }
 
-    pub async fn subscribe_spaces(&self) -> Result<object::search_subscribe::Response> {
+    pub async fn subscribe_spaces(&self) -> Result<()> {
         let mut grpc_client = self.client.clone();
         let req = Request::new(object::search_subscribe::Request {
             space_id: self.tech_space_id.clone(),
@@ -314,17 +314,26 @@ impl Client {
             ],
             ..Default::default()
         });
-        Ok(grpc_client
+        let resp = grpc_client
             .object_search_subscribe(req)
             .await
             .context("Search subscribe error")?
-            .into_inner())
+            .into_inner();
+
+        let mut state = SPACES.write();
+        state.order.clear();
+        state.details.clear();
+        for record in resp.records {
+            let id = extract_string(record.fields.get("id"));
+            let det = parse_space_details(&id, &record.fields);
+            state.order.push(det.object_id.clone());
+            state.details.insert(det.object_id.clone(), det);
+        }
+
+        Ok(())
     }
 
-    pub async fn subscribe_sets(
-        &self,
-        space_id: &str,
-    ) -> Result<object::search_subscribe::Response> {
+    pub async fn subscribe_sets(&self, space_id: &str) -> Result<()> {
         let sub_id = SetsState::sub_id(space_id);
         let mut grpc_client = self.client.clone();
         let req = Request::new(object::search_subscribe::Request {
@@ -359,11 +368,26 @@ impl Client {
             ],
             ..Default::default()
         });
-        grpc_client
+        let resp = grpc_client
             .object_search_subscribe(req)
             .await
-            .context("subscribe_sets error")
-            .map(|r| r.into_inner())
+            .context("subscribe_sets error")?
+            .into_inner();
+        let mut state = SETS.write();
+        state.order.clear();
+        state.details.clear();
+        for record in resp.records {
+            let id = extract_string(record.fields.get("id"));
+            let det = SetDetails {
+                object_id: id.clone(),
+                name: extract_string(record.fields.get("name")),
+                layout: extract_number(record.fields.get("resolvedLayout")),
+                set_of: extract_set_of_ids(&record.fields),
+            };
+            state.order.push(id.clone());
+            state.details.insert(id, det);
+        }
+        Ok(())
     }
 
     pub async fn subscribe_list_objects(
