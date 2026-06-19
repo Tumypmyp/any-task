@@ -391,9 +391,13 @@ pub struct ObjectDetails {
     pub name: String,
     pub fields: std::collections::BTreeMap<String, prost_types::Value>,
 }
+use crate::protos::anytype_model::block::*;
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct SetMetaState {
     pub id: String,
     pub name: String,
     pub set_of: Vec<String>,
+    pub views: HashMap<String, content::dataview::View>,
+    pub view_order: Vec<String>,
+    pub active_view_id: String,
 }

@@ -396,6 +396,8 @@ impl Client {
         list_id: &str,
         set_of: Vec<String>,
         keys: Vec<String>,
+        filters: Vec<content::dataview::Filter>,
+        sorts: Vec<content::dataview::Sort>,
     ) -> Result<object::search_subscribe::Response> {
         let mut client = self.client.clone();
         let mut all_keys = keys;
@@ -409,6 +411,8 @@ impl Client {
                 sub_id: format!("list-{}", list_id),
                 source: set_of,
                 keys: all_keys,
+                filters,
+                sorts,
                 ..Default::default()
             }))
             .await
@@ -445,34 +449,46 @@ impl Client {
                 ..Default::default()
             }))
             .await
-            .context("object_open failed")
-            .map(|r| r.into_inner());
-        match resp {
-            Err(e) => tracing::error!("subscribe_set_meta: {e:#}"),
-            Ok(r) => {
-                if let Some(object_view) = r.object_view {
-                    // tracing::debug!("got set object_view: {:#?}", object_view);
-                    let fields = object_view
-                        .details
-                        .first()
-                        .and_then(|d| d.details.as_ref())
-                        .map(|s| &s.fields);
+            .context("object_open failed")?
+            .into_inner();
 
-                    let name = fields
-                        .and_then(|f| f.get("name"))
-                        .and_then(|v| Some(extract_string(Some(v))))
-                        .unwrap_or_default();
-                    let set_of = fields
-                        .and_then(|f| f.get("setOf"))
-                        .and_then(|v| Some(extract_list_strings_from_value(Some(v))))
-                        .unwrap_or_default();
-                    let mut state = SET_META.write();
-                    state.name = name;
-                    state.set_of = set_of;
-                    state.id = object_id.to_string();
-                }
-            }
-        }
+        let Some(object_view) = resp.object_view else {
+            // tracing::debug!("got set object_view: {:#?}", object_view);
+            return Ok(());
+        };
+        let fields = object_view
+            .details
+            .first()
+            .and_then(|d| d.details.as_ref())
+            .map(|s| &s.fields);
+        let name = fields
+            .and_then(|f| f.get("name"))
+            .map(|v| extract_string(Some(v)))
+            .unwrap_or_default();
+        let set_of = fields
+            .and_then(|f| f.get("setOf"))
+            .map(|v| extract_list_strings_from_value(Some(v)))
+            .unwrap_or_default();
+        let dv_block = object_view
+            .blocks
+            .iter()
+            .find(|b| b.id == "dataview")
+            .ok_or_else(|| anyhow::anyhow!("got no views"))?;
+        let dv = match &dv_block.content {
+            Some(ContentOneOf::Dataview(dv)) => dv,
+            _ => return Err(anyhow::anyhow!("no dataview")),
+        };
+        let mut state = SET_META.write();
+        state.name = name;
+        state.set_of = set_of;
+        state.id = object_id.to_string();
+        state.view_order = dv.views.iter().map(|v| v.id.clone()).collect();
+        state.views = dv.views.iter().map(|v| (v.id.clone(), v.clone())).collect();
+        state.active_view_id = if !dv.active_view.is_empty() {
+            dv.active_view.clone()
+        } else {
+            dv.views.first().map(|v| v.id.clone()).unwrap_or_default()
+        };
         Ok(())
     }
 
@@ -645,21 +661,31 @@ pub fn handle_msg(context_id: &str, msg: Message) {
                 state.details.remove(&v.id);
             }
         }
-        // Some(BlockDataviewViewSet(v)) => {
-        //     // v.id = block id ("dataview"), context_id = the open set's object_id
-        //     if let Some(view) = v.view {
-        //         SET_META.write().upsert_view(context_id, view);
-        //     }
-        // }
-        // Some(BlockDataviewViewDelete(v)) => {
-        //     SET_META.write().remove_view(context_id, &v.view_id);
-        // }
-        // Some(BlockDataviewViewUpdate(v)) => {
-        //     SET_META.write().apply_view_update(context_id, v);
-        // }
-        // Some(BlockDataviewViewOrder(v)) => {
-        //     SET_META.write().reorder_views(context_id, &v.view_ids);
-        // }
+        Some(BlockDataviewViewSet(v)) => {
+            let mut state = SET_META.write();
+            if let Some(view) = v.view.clone() {
+                state.views.insert(v.view_id.clone(), view);
+            }
+            if !state.views.contains_key(&v.view_id) {
+                state.view_order.push(v.view_id.clone());
+            }
+        }
+        Some(BlockDataviewViewDelete(v)) => {
+            let mut state = SET_META.write();
+            if state.active_view_id == v.view_id {
+                state.active_view_id = state.view_order.first().cloned().unwrap_or_default();
+            }
+            state.view_order.retain(|id| *id != v.view_id);
+            state.views.remove(&v.view_id);
+        }
+        Some(BlockDataviewViewUpdate(v)) => {
+            // SET_META.write().apply_view_update(context_id, v);
+            tracing::debug!("view update: {:#?}", v);
+        }
+        Some(BlockDataviewViewOrder(v)) => {
+            let mut state = SET_META.write();
+            state.view_order = v.view_ids.to_vec();
+        }
         _ => {}
     }
 }

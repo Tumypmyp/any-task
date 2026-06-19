@@ -109,6 +109,7 @@ pub fn ListHeader(
     rsx! {
         Header {
             Title { title: "{name}" }
+            Views {}
             EditView {
                 space_id,
                 list_id,
@@ -119,6 +120,13 @@ pub fn ListHeader(
         }
     }
 }
+#[component]
+pub fn Views() -> Element {
+    let list = SET_META.read();
+    tracing::debug!("meta: {:#?}", list);
+    rsx! { "{list.name:#?}" }
+}
+
 #[component]
 pub fn Objects(
     space_id: ReadSignal<String>,
@@ -144,7 +152,17 @@ pub fn Objects(
         let _reconnect = RECONNECT_COUNT.read();
         let sid = space_id.read().clone();
         let lid = list_id.read().clone();
-        let set_of_ids = SET_META.read().set_of.clone(); // ← tracked dependency
+
+        let meta = SET_META.read();
+        let set_of_ids = meta.set_of.clone();
+        let active_view_id = meta.active_view_id.clone();
+        let (filters, sorts) = meta
+            .views
+            .get(&active_view_id)
+            .map(|v| (v.filters.clone(), v.sorts.clone()))
+            .unwrap_or_default();
+        drop(meta);
+
         let keys = pane_keys(&positions.read());
         let client = API_CLIENT.read().as_ref().cloned();
         async move {
@@ -159,7 +177,7 @@ pub fn Objects(
             state.details.clear();
             drop(state);
             match client
-                .subscribe_list_objects(&sid, &lid, set_of_ids, keys)
+                .subscribe_list_objects(&sid, &lid, set_of_ids, keys, filters, sorts)
                 .await
             {
                 Ok(resp) => {
