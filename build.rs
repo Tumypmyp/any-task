@@ -67,17 +67,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!(
                 "cargo:rerun-if-changed={output_base}/android/{nix_arch}/libanytype_engine.so",
             );
-            let pkg_name = std::env::var("CARGO_PKG_NAME").unwrap();
+            // let pkg_name = std::env::var("CARGO_PKG_NAME").unwrap();
+            // let profile = std::env::var("PROFILE").unwrap();
+            // let dest_dir = format!(
+            //     "{manifest_dir}/target/dx/{pkg_name}/{profile}/android/app/app/src/main/jniLibs/{jni_abi}",
+            // );
+            // Change this line in your build.rs:
+            // let dest_dir = format!("{manifest_dir}/app/src/main/jniLibs/{jni_abi}",);
+            // 1. Define the exact Dioxus target directory
+            let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
             let profile = std::env::var("PROFILE").unwrap();
+
+            // Hardcoding "any-task" here ensures we don't get mismatches with underscores from CARGO_PKG_NAME
             let dest_dir = format!(
-                "{manifest_dir}/target/dx/{pkg_name}/{profile}/android/app/app/src/main/jniLibs/{jni_abi}",
+                "{manifest_dir}/target/dx/any-task/{profile}/android/app/app/src/main/jniLibs/{jni_abi}"
             );
-            std::fs::create_dir_all(&dest_dir).ok();
+            // 2. Safely create directory and crash cleanly if it fails
+            std::fs::create_dir_all(&dest_dir).expect(&format!(
+                "Failed to create jniLibs directory at {}",
+                dest_dir
+            ));
             let src = format!("{output_base}/android/{nix_arch}/libanytype_engine.so");
             let dst = format!("{dest_dir}/libanytype_engine.so");
-            if let Err(e) = std::fs::copy(&src, &dst) {
-                panic!("Failed to copy {src} to {dst}: {e}");
-            }
+            std::fs::copy(&src, &dst).expect(&format!("Failed to copy {} to {}", src, dst));
+
             let ndk_home = std::env::var("ANDROID_NDK_HOME").expect("ANDROID_NDK_HOME must be set");
             let host = if cfg!(target_os = "linux") {
                 "linux-x86_64"
@@ -94,12 +107,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 _ => return Ok(()),
             };
             let libcxx_src = format!(
-                "{ndk_home}/toolchains/llvm/prebuilt/{host}/sysroot/usr/lib/{ndk_abi}/libc++_shared.so",
+                "{ndk_home}/toolchains/llvm/prebuilt/{host}/sysroot/usr/lib/{ndk_abi}/libc++_shared.so"
             );
             let libcxx_dst = format!("{dest_dir}/libc++_shared.so");
-            if let Err(e) = std::fs::copy(&libcxx_src, &libcxx_dst) {
-                panic!("Failed to copy libc++_shared.so from {libcxx_src} to {libcxx_dst}: {e}",);
-            }
+            std::fs::copy(&libcxx_src, &libcxx_dst).expect(&format!(
+                "Failed to copy libc++_shared.so to {}",
+                libcxx_dst
+            ));
         }
         _ => {}
     }

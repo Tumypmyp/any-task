@@ -70,6 +70,10 @@ in {
 
     pkgs.pkgsCross.mingwW64.stdenv.cc
     #   pkgs.pkgsCross.mingwW64.windows.pthreads
+    #         pkgs.bundletool
+    pkgs.bundletool
+    pkgs.unzip
+    pkgs.steam-run
   ];
   # https://wiki.nixos.org/wiki/Tauri
   # https://devenv.sh/processes/
@@ -123,37 +127,84 @@ in {
   # env.TEMP_DIR = "${config.devenv.runtime}/bundle-android";
   env.TEMP_DIR = "${config.devenv.root}/TEMP_DIR";
   env = {
+    ANDROID_NDK_HOME = config.env.ANDROID_NDK_ROOT;
     APP_NAME = "AnyTask";
     OUTPUT_DIR = "${config.devenv.root}/dist/android";
     OUTPUT_AAB = "${config.env.TEMP_DIR}/AnyTask-aarch64-linux-android.aab";
-    # OUTPUT_AAB = "${config.env.TEMP_DIR}/AnyTask-x86_64-linux-android.aab";
+    # OUTPUT_AAB = "${config.devenv.root}/dist/android-abb/AnyTask-x86_64-linux-android.aab";
     OUTPUT_APKS = "${config.env.OUTPUT_DIR}/${config.env.APP_NAME}-dev.apks";
     OUTPUT_APK = "${config.env.OUTPUT_DIR}/${config.env.APP_NAME}-universal.apk";
     AAPT2 = "${pkgs.android-tools}/bin/aapt2";
   };
-  scripts.create-emulator.exec = ''
-    avdmanager create avd -n android-simple -k "system-images;android-34;google_apis_playstore;x86_64" --device "pixel_6_pro"
-  '';
-  scripts.run-android = {
-    packages = [
-      pkgs.bundletool
-      pkgs.unzip
-      pkgs.steam-run
-    ];
+  # scripts.create-emulator.exec = ''
+  #   avdmanager create avd -n android-simple -k "system-images;android-34;google_apis_playstore;x86_64" --device "pixel_6_pro"
+  # '';
+  # scripts.run-android = {
+  #  exec = ''
+  #     dx serve --android --device
+  #   '';
+  # };
+  tasks."bundle:android" = {
     exec = ''
-      dx serve --android --device
+      # Clean up
+      rm -rf "$TEMP_DIR"
+
+      # 1. Let dx generate the project and compile Rust
+      # This generates an initial AAB, but without our .so files
+      echo "Running dx bundle (allowing failure)..."
+      dx bundle --android --release --debug-symbols=false --target aarch64-linux-android --out-dir "$TEMP_DIR" || true
+
+      # 2. Re-copy .so files into the generated project
+      echo "Re-injecting native libraries into the generated Android project..."
+      JNI_DIR="target/dx/any-task/release/android/app/app/src/main/jniLibs/arm64-v8a"
+      mkdir -p "$JNI_DIR"
+
+      cp "go-engine/native-libs/android/aarch64/libanytype_engine.so" "$JNI_DIR/"
+
+      # Fallback to NDK_HOME if ANDROID_NDK_HOME is not set
+      NDK_PATH="''${ANDROID_NDK_HOME:-$NDK_HOME}"
+      if [ -z "$NDK_PATH" ]; then
+          echo "Error: ANDROID_NDK_HOME or NDK_HOME is not set in your environment."
+          exit 1
+      fi
+      cp "$NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" "$JNI_DIR/"
+
+      # 3. Run Gradle manually from the CORRECT root directory
+      echo "Building AAB via Gradle..."
+      pushd target/dx/any-task/release/android/app
+      ./gradlew bundleRelease || { echo "Gradle build failed."; popd; exit 1; }
+      popd
+
+      # Move the newly generated AAB to the expected TEMP_DIR output location
+      mkdir -p "$TEMP_DIR"
+      cp target/dx/any-task/release/android/app/app/build/outputs/bundle/release/app-release.aab "$OUTPUT_AAB"
+
+      # 4. Process the AAB into a Universal APK using bundletool
+      if [ -d "$OUTPUT_DIR" ]; then
+          echo "Removing existing Android files: $OUTPUT_DIR"
+          rm -rf "$OUTPUT_DIR"
+      fi
+      mkdir -p "$OUTPUT_DIR"
+
+      echo "Building APKS from AAB using bundletool..."
+      steam-run bundletool build-apks --bundle="$OUTPUT_AAB" --output="$OUTPUT_APKS" --mode=universal \
+          --ks="$HOME/.keys/upload-keystore.jks" \
+          --ks-pass=pass:"$KS_PASS" \
+          --ks-key-alias=upload \
+          --overwrite \
+          || { echo "Failed to build APKS."; exit 1; }
+
+      echo "Extracting Universal APK..."
+      unzip -q "$OUTPUT_APKS" -d "$TEMP_DIR"
+      mv "$TEMP_DIR/universal.apk" "$OUTPUT_APK" || { echo "Failed to find universal.apk in APKS."; rm -rf "$TEMP_DIR"; exit 1; }
+
+      # Clean up
+      rm -rf "$TEMP_DIR"
+      echo "Universal APK successfully extracted to $OUTPUT_APK"
     '';
   };
-
-  scripts.bundle-android = {
-    packages = [
-      pkgs.bundletool
-      pkgs.unzip
-      pkgs.steam-run
-    ];
+  tasks."bundle:unzip-android" = {
     exec = ''
-      dx bundle --android --release --debug-symbols=false --target  aarch64-linux-android --out-dir "$TEMP_DIR" || { echo "Failed to bundle AAB with dioxus"; exit 1; }
-
       if [ -d "$OUTPUT_DIR" ]; then
           echo "Removing existing Android files: $OUTPUT_DIR"
           rm -rf "$OUTPUT_DIR"
@@ -165,31 +216,6 @@ in {
           --ks-key-alias=upload \
           --overwrite \
           || { echo "Failed to build APKS."; exit 1; }
-      unzip "$OUTPUT_APKS" -d "$TEMP_DIR"
-      mv "$TEMP_DIR/universal.apk" "$OUTPUT_APK" || { echo "Failed to find universal.apk in APKS."; rm -rf "$TEMP_DIR"; exit 1; }
-      rm -rf "$TEMP_DIR"
-      echo "Universal APK extracted to $OUTPUT_APK"
-    '';
-  };
-  scripts.unzip-bundle-android = {
-    packages = [
-      pkgs.bundletool
-      pkgs.unzip
-      pkgs.steam-run
-    ];
-    exec = ''
-
-      if [ -d "$OUTPUT_DIR" ]; then
-          echo "Removing existing Android files: $OUTPUT_DIR"
-          rm -rf "$OUTPUT_DIR"
-      fi
-
-      steam-run bundletool build-apks --bundle="$OUTPUT_AAB" --output="$OUTPUT_APKS" --mode=universal \
-          --ks="$HOME/.keys/upload-keystore.jks" \
-          --ks-pass=pass:"$KS_PASS" \
-          --ks-key-alias=app-key \
-          --overwrite \
-          || { echo "Failed to build APKS."; exit 1; }
 
       unzip "$OUTPUT_APKS" -d "$TEMP_DIR"
       mv "$TEMP_DIR/universal.apk" "$OUTPUT_APK" || { echo "Failed to find universal.apk in APKS."; rm -rf "$TEMP_DIR"; exit 1; }
@@ -198,7 +224,7 @@ in {
     '';
   };
 
-  pre-commit.hooks = {
+  git-hooks.hooks = {
     alejandra.enable = true;
     prettier = {
       enable = true;

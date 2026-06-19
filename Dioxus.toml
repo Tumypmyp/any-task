@@ -7,7 +7,6 @@ title = "AnyTask"
 # include `assets` in web platform
 # [web.resource]
 
-# Additional CSS style files
 style = []
 
 [bundle]
@@ -16,7 +15,6 @@ publisher = "Tumypmyp"
 icon = ["assets/favicon.ico"]
 category = "Productivity"
 short_description = "Cross-Platform Anytype client"
-external_bin = ["anytype-binaries"]
 
 [bundle.windows]
 icon_path = "assets/favicon.ico"

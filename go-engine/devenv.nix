@@ -165,7 +165,7 @@ in {
       ];
     };
   };
-  pre-commit.hooks = {
+  git-hooks.hooks = {
     alejandra.enable = true;
   };
 }

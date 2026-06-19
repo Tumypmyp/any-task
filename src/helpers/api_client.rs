@@ -641,10 +641,8 @@ pub fn handle_msg(context_id: &str, msg: Message) {
         Some(BlockDataviewViewDelete(v)) => {
             SET_META.write().handle_view_delete(v);
         }
-
         Some(BlockDataviewViewUpdate(v)) => {
             SET_META.write().handle_view_update(v);
-            // tracing::debug!("view update: {:#?}", v);
         }
         Some(BlockDataviewViewOrder(v)) => {
             SET_META.write().handle_view_order(v);

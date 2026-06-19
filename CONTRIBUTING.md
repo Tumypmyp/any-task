@@ -13,6 +13,10 @@
 │   └── views/
 ```
 
+## Dependencies
+
+NixOS is the primary target for development. But you can build and run the app localy after installing the development tools manually.
+
 ### Running
 
 #### Desktop

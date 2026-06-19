@@ -112,7 +112,6 @@ pub fn ListHeader(
             EditView {
                 space_id,
                 list_id,
-                view_id,
                 positions,
                 all_properties,
             }

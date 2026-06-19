@@ -15,8 +15,10 @@
   padding: 0 2rem 0 0.75rem;
   border: none;
   border-radius: 0.5rem;
-  background: var(--light, var(--primary-color)) var(--dark, var(--primary-color-3));
-  box-shadow: inset 0 0 0 1px var(--light, var(--primary-color-6)) var(--dark, var(--primary-color-7));
+  background: var(--light, var(--primary-color))
+    var(--dark, var(--primary-color-3));
+  box-shadow: inset 0 0 0 1px var(--light, var(--primary-color-6))
+    var(--dark, var(--primary-color-7));
   color: var(--secondary-color-1);
   cursor: text;
   font-family: inherit;
@@ -28,7 +30,8 @@
 .dx-combobox-input:hover:not([disabled]),
 .dx-combobox-input:focus-visible,
 .dx-combobox-input[data-state="open"] {
-  background: var(--light, var(--primary-color-4)) var(--dark, var(--primary-color-5));
+  background: var(--light, var(--primary-color-4))
+    var(--dark, var(--primary-color-5));
 }
 
 .dx-combobox-input[disabled] {
@@ -61,8 +64,10 @@
   flex-direction: column;
   padding: 0.25rem;
   border-radius: 0.5rem;
-  background: var(--light, var(--primary-color)) var(--dark, var(--primary-color-5));
-  box-shadow: inset 0 0 0 1px var(--light, var(--primary-color-6)) var(--dark, var(--primary-color-7));
+  background: var(--light, var(--primary-color))
+    var(--dark, var(--primary-color-5));
+  box-shadow: inset 0 0 0 1px var(--light, var(--primary-color-6))
+    var(--dark, var(--primary-color-7));
   color: var(--secondary-color-1);
   transform-origin: top;
 }
@@ -120,7 +125,8 @@
 }
 
 .dx-combobox-option[data-highlighted="true"] {
-  background: var(--light, var(--primary-color-4)) var(--dark, var(--primary-color-7));
+  background: var(--light, var(--primary-color-4))
+    var(--dark, var(--primary-color-7));
   color: var(--secondary-color-1);
 }
 
