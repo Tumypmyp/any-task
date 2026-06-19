@@ -391,8 +391,9 @@ pub struct ObjectDetails {
     pub name: String,
     pub fields: std::collections::BTreeMap<String, prost_types::Value>,
 }
-#[derive(Clone, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SetMetaState {
+    pub id: String,
     pub name: String,
     pub set_of: Vec<String>,
 }

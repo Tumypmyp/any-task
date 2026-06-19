@@ -416,22 +416,80 @@ impl Client {
             .map(|r| r.into_inner())
     }
 
-    pub async fn subscribe_set_meta(
-        &self,
-        space_id: &str,
-        set_id: &str,
-    ) -> Result<object::subscribe_ids::Response> {
-        let mut client = self.client.clone();
-        client
-            .object_subscribe_ids(Request::new(object::subscribe_ids::Request {
+    // pub async fn subscribe_set_meta(
+    //     &self,
+    //     space_id: &str,
+    //     set_id: &str,
+    // ) -> Result<object::subscribe_ids::Response> {
+    //     let mut client = self.client.clone();
+    //     client
+    //         .object_subscribe_ids(Request::new(object::subscribe_ids::Request {
+    //             space_id: space_id.to_string(),
+    //             sub_id: format!("set-meta-{}", set_id),
+    //             ids: vec![set_id.to_string()],
+    //             keys: vec!["id".into(), "name".into(), "setOf".into()],
+    //             ..Default::default()
+    //         }))
+    //         .await
+    //         .context("subscribe_set_meta failed")
+    //         .map(|r| r.into_inner())
+    // }
+    pub async fn object_open(&self, space_id: &str, object_id: &str) -> Result<()> {
+        let resp = self
+            .client
+            .clone()
+            .object_open(Request::new(object::open::Request {
                 space_id: space_id.to_string(),
-                sub_id: format!("set-meta-{}", set_id),
-                ids: vec![set_id.to_string()],
-                keys: vec!["id".into(), "name".into(), "setOf".into()],
+                object_id: object_id.to_string(),
+                include_relations_as_dependent_objects: true,
                 ..Default::default()
             }))
             .await
-            .context("subscribe_set_meta failed")
+            .context("object_open failed")
+            .map(|r| r.into_inner());
+        match resp {
+            Err(e) => tracing::error!("subscribe_set_meta: {e:#}"),
+            Ok(r) => {
+                if let Some(object_view) = r.object_view {
+                    // tracing::debug!("got set object_view: {:#?}", object_view);
+                    let fields = object_view
+                        .details
+                        .first()
+                        .and_then(|d| d.details.as_ref())
+                        .map(|s| &s.fields);
+
+                    let name = fields
+                        .and_then(|f| f.get("name"))
+                        .and_then(|v| Some(extract_string(Some(v))))
+                        .unwrap_or_default();
+                    let set_of = fields
+                        .and_then(|f| f.get("setOf"))
+                        .and_then(|v| Some(extract_list_strings_from_value(Some(v))))
+                        .unwrap_or_default();
+                    let mut state = SET_META.write();
+                    state.name = name;
+                    state.set_of = set_of;
+                    state.id = object_id.to_string();
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub async fn object_close(
+        &self,
+        space_id: &str,
+        object_id: &str,
+    ) -> Result<object::close::Response> {
+        self.client
+            .clone()
+            .object_close(Request::new(object::close::Request {
+                space_id: space_id.to_string(),
+                object_id: object_id.to_string(),
+                ..Default::default()
+            }))
+            .await
+            .context("object_close failed")
             .map(|r| r.into_inner())
     }
 
@@ -498,7 +556,7 @@ pub fn parse_invite_url(invite_url: &str) -> Result<ParsedInvite> {
     anyhow::bail!("Invalid invite url scheme: {}", invite_url)
 }
 
-pub fn handle_msg(msg: Message) {
+pub fn handle_msg(context_id: &str, msg: Message) {
     match msg.value {
         Some(ObjectDetailsSet(v)) => {
             if v.sub_ids.iter().any(|s| s == SPACES_SUB) {
@@ -517,9 +575,15 @@ pub fn handle_msg(msg: Message) {
                     fields,
                 };
                 LIST_OBJECTS.write().details.insert(v.id, det);
-            } else if v.sub_ids.iter().any(|s| s.starts_with("set-meta-")) {
+            } else if v.sub_ids.is_empty() && SET_META.read().id.contains(context_id) {
+                tracing::debug!(
+                    "sub_id, context {:#?} {:#?} {:#?}",
+                    v.sub_ids,
+                    context_id,
+                    SET_META.read()
+                );
+                let mut state = SET_META.write();
                 if let Some(fields) = v.details.map(|d| d.fields) {
-                    let mut state = SET_META.write();
                     state.name = extract_string(fields.get("name"));
                     state.set_of = extract_list_strings(fields.get("setOf"));
                 }
@@ -542,7 +606,13 @@ pub fn handle_msg(msg: Message) {
                         det.fields.insert(kv.key, val);
                     }
                 }
-            } else if v.sub_ids.iter().any(|s| s.starts_with("set-meta-")) {
+            } else if v.sub_ids.is_empty() && SET_META.read().id.contains(context_id) {
+                tracing::debug!(
+                    "amend - sub_id, context {:#?} {:#?} {:#?}",
+                    v.sub_ids,
+                    context_id,
+                    SET_META.read()
+                );
                 let mut state = SET_META.write();
                 for kv in v.details {
                     match kv.key.as_str() {
@@ -575,7 +645,21 @@ pub fn handle_msg(msg: Message) {
                 state.details.remove(&v.id);
             }
         }
-
+        // Some(BlockDataviewViewSet(v)) => {
+        //     // v.id = block id ("dataview"), context_id = the open set's object_id
+        //     if let Some(view) = v.view {
+        //         SET_META.write().upsert_view(context_id, view);
+        //     }
+        // }
+        // Some(BlockDataviewViewDelete(v)) => {
+        //     SET_META.write().remove_view(context_id, &v.view_id);
+        // }
+        // Some(BlockDataviewViewUpdate(v)) => {
+        //     SET_META.write().apply_view_update(context_id, v);
+        // }
+        // Some(BlockDataviewViewOrder(v)) => {
+        //     SET_META.write().reorder_views(context_id, &v.view_ids);
+        // }
         _ => {}
     }
 }

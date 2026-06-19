@@ -129,23 +129,14 @@ pub fn Objects(
 ) -> Element {
     use_resource(move || {
         let _reconnect = RECONNECT_COUNT.read();
-        let sid = space_id.read().clone();
-        let lid = list_id.read().clone();
         let client = API_CLIENT.read().as_ref().cloned();
         async move {
             let Some(client) = client else {
                 tracing::warn!("subscribe_set_meta: no client");
                 return;
             };
-            match client.subscribe_set_meta(&sid, &lid).await {
-                Ok(resp) => {
-                    if let Some(record) = resp.records.first() {
-                        let mut state = SET_META.write();
-                        state.name = extract_string(record.fields.get("name"));
-                        state.set_of = extract_list_strings(record.fields.get("setOf"));
-                    }
-                }
-                Err(e) => tracing::error!("subscribe_set_meta: {e:#}"),
+            if let Err(e) = client.object_open(&space_id(), &list_id()).await {
+                tracing::error!("subscribe_spaces failed: {e:#}");
             }
         }
     });
@@ -191,7 +182,7 @@ pub fn Objects(
         let lid = list_id.peek().clone();
         spawn(async move {
             if let Some(client) = API_CLIENT.read().as_ref().cloned() {
-                client.unsubscribe_set_meta(&lid).await.ok();
+                client.object_close(&space_id(), &list_id()).await.ok();
                 client.unsubscribe_list_objects(&lid).await.ok();
             }
         });
