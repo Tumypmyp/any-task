@@ -267,7 +267,6 @@ impl Client {
             .records
             .into_iter()
             .map(|record| {
-                // let id = extract_string(record.fields.get("id"));
                 let name = extract_string(record.fields.get("name"));
                 let key = extract_string(record.fields.get("relationKey"));
                 let format =
@@ -382,7 +381,6 @@ impl Client {
                 object_id: id.clone(),
                 name: extract_string(record.fields.get("name")),
                 layout: extract_number(record.fields.get("resolvedLayout")),
-                set_of: extract_set_of_ids(&record.fields),
             };
             state.order.push(id.clone());
             state.details.insert(id, det);
@@ -452,10 +450,10 @@ impl Client {
             .context("object_open failed")?
             .into_inner();
 
-        let Some(object_view) = resp.object_view else {
-            // tracing::debug!("got set object_view: {:#?}", object_view);
-            return Ok(());
-        };
+        let object_view = resp
+            .object_view
+            .ok_or_else(|| anyhow::anyhow!("missing object_view for object {}", object_id))?;
+
         let fields = object_view
             .details
             .first()
@@ -572,6 +570,8 @@ pub fn parse_invite_url(invite_url: &str) -> Result<ParsedInvite> {
     anyhow::bail!("Invalid invite url scheme: {}", invite_url)
 }
 
+use crate::protos::event::block::dataview::view_update::*;
+// use crate::protos::event::block::dataview::view_update::*;
 pub fn handle_msg(context_id: &str, msg: Message) {
     match msg.value {
         Some(ObjectDetailsSet(v)) => {
@@ -672,9 +672,117 @@ pub fn handle_msg(context_id: &str, msg: Message) {
             state.view_order.retain(|id| *id != v.view_id);
             state.views.remove(&v.view_id);
         }
+
         Some(BlockDataviewViewUpdate(v)) => {
-            // SET_META.write().apply_view_update(context_id, v);
-            tracing::debug!("view update: {:#?}", v);
+            tracing::debug!("dataview update: {:#?}", v);
+            let mut state = SET_META.write();
+            let Some(view) = state.views.get_mut(&v.view_id) else {
+                tracing::error!("got update on nonexisting view");
+                return;
+            };
+            if let Some(f) = v.fields {
+                view.name = f.name;
+            }
+            for change in v.filter {
+                match change.operation {
+                    Some(filter::Operation::Add(add)) => {
+                        let pos = insert_pos_by_id(
+                            &add.after_id,
+                            view.filters.iter().map(|f| f.id.as_str()),
+                        );
+                        for (i, item) in add.items.into_iter().enumerate() {
+                            view.filters.insert(pos + i, item);
+                        }
+                    }
+                    Some(filter::Operation::Remove(rem)) => {
+                        view.filters.retain(|f| !rem.ids.contains(&f.id));
+                    }
+                    Some(filter::Operation::Update(u)) => {
+                        if let Some(f) = view.filters.iter_mut().find(|f| f.id == u.id) {
+                            if let Some(item) = u.item {
+                                *f = item;
+                            }
+                        }
+                    }
+                    Some(filter::Operation::Move(mv)) => {
+                        let mut moved = Vec::with_capacity(mv.ids.len());
+
+                        for target_id in &mv.ids {
+                            if let Some(idx) = view.filters.iter().position(|s| s.id == *target_id)
+                            {
+                                moved.push(view.filters.remove(idx));
+                            }
+                        }
+                        // let moved: Vec<_> = view
+                        //     .filters
+                        //     .drain(..)
+                        //     .filter(|f| mv.ids.contains(&f.id))
+                        //     .collect();
+                        let pos = insert_pos_by_id(
+                            &mv.after_id,
+                            view.filters.iter().map(|s| s.id.as_str()),
+                        );
+
+                        for (i, item) in moved.into_iter().enumerate() {
+                            view.filters.insert(pos + i, item);
+                        }
+                    }
+                    None => {}
+                }
+            }
+
+            // --- sorts (same pattern) ---
+            for change in v.sort {
+                match change.operation {
+                    Some(sort::Operation::Add(add)) => {
+                        let pos = insert_pos_by_id(
+                            &add.after_id,
+                            view.sorts.iter().map(|s| s.id.as_str()),
+                        );
+                        for (i, item) in add.items.into_iter().enumerate() {
+                            view.sorts.insert(pos + i, item);
+                        }
+                    }
+                    Some(sort::Operation::Remove(rem)) => {
+                        view.sorts.retain(|s| !rem.ids.contains(&s.id));
+                    }
+                    Some(sort::Operation::Update(u)) => {
+                        if let Some(s) = view.sorts.iter_mut().find(|s| s.id == u.id) {
+                            if let Some(item) = u.item {
+                                *s = item;
+                            }
+                        }
+                    }
+                    Some(sort::Operation::Move(mv)) => {
+                        let mut moved = Vec::with_capacity(mv.ids.len());
+
+                        for target_id in &mv.ids {
+                            if let Some(idx) = view.sorts.iter().position(|s| s.id == *target_id) {
+                                moved.push(view.sorts.remove(idx));
+                            }
+                        }
+                        // let moved: Vec<_> = view
+                        //     .sorts
+                        //     .drain(..)
+                        //     .filter(|s| mv.ids.contains(&s.id))
+                        //     .collect();
+
+                        // 2. Calculate the new insertion point *after* the items have been removed.
+                        // This guarantees the relative indexing is correct.
+                        let pos = insert_pos_by_id(
+                            &mv.after_id,
+                            view.sorts.iter().map(|s| s.id.as_str()),
+                        );
+
+                        // 3. Re-insert the items at the target position.
+                        for (i, item) in moved.into_iter().enumerate() {
+                            view.sorts.insert(pos + i, item);
+                        }
+                    }
+                    None => {}
+                }
+            }
+            // tracing::debug!("view update: {:#?}", v);
         }
         Some(BlockDataviewViewOrder(v)) => {
             let mut state = SET_META.write();
@@ -752,7 +860,6 @@ impl SetsState {
                     .as_ref()
                     .and_then(|d| d.fields.get("resolvedLayout")),
             ),
-            set_of: extract_set_of_ids(&v.details.unwrap().fields),
         };
         self.details.insert(v.id, det);
     }
@@ -765,7 +872,6 @@ impl SetsState {
             match kv.key.as_str() {
                 "name" => details.name = get_string(kv.value.unwrap()),
                 "resolvedLayout" => details.layout = extract_number((&kv.value).into()),
-                // "setOf" => details.set_of = v.details,
                 _ => {}
             }
         }
@@ -880,4 +986,15 @@ fn get_string(v: prost_types::Value) -> String {
         Some(prost_types::value::Kind::StringValue(s)) => s,
         _ => String::new(),
     }
+}
+
+/// Finds the insertion index for a new item.
+/// If `after_id` is empty, or if the ID is not found, it defaults to index 0.
+fn insert_pos_by_id<'a>(after_id: &str, mut ids: impl Iterator<Item = &'a str>) -> usize {
+    if after_id.is_empty() {
+        return 0;
+    }
+    ids.position(|id| id == after_id)
+        .map(|i| i + 1)
+        .unwrap_or(0)
 }

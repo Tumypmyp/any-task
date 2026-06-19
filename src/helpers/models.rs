@@ -376,7 +376,6 @@ pub struct SetDetails {
     pub object_id: String,
     pub name: String,
     pub layout: i32,
-    pub set_of: Vec<String>,
 }
 
 #[derive(Clone, PartialEq, Default)]

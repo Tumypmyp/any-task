@@ -142,9 +142,7 @@ pub fn Views() -> Element {
                     SET_META.write().active_view_id = id;
                 }
             },
-            SelectTrigger {
-                SelectValue {}
-            }
+            SelectTrigger { SelectValue {} }
             SelectList {
                 SelectGroup {
                     for (i, (view_id, view_name)) in views.into_iter().enumerate() {
