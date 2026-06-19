@@ -5,8 +5,6 @@ use crate::components::edit_view::*;
 use crate::components::header::{Header, Title};
 use crate::components::object::*;
 use crate::components::select::*;
-use crate::components::separator::Separator;
-use crate::helpers::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
 use dioxus_sdk_storage::LocalStorage;
@@ -131,7 +129,7 @@ pub fn Views() -> Element {
         .read()
         .views
         .iter()
-        .map(|(id, view)| (id.clone(), view.name.clone())) // adjust .name to your field
+        .map(|view| (view.id.clone(), view.name.clone()))
         .collect();
 
     rsx! {
@@ -191,7 +189,8 @@ pub fn Objects(
         let active_view_id = meta.active_view_id.clone();
         let (filters, sorts) = meta
             .views
-            .get(&active_view_id)
+            .iter()
+            .find(|v| v.id == active_view_id)
             .map(|v| (v.filters.clone(), v.sorts.clone()))
             .unwrap_or_default();
         drop(meta);

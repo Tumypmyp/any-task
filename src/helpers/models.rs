@@ -396,7 +396,6 @@ pub struct SetMetaState {
     pub id: String,
     pub name: String,
     pub set_of: Vec<String>,
-    pub views: HashMap<String, content::dataview::View>,
-    pub view_order: Vec<String>,
+    pub views: Vec<content::dataview::View>,
     pub active_view_id: String,
 }
