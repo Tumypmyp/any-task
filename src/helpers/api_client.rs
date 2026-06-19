@@ -530,9 +530,9 @@ impl Client {
     pub async fn unsubscribe_list_objects(&self, list_id: &str) -> Result<()> {
         self.unsubscribe(format!("list-{}", list_id)).await
     }
-    pub async fn unsubscribe_set_meta(&self, set_id: &str) -> Result<()> {
-        self.unsubscribe(format!("set-meta-{}", set_id)).await
-    }
+    // pub async fn unsubscribe_set_meta(&self, set_id: &str) -> Result<()> {
+    //     self.unsubscribe(format!("set-meta-{}", set_id)).await
+    // }
 }
 
 use url::Url;
@@ -623,12 +623,6 @@ pub fn handle_msg(context_id: &str, msg: Message) {
                     }
                 }
             } else if v.sub_ids.is_empty() && SET_META.read().id.contains(context_id) {
-                tracing::debug!(
-                    "amend - sub_id, context {:#?} {:#?} {:#?}",
-                    v.sub_ids,
-                    context_id,
-                    SET_META.read()
-                );
                 let mut state = SET_META.write();
                 for kv in v.details {
                     match kv.key.as_str() {

@@ -4,6 +4,7 @@ use crate::components::column::*;
 use crate::components::edit_view::*;
 use crate::components::header::{Header, Title};
 use crate::components::object::*;
+use crate::components::select::*;
 use crate::components::separator::Separator;
 use crate::helpers::*;
 use crate::helpers::*;
@@ -120,13 +121,47 @@ pub fn ListHeader(
         }
     }
 }
+
 #[component]
 pub fn Views() -> Element {
-    let list = SET_META.read();
-    tracing::debug!("meta: {:#?}", list);
-    rsx! { "{list.name:#?}" }
-}
+    let selected = use_memo(move || Some(SET_META.read().active_view_id.clone()));
+    let selected_signal: ReadSignal<Option<String>> = selected.into();
 
+    let views: Vec<(String, String)> = SET_META
+        .read()
+        .views
+        .iter()
+        .map(|(id, view)| (id.clone(), view.name.clone())) // adjust .name to your field
+        .collect();
+
+    rsx! {
+        Select::<String> {
+            value: Some(selected_signal),
+            on_value_change: move |new_id: Option<String>| {
+                if let Some(id) = new_id {
+                    SET_META.write().active_view_id = id;
+                }
+            },
+            SelectTrigger {
+                SelectValue {}
+            }
+            SelectList {
+                SelectGroup {
+                    for (i, (view_id, view_name)) in views.into_iter().enumerate() {
+                        SelectOption::<String> {
+                            key: "{view_id}",
+                            index: i,
+                            value: view_id.clone(),
+                            text_value: view_name.clone(),
+                            "{view_name}"
+                            SelectItemIndicator {}
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 #[component]
 pub fn Objects(
     space_id: ReadSignal<String>,
