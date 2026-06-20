@@ -267,7 +267,6 @@ impl Client {
             .records
             .into_iter()
             .map(|record| {
-                // let id = extract_string(record.fields.get("id"));
                 let name = extract_string(record.fields.get("name"));
                 let key = extract_string(record.fields.get("relationKey"));
                 let format =
@@ -382,7 +381,6 @@ impl Client {
                 object_id: id.clone(),
                 name: extract_string(record.fields.get("name")),
                 layout: extract_number(record.fields.get("resolvedLayout")),
-                set_of: extract_set_of_ids(&record.fields),
             };
             state.order.push(id.clone());
             state.details.insert(id, det);
@@ -396,6 +394,8 @@ impl Client {
         list_id: &str,
         set_of: Vec<String>,
         keys: Vec<String>,
+        filters: Vec<content::dataview::Filter>,
+        sorts: Vec<content::dataview::Sort>,
     ) -> Result<object::search_subscribe::Response> {
         let mut client = self.client.clone();
         let mut all_keys = keys;
@@ -409,6 +409,8 @@ impl Client {
                 sub_id: format!("list-{}", list_id),
                 source: set_of,
                 keys: all_keys,
+                filters,
+                sorts,
                 ..Default::default()
             }))
             .await
@@ -416,22 +418,91 @@ impl Client {
             .map(|r| r.into_inner())
     }
 
-    pub async fn subscribe_set_meta(
-        &self,
-        space_id: &str,
-        set_id: &str,
-    ) -> Result<object::subscribe_ids::Response> {
-        let mut client = self.client.clone();
-        client
-            .object_subscribe_ids(Request::new(object::subscribe_ids::Request {
+    // pub async fn subscribe_set_meta(
+    //     &self,
+    //     space_id: &str,
+    //     set_id: &str,
+    // ) -> Result<object::subscribe_ids::Response> {
+    //     let mut client = self.client.clone();
+    //     client
+    //         .object_subscribe_ids(Request::new(object::subscribe_ids::Request {
+    //             space_id: space_id.to_string(),
+    //             sub_id: format!("set-meta-{}", set_id),
+    //             ids: vec![set_id.to_string()],
+    //             keys: vec!["id".into(), "name".into(), "setOf".into()],
+    //             ..Default::default()
+    //         }))
+    //         .await
+    //         .context("subscribe_set_meta failed")
+    //         .map(|r| r.into_inner())
+    // }
+    pub async fn object_open(&self, space_id: &str, object_id: &str) -> Result<()> {
+        let resp = self
+            .client
+            .clone()
+            .object_open(Request::new(object::open::Request {
                 space_id: space_id.to_string(),
-                sub_id: format!("set-meta-{}", set_id),
-                ids: vec![set_id.to_string()],
-                keys: vec!["id".into(), "name".into(), "setOf".into()],
+                object_id: object_id.to_string(),
+                include_relations_as_dependent_objects: true,
                 ..Default::default()
             }))
             .await
-            .context("subscribe_set_meta failed")
+            .context("object_open failed")?
+            .into_inner();
+
+        let object_view = resp
+            .object_view
+            .ok_or_else(|| anyhow::anyhow!("missing object_view for object {}", object_id))?;
+
+        let fields = object_view
+            .details
+            .first()
+            .and_then(|d| d.details.as_ref())
+            .map(|s| &s.fields);
+        let name = fields
+            .and_then(|f| f.get("name"))
+            .map(|v| extract_string(Some(v)))
+            .unwrap_or_default();
+        let set_of = fields
+            .and_then(|f| f.get("setOf"))
+            .map(|v| extract_list_strings_from_value(Some(v)))
+            .unwrap_or_default();
+        let dv_block = object_view
+            .blocks
+            .iter()
+            .find(|b| b.id == "dataview")
+            .ok_or_else(|| anyhow::anyhow!("got no views"))?;
+        let dv = match &dv_block.content {
+            Some(ContentOneOf::Dataview(dv)) => dv,
+            _ => return Err(anyhow::anyhow!("no dataview")),
+        };
+        let mut state = SET_META.write();
+        state.name = name;
+        state.set_of = set_of;
+        state.id = object_id.to_string();
+        state.views = dv.views.clone();
+        state.active_view_id = if !dv.active_view.is_empty() {
+            dv.active_view.clone()
+        } else {
+            dv.views.first().map(|v| v.id.clone()).unwrap_or_default()
+        };
+        Ok(())
+    }
+
+    pub async fn object_close(
+        &self,
+        space_id: &str,
+        object_id: &str,
+    ) -> Result<object::close::Response> {
+        self.client
+            .clone()
+            .object_close(Request::new(object::close::Request {
+                space_id: space_id.to_string(),
+                object_id: object_id.to_string(),
+                ..Default::default()
+            }))
+            .await
+            .context("object_close failed")
             .map(|r| r.into_inner())
     }
 
@@ -456,9 +527,9 @@ impl Client {
     pub async fn unsubscribe_list_objects(&self, list_id: &str) -> Result<()> {
         self.unsubscribe(format!("list-{}", list_id)).await
     }
-    pub async fn unsubscribe_set_meta(&self, set_id: &str) -> Result<()> {
-        self.unsubscribe(format!("set-meta-{}", set_id)).await
-    }
+    // pub async fn unsubscribe_set_meta(&self, set_id: &str) -> Result<()> {
+    //     self.unsubscribe(format!("set-meta-{}", set_id)).await
+    // }
 }
 
 use url::Url;
@@ -498,7 +569,9 @@ pub fn parse_invite_url(invite_url: &str) -> Result<ParsedInvite> {
     anyhow::bail!("Invalid invite url scheme: {}", invite_url)
 }
 
-pub fn handle_msg(msg: Message) {
+use crate::protos::event::block::dataview::view_update::*;
+use crate::protos::event::block::dataview::*;
+pub fn handle_msg(context_id: &str, msg: Message) {
     match msg.value {
         Some(ObjectDetailsSet(v)) => {
             if v.sub_ids.iter().any(|s| s == SPACES_SUB) {
@@ -517,12 +590,8 @@ pub fn handle_msg(msg: Message) {
                     fields,
                 };
                 LIST_OBJECTS.write().details.insert(v.id, det);
-            } else if v.sub_ids.iter().any(|s| s.starts_with("set-meta-")) {
-                if let Some(fields) = v.details.map(|d| d.fields) {
-                    let mut state = SET_META.write();
-                    state.name = extract_string(fields.get("name"));
-                    state.set_of = extract_list_strings(fields.get("setOf"));
-                }
+            } else if v.sub_ids.is_empty() && SET_META.read().id.contains(context_id) {
+                SET_META.write().handle_set(v);
             }
         }
         Some(ObjectDetailsAmend(v)) => {
@@ -542,17 +611,8 @@ pub fn handle_msg(msg: Message) {
                         det.fields.insert(kv.key, val);
                     }
                 }
-            } else if v.sub_ids.iter().any(|s| s.starts_with("set-meta-")) {
-                let mut state = SET_META.write();
-                for kv in v.details {
-                    match kv.key.as_str() {
-                        "name" => state.name = get_string(kv.value.unwrap_or_default()),
-                        "setOf" => {
-                            state.set_of = extract_list_strings_from_value(kv.value.as_ref())
-                        }
-                        _ => {}
-                    }
-                }
+            } else if v.sub_ids.is_empty() && SET_META.read().id.contains(context_id) {
+                SET_META.write().handle_amend(v);
             }
         }
         Some(SubscriptionAdd(v)) => {
@@ -575,7 +635,20 @@ pub fn handle_msg(msg: Message) {
                 state.details.remove(&v.id);
             }
         }
+        Some(BlockDataviewViewSet(v)) => {
+            SET_META.write().handle_view_set(v);
+        }
+        Some(BlockDataviewViewDelete(v)) => {
+            SET_META.write().handle_view_delete(v);
+        }
 
+        Some(BlockDataviewViewUpdate(v)) => {
+            SET_META.write().handle_view_update(v);
+            // tracing::debug!("view update: {:#?}", v);
+        }
+        Some(BlockDataviewViewOrder(v)) => {
+            SET_META.write().handle_view_order(v);
+        }
         _ => {}
     }
 }
@@ -648,7 +721,6 @@ impl SetsState {
                     .as_ref()
                     .and_then(|d| d.fields.get("resolvedLayout")),
             ),
-            set_of: extract_set_of_ids(&v.details.unwrap().fields),
         };
         self.details.insert(v.id, det);
     }
@@ -661,38 +733,10 @@ impl SetsState {
             match kv.key.as_str() {
                 "name" => details.name = get_string(kv.value.unwrap()),
                 "resolvedLayout" => details.layout = extract_number((&kv.value).into()),
-                // "setOf" => details.set_of = v.details,
                 _ => {}
             }
         }
     }
-}
-pub fn extract_set_of_ids(
-    fields: &std::collections::BTreeMap<String, prost_types::Value>,
-) -> Vec<String> {
-    fields
-        .get("setOf")
-        .and_then(|v| v.kind.as_ref())
-        .and_then(|k| {
-            if let prost_types::value::Kind::ListValue(l) = k {
-                Some(l)
-            } else {
-                None
-            }
-        })
-        .map(|l| {
-            l.values
-                .iter()
-                .filter_map(|v| {
-                    if let Some(prost_types::value::Kind::StringValue(s)) = &v.kind {
-                        Some(s.clone())
-                    } else {
-                        None
-                    }
-                })
-                .collect()
-        })
-        .unwrap_or_default()
 }
 
 pub fn extract_list_strings(v: Option<&prost_types::Value>) -> Vec<String> {
@@ -747,6 +791,144 @@ pub static LIST_OBJECTS: GlobalSignal<ListObjectsState> = Signal::global(ListObj
 
 pub static SET_META: GlobalSignal<SetMetaState> = Signal::global(SetMetaState::default);
 
+impl SetMetaState {
+    pub fn handle_set(&mut self, v: Set) {
+        let Some(fields) = v.details.map(|d| d.fields) else {
+            return;
+        };
+        self.name = extract_string(fields.get("name"));
+        self.set_of = extract_list_strings(fields.get("setOf"));
+    }
+    pub fn handle_amend(&mut self, v: Amend) {
+        for kv in v.details {
+            match kv.key.as_str() {
+                "name" => self.name = get_string(kv.value.unwrap_or_default()),
+                "setOf" => self.set_of = extract_list_strings_from_value(kv.value.as_ref()),
+                _ => {}
+            }
+        }
+    }
+    pub fn handle_view_set(&mut self, v: ViewSet) {
+        let Some(new_view) = v.view else { return };
+
+        if let Some(existing) = self.views.iter_mut().find(|view| view.id == v.view_id) {
+            *existing = new_view;
+        } else {
+            self.views.push(new_view);
+        }
+    }
+    pub fn handle_view_delete(&mut self, v: ViewDelete) {
+        self.views.retain(|view| view.id != v.view_id);
+
+        if self.active_view_id == v.view_id {
+            self.active_view_id = self
+                .views
+                .first()
+                .map(|view| view.id.clone())
+                .unwrap_or_default();
+        }
+    }
+
+    pub fn handle_view_update(&mut self, v: ViewUpdate) {
+        let Some(view) = self.views.iter_mut().find(|view| view.id == v.view_id) else {
+            tracing::error!("got update on nonexisting view: {}", v.view_id);
+            return;
+        };
+
+        if let Some(f) = v.fields {
+            view.name = f.name;
+        }
+
+        // --- Filters ---
+        for change in v.filter {
+            match change.operation {
+                Some(filter::Operation::Add(add)) => {
+                    let pos =
+                        insert_pos_by_id(&add.after_id, view.filters.iter().map(|f| f.id.as_str()));
+                    for (i, item) in add.items.into_iter().enumerate() {
+                        view.filters.insert(pos + i, item);
+                    }
+                }
+                Some(filter::Operation::Remove(rem)) => {
+                    view.filters.retain(|f| !rem.ids.contains(&f.id));
+                }
+                Some(filter::Operation::Update(u)) => {
+                    if let Some(f) = view.filters.iter_mut().find(|f| f.id == u.id) {
+                        if let Some(item) = u.item {
+                            *f = item;
+                        }
+                    }
+                }
+                Some(filter::Operation::Move(mv)) => {
+                    let mut moved = Vec::with_capacity(mv.ids.len());
+
+                    for target_id in &mv.ids {
+                        if let Some(idx) = view.filters.iter().position(|s| s.id == *target_id) {
+                            moved.push(view.filters.remove(idx));
+                        }
+                    }
+
+                    let pos =
+                        insert_pos_by_id(&mv.after_id, view.filters.iter().map(|s| s.id.as_str()));
+
+                    for (i, item) in moved.into_iter().enumerate() {
+                        view.filters.insert(pos + i, item);
+                    }
+                }
+                None => {}
+            }
+        }
+
+        // --- Sorts ---
+        for change in v.sort {
+            match change.operation {
+                Some(sort::Operation::Add(add)) => {
+                    let pos =
+                        insert_pos_by_id(&add.after_id, view.sorts.iter().map(|s| s.id.as_str()));
+                    for (i, item) in add.items.into_iter().enumerate() {
+                        view.sorts.insert(pos + i, item);
+                    }
+                }
+                Some(sort::Operation::Remove(rem)) => {
+                    view.sorts.retain(|s| !rem.ids.contains(&s.id));
+                }
+                Some(sort::Operation::Update(u)) => {
+                    if let Some(s) = view.sorts.iter_mut().find(|s| s.id == u.id) {
+                        if let Some(item) = u.item {
+                            *s = item;
+                        }
+                    }
+                }
+                Some(sort::Operation::Move(mv)) => {
+                    let mut moved = Vec::with_capacity(mv.ids.len());
+
+                    for target_id in &mv.ids {
+                        if let Some(idx) = view.sorts.iter().position(|s| s.id == *target_id) {
+                            moved.push(view.sorts.remove(idx));
+                        }
+                    }
+
+                    let pos =
+                        insert_pos_by_id(&mv.after_id, view.sorts.iter().map(|s| s.id.as_str()));
+
+                    for (i, item) in moved.into_iter().enumerate() {
+                        view.sorts.insert(pos + i, item);
+                    }
+                }
+                None => {}
+            }
+        }
+    }
+    pub fn handle_view_order(&mut self, v: ViewOrder) {
+        self.views.sort_by_cached_key(|view| {
+            v.view_ids
+                .iter()
+                .position(|id| id == &view.id)
+                .unwrap_or(usize::MAX)
+        });
+    }
+}
+
 fn insert_ordered(order: &mut Vec<String>, id: String, after_id: &str) {
     order.retain(|existing| existing != &id);
     if after_id.is_empty() {
@@ -776,4 +958,15 @@ fn get_string(v: prost_types::Value) -> String {
         Some(prost_types::value::Kind::StringValue(s)) => s,
         _ => String::new(),
     }
+}
+
+/// Finds the insertion index for a new item.
+/// If `after_id` is empty, or if the ID is not found, it defaults to index 0.
+fn insert_pos_by_id<'a>(after_id: &str, mut ids: impl Iterator<Item = &'a str>) -> usize {
+    if after_id.is_empty() {
+        return 0;
+    }
+    ids.position(|id| id == after_id)
+        .map(|i| i + 1)
+        .unwrap_or(0)
 }

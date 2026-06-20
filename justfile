@@ -1,4 +1,5 @@
 set dotenv-load := true
+set shell := ["nu", "-c"]
 
 export NDK_HOME := env_var('NDK_HOME')
 export ANDROID_HOME := env_var('ANDROID_HOME')

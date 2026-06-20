@@ -149,7 +149,7 @@ fn App() -> Element {
                             msg = stream.message() => {
                                 match msg {
                                     Ok(Some(event)) => {
-                                        for msg in event.messages { handle_msg(msg); }
+                                        for msg in event.messages { handle_msg(&event.context_id.clone(), msg); }
                                     }
                                     Ok(None) => { tracing::warn!("stream closed, reconnecting"); break; }
                                     Err(e) => { tracing::warn!("stream error: {e}, reconnecting"); break; }
