@@ -1,2 +1,8 @@
 [target.x86_64-pc-windows-msvc]
-rustflags = ["-C", "link-args=/STACK:8388608"]
+rustflags = [
+    "-C", "link-args=/STACK:8388608",
+    "-C", "link-arg=-mwindows",
+    "-C", "link-arg=-Wl,--dynamicbase",
+    "-C", "link-arg=-Wl,--disable-auto-image-base",
+    "-C", "link-arg=-Wl,--high-entropy-va"
+]

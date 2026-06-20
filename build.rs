@@ -1,54 +1,38 @@
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
-    let output_base = std::env::var("OUTPUT_BASE")
+    let engine_libs = std::env::var("ENGINE_LIBS")
         .unwrap_or_else(|_| format!("{manifest_dir}/go-engine/native-libs"));
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
     match target_os.as_str() {
         "windows" => {
-            println!("cargo:rustc-link-search=native={output_base}/windows");
+            println!("cargo:rustc-link-search=native={engine_libs}/windows");
             println!("cargo:rustc-link-lib=dylib=anytype_engine");
-            println!("cargo:rerun-if-env-changed=OUTPUT_BASE");
-            println!("cargo:rerun-if-changed={output_base}/windows/libanytype_engine.dll",);
-            let src_dll = std::path::PathBuf::from(&output_base)
+            println!("cargo:rerun-if-env-changed=ENGINE_LIBS");
+            println!("cargo:rerun-if-changed={engine_libs}/windows/anytype_engine.dll",);
+            // dx serve --windows needs manual copying of the engine lib
+            let src_dll = std::path::PathBuf::from(&engine_libs)
                 .join("windows")
-                .join("libanytype_engine.dll");
+                .join("anytype_engine.dll");
+
             if src_dll.exists() {
-                if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
-                    let p_root = std::path::PathBuf::from(manifest_dir);
-                    let _ = std::fs::copy(&src_dll, p_root.join("libanytype_engine.dll"));
-                    let dx_windows_dir = p_root
-                        .join("target")
-                        .join("dx")
-                        .join("any-task")
-                        .join("debug")
-                        .join("windows");
-                    if !dx_windows_dir.exists() {
-                        let _ = std::fs::create_dir_all(&dx_windows_dir);
-                    }
-                    let _ = std::fs::copy(&src_dll, dx_windows_dir.join("libanytype_engine.dll"));
-                }
-                if let Ok(out_dir) = std::env::var("OUT_DIR") {
-                    let mut profile_dir = std::path::PathBuf::from(out_dir);
-                    profile_dir.pop();
-                    profile_dir.pop();
-                    profile_dir.pop();
-                    let _ = std::fs::copy(&src_dll, profile_dir.join("libanytype_engine.dll"));
-                    let _ = std::fs::copy(
-                        &src_dll,
-                        profile_dir.join("deps").join("libanytype_engine.dll"),
-                    );
-                }
-            } else {
-                println!(
-                    "cargo:warning=anytype_engine.dll was not found at the expected source path!",
-                );
+                let pkg_name = std::env::var("CARGO_PKG_NAME").unwrap();
+                let profile = std::env::var("PROFILE").unwrap();
+                let dx_app_dir = std::path::PathBuf::from(&manifest_dir)
+                    .join("target")
+                    .join("dx")
+                    .join(&pkg_name)
+                    .join(&profile)
+                    .join("windows")
+                    .join("app");
+                std::fs::create_dir_all(&dx_app_dir).ok();
+                std::fs::copy(&src_dll, dx_app_dir.join("anytype_engine.dll")).ok();
             }
         }
         "linux" => {
-            println!("cargo:rustc-link-search=native={output_base}/linux");
+            println!("cargo:rustc-link-search=native={engine_libs}/linux");
             println!("cargo:rustc-link-lib=dylib=anytype_engine");
-            println!("cargo:rerun-if-env-changed=OUTPUT_BASE");
-            println!("cargo:rerun-if-changed={output_base}/linux/libanytype_engine.so");
+            println!("cargo:rerun-if-env-changed=ENGINE_LIBS");
+            println!("cargo:rerun-if-changed={engine_libs}/linux/anytype_engine.so");
         }
         "android" => {
             let (nix_arch, jni_abi) = match std::env::var("CARGO_CFG_TARGET_ARCH")
@@ -61,12 +45,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "x86" => ("i686", "x86"),
                 _ => return Ok(()),
             };
-            println!("cargo:rustc-link-search=native={output_base}/android/{nix_arch}");
+            println!("cargo:rustc-link-search=native={engine_libs}/android/{nix_arch}");
             println!("cargo:rustc-link-lib=dylib=anytype_engine");
-            println!("cargo:rerun-if-env-changed=OUTPUT_BASE");
-            println!(
-                "cargo:rerun-if-changed={output_base}/android/{nix_arch}/libanytype_engine.so",
-            );
+            println!("cargo:rerun-if-env-changed=ENGINE_LIBS");
+            println!("cargo:rerun-if-changed={engine_libs}/android/{nix_arch}/anytype_engine.so",);
             // let pkg_name = std::env::var("CARGO_PKG_NAME").unwrap();
             // let profile = std::env::var("PROFILE").unwrap();
             // let dest_dir = format!(
@@ -78,7 +60,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
             let profile = std::env::var("PROFILE").unwrap();
 
-            // Hardcoding "any-task" here ensures we don't get mismatches with underscores from CARGO_PKG_NAME
             let dest_dir = format!(
                 "{manifest_dir}/target/dx/any-task/{profile}/android/app/app/src/main/jniLibs/{jni_abi}"
             );
@@ -87,8 +68,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "Failed to create jniLibs directory at {}",
                 dest_dir
             ));
-            let src = format!("{output_base}/android/{nix_arch}/libanytype_engine.so");
-            let dst = format!("{dest_dir}/libanytype_engine.so");
+            let src = format!("{engine_libs}/android/{nix_arch}/anytype_engine.so");
+            let dst = format!("{dest_dir}/anytype_engine.so");
             std::fs::copy(&src, &dst).expect(&format!("Failed to copy {} to {}", src, dst));
 
             let ndk_home = std::env::var("ANDROID_NDK_HOME").expect("ANDROID_NDK_HOME must be set");

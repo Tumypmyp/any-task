@@ -15,6 +15,7 @@ publisher = "Tumypmyp"
 icon = ["assets/favicon.ico"]
 category = "Productivity"
 short_description = "Cross-Platform Anytype client"
+resources = ["go-engine/native-libs/windows/anytype_engine.dll"]
 
 [bundle.windows]
 icon_path = "assets/favicon.ico"

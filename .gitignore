@@ -18,7 +18,6 @@ local.properties
 
 # pre-commit
 .pre-commit-config.yaml
-.tmp
 .android
 
 # build
@@ -27,7 +26,7 @@ dist
 *.dll
 
 # part of anytype-heart
-protos/
+*.proto
 
 .git*
 .env*
