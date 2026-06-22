@@ -37,6 +37,8 @@ pub struct AppSettings {
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/main.css");
 const THEME_CSS: Asset = asset!("/assets/dx-components-theme.css");
+static LICENSES: Asset = asset!("/assets/LICENSE-ANYTYPE.md");
+
 #[derive(Clone, Routable)]
 #[rustfmt::skip]
 enum Route {
