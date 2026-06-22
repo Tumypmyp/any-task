@@ -62,11 +62,11 @@ pub fn RelationPositionsEditor(
         } => {
             let divider_style = match direction {
                 SplitDirection::Row => {
-                    "width: 5px; cursor: col-resize; background: var(--secondary-color-6); \
+                    "width: 8px; cursor: col-resize; background: var(--secondary-color-6); \
                    flex-shrink: 0; z-index: 1; touch-action: none;"
                 }
                 SplitDirection::Column => {
-                    "height: 7px; cursor: row-resize; background: var(--secondary-color-6); \
+                    "height: 8px; cursor: row-resize; background: var(--secondary-color-6); \
                    flex-shrink: 0; z-index: 1; touch-action: none;"
                 }
             };
@@ -258,7 +258,6 @@ pub fn Property(
                     list_aria_label: "Relations",
                     ComboboxEmpty { "No relations match." }
                     PropertyOptions { all_properties }
-
                 }
                 Button {
                     size: ButtonSize::Xs,
@@ -296,7 +295,6 @@ pub fn Property(
                         });
                 },
                 "+"
-
             }
         }
     }

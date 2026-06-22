@@ -25,14 +25,16 @@
   width: calc(1.15rem - 2px);
   height: calc(1.15rem - 2px);
   border-radius: 9999px;
-  background-color: var(--light, var(--primary-color)) var(--dark, var(--secondary-color-2));
+  background-color: var(--light, var(--primary-color))
+    var(--dark, var(--secondary-color-2));
   transform: translateX(1px);
   transition: transform 150ms;
   will-change: transform;
 }
 
 .switch[data-state="checked"] .switch-thumb {
-  background-color: var(--light, var(--primary-color)) var(--dark, var(--primary-color-3));
+  background-color: var(--light, var(--primary-color))
+    var(--dark, var(--primary-color-3));
   transform: translateX(calc(2rem - 1px - (1.15rem - 2px)));
 }
 

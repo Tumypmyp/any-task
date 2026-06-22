@@ -20,9 +20,7 @@
     doCheck = false;
     OPENSSL_NO_VENDOR = 1;
     nativeBuildInputs = [pkgs.pkg-config pkgs.cacert];
-    buildInputs = with pkgs;
-      [openssl]
-      ++ lib.optionals stdenv.isDarwin [darwin.apple_sdk.frameworks.CoreServices];
+    buildInputs = [pkgs.openssl];
   };
 in {
   android = {
@@ -67,138 +65,120 @@ in {
     pkgs.webkitgtk_4_1
     pkgs.openjdk
     pkgs.protobuf
+    # android
+    pkgs.bundletool
+    pkgs.unzip
+    pkgs.steam-run
 
-    pkgs.pkgsCross.mingwW64.stdenv.cc
-    #   pkgs.pkgsCross.mingwW64.windows.pthreads
+    # windows
   ];
   # https://wiki.nixos.org/wiki/Tauri
   # https://devenv.sh/processes/
-  # processes.dev.exec = "${lib.getExe pkgs.watchexec} -n -- ls -la";
 
   # https://devenv.sh/basics/
-  enterShell = '''';
+  # enterShell = '''';
 
   tasks."proto:download" = {
     env = {
       BASE = "https://raw.githubusercontent.com/anyproto/anytype-heart/main";
       DEST = "./protos";
     };
+    package = pkgs.nushell;
+    binary = "nu";
     exec = ''
-      mkdir -p $DEST/pb/protos/service
-      mkdir -p $DEST/pb/protos
-      mkdir -p $DEST/pkg/lib/pb/model/protos
+      mkdir $"($env.DEST)/pb/protos/service"
+      mkdir $"($env.DEST)/pb/protos"
+      mkdir $"($env.DEST)/pkg/lib/pb/model/protos"
 
-      curl -sL $BASE/pb/protos/service/service.proto   -o $DEST/pb/protos/service/service.proto
-      curl -sL $BASE/pb/protos/commands.proto          -o $DEST/pb/protos/commands.proto
-      curl -sL $BASE/pb/protos/events.proto            -o $DEST/pb/protos/events.proto
-      curl -sL $BASE/pkg/lib/pb/model/protos/models.proto            -o $DEST/pkg/lib/pb/model/protos/models.proto
-      curl -sL $BASE/pkg/lib/pb/model/protos/localstore.proto -o $DEST/pkg/lib/pb/model/protos/localstore.proto
+      let files = [
+          ["path",                                        "dest"],
+          ["pb/protos/service/service.proto",             $"($env.DEST)/pb/protos/service/service.proto"],
+          ["pb/protos/commands.proto",                    $"($env.DEST)/pb/protos/commands.proto"],
+          ["pb/protos/events.proto",                      $"($env.DEST)/pb/protos/events.proto"],
+          ["pkg/lib/pb/model/protos/models.proto",        $"($env.DEST)/pkg/lib/pb/model/protos/models.proto"],
+          ["pkg/lib/pb/model/protos/localstore.proto",    $"($env.DEST)/pkg/lib/pb/model/protos/localstore.proto"],
+      ]
+
+      for row in $files {
+          let url = $"($env.BASE)/($row.path)"
+          print $"Downloading ($row.path)..."
+          http get $url | save -f $row.dest
+      }
     '';
   };
-
-  # tasks."bundle:windows" = {
-  #   # packages = [
-  #   #   pkgs.pkgsCross.mingwW64.stdenv.cc
-  #   #   pkgs.pkgsCross.mingwW64.windows.pthreads
-  #   # ];
-  #   exec = ''
-  #     # export CC="zig cc -target x86_64-windows-gnu"
-  #     # export CXX="zig c++ -target x86_64-windows-gnu"
-
-  #     # # export LIBRARY_PATH="$LIBRARY_PATH:${pkgs.pkgsCross.mingwW64.windows.pthreads}/lib"
-  #     # dx bundle --release --windows --target x86_64-pc-windows-gnu --features bundle
-  #     export CC_x86_64_pc_windows_gnu="x86_64-w64-mingw32-gcc"
-  #         export CXX_x86_64_pc_windows_gnu="x86_64-w64-mingw32-g++"
-  #         export AR_x86_64_pc_windows_gnu="x86_64-w64-mingw32-ar"
-
-  #         # Tell Cargo to use the MinGW linker for the final executable
-  #         export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER="x86_64-w64-mingw32-gcc"
-
-  #         dx bundle --release --windows --target x86_64-pc-windows-gnu --features bundle
-  #   '';
-  # };
 
   dotenv.enable = true;
   dotenv.filename = ".env.devenv";
-  # env.TEMP_DIR = "${config.devenv.runtime}/bundle-android";
-  env.TEMP_DIR = "${config.devenv.root}/TEMP_DIR";
+
   env = {
+    ANDROID_NDK_HOME = config.env.ANDROID_NDK_ROOT;
+    TEMP_DIR = "${config.devenv.root}/.devenv/bundle-temp";
     APP_NAME = "AnyTask";
-    OUTPUT_DIR = "${config.devenv.root}/dist/android";
-    OUTPUT_AAB = "${config.env.TEMP_DIR}/AnyTask-aarch64-linux-android.aab";
-    # OUTPUT_AAB = "${config.env.TEMP_DIR}/AnyTask-x86_64-linux-android.aab";
-    OUTPUT_APKS = "${config.env.OUTPUT_DIR}/${config.env.APP_NAME}-dev.apks";
-    OUTPUT_APK = "${config.env.OUTPUT_DIR}/${config.env.APP_NAME}-universal.apk";
-    AAPT2 = "${pkgs.android-tools}/bin/aapt2";
+
+    ANDROID_AAB = "${config.env.TEMP_DIR}/${config.env.APP_NAME}.aab";
+    ANDROID_APKS = "${config.env.TEMP_DIR}/${config.env.APP_NAME}.apks";
+
+    ANDROID_APK_DIR = "${config.devenv.root}/dist/android";
+    ANDROID_APK = "${config.env.ANDROID_APK_DIR}/${config.env.APP_NAME}.apk";
+    JNI_DIR = "target/dx/any-task/release/android/app/app/src/main/jniLibs/arm64-v8a";
   };
-  scripts.create-emulator.exec = ''
-    avdmanager create avd -n android-simple -k "system-images;android-34;google_apis_playstore;x86_64" --device "pixel_6_pro"
-  '';
-  scripts.run-android = {
-    packages = [
-      pkgs.bundletool
-      pkgs.unzip
-      pkgs.steam-run
-    ];
+  # scripts.create-emulator.exec = ''
+  #   avdmanager create avd -n android-simple -k "system-images;android-34;google_apis_playstore;x86_64" --device "pixel_6_pro"
+  # '';
+  # scripts.run-android = {
+  #  exec = ''
+  #     dx serve --android --device
+  #   '';
+  # };
+  tasks."bundle:android" = {
+    package = pkgs.nushell;
+    binary = "nu";
     exec = ''
-      dx serve --android --device
+      dx bundle --android --release --debug-symbols=false --target aarch64-linux-android
+
+      print "Re-injecting native libraries into the generated Android project..."
+      mkdir $env.JNI_DIR
+      cp "go-engine/native-libs/android/aarch64/anytype_engine.so" $env.JNI_DIR
+      cp $"($env.ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" $env.JNI_DIR
+
+      print "Building AAB via Gradle..."
+      do {
+        cd "target/dx/any-task/release/android/app"
+        try {
+          ^./gradlew bundleRelease
+        } catch {
+          error make "Gradle build failed."
+        }
+      }
+
+      rm -rf $env.TEMP_DIR
+      mkdir $env.TEMP_DIR
+
+      cp "target/dx/any-task/release/android/app/app/build/outputs/bundle/release/app-release.aab" $env.ANDROID_AAB
+
+      print "Building APKS from AAB using bundletool..."
+      try {
+        (steam-run bundletool build-apks
+          --bundle $env.ANDROID_AAB
+          --output $env.ANDROID_APKS
+          --mode universal
+          --ks $"($env.HOME)/.keys/upload-keystore.jks"
+          --ks-pass $"pass:($env.KS_PASS)"
+          --ks-key-alias upload
+          --overwrite
+        )
+      } catch {
+        error make "Failed to build APKS."
+      }
+
+      print "Extracting Universal APK..."
+      mkdir ($env.ANDROID_APK | path dirname)
+      ^unzip -p $env.ANDROID_APKS universal.apk | save -f $env.ANDROID_APK
+
+      print $"Universal APK successfully extracted to ($env.ANDROID_APK)"
     '';
   };
-
-  scripts.bundle-android = {
-    packages = [
-      pkgs.bundletool
-      pkgs.unzip
-      pkgs.steam-run
-    ];
-    exec = ''
-      dx bundle --android --release --debug-symbols=false --target  aarch64-linux-android --out-dir "$TEMP_DIR" || { echo "Failed to bundle AAB with dioxus"; exit 1; }
-
-      if [ -d "$OUTPUT_DIR" ]; then
-          echo "Removing existing Android files: $OUTPUT_DIR"
-          rm -rf "$OUTPUT_DIR"
-      fi
-
-      steam-run bundletool build-apks --bundle="$OUTPUT_AAB" --output="$OUTPUT_APKS" --mode=universal \
-          --ks="$HOME/.keys/upload-keystore.jks" \
-          --ks-pass=pass:"$KS_PASS" \
-          --ks-key-alias=upload \
-          --overwrite \
-          || { echo "Failed to build APKS."; exit 1; }
-      unzip "$OUTPUT_APKS" -d "$TEMP_DIR"
-      mv "$TEMP_DIR/universal.apk" "$OUTPUT_APK" || { echo "Failed to find universal.apk in APKS."; rm -rf "$TEMP_DIR"; exit 1; }
-      rm -rf "$TEMP_DIR"
-      echo "Universal APK extracted to $OUTPUT_APK"
-    '';
-  };
-  scripts.unzip-bundle-android = {
-    packages = [
-      pkgs.bundletool
-      pkgs.unzip
-      pkgs.steam-run
-    ];
-    exec = ''
-
-      if [ -d "$OUTPUT_DIR" ]; then
-          echo "Removing existing Android files: $OUTPUT_DIR"
-          rm -rf "$OUTPUT_DIR"
-      fi
-
-      steam-run bundletool build-apks --bundle="$OUTPUT_AAB" --output="$OUTPUT_APKS" --mode=universal \
-          --ks="$HOME/.keys/upload-keystore.jks" \
-          --ks-pass=pass:"$KS_PASS" \
-          --ks-key-alias=app-key \
-          --overwrite \
-          || { echo "Failed to build APKS."; exit 1; }
-
-      unzip "$OUTPUT_APKS" -d "$TEMP_DIR"
-      mv "$TEMP_DIR/universal.apk" "$OUTPUT_APK" || { echo "Failed to find universal.apk in APKS."; rm -rf "$TEMP_DIR"; exit 1; }
-      rm -rf "$TEMP_DIR"
-      echo "Universal APK extracted to $OUTPUT_APK"
-    '';
-  };
-
-  pre-commit.hooks = {
+  git-hooks.hooks = {
     alejandra.enable = true;
     prettier = {
       enable = true;

@@ -25,7 +25,7 @@
 - [x] Properties: Text, Checkbox, Date, Number, etc.
 - [x] Customize properties appearence in Lists
 - [x] Live property update on value change
-- [ ] Use different List views
+- [x] Use different List views
 - [x] Open last visited view after app reload
 <!--- [ ] Timeline/Calendar view-->
 
@@ -43,6 +43,7 @@ devenv shell -v
 devenv tasks run deps:download          # download anytype-heart dependencies
 devenv tasks run engine:build           # build anytype-heart library
 devenv tasks run proto:download         # download anytype-heart proto files for communication
+devenv tasks run bundle:android         # bundle android apk
 ```
 
 ### Manual install for Windows, Linux, Mac

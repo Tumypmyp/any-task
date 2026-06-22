@@ -4,14 +4,20 @@
 .
 ├── build.rs                      # build script to add compiled engine inside the app
 ├── go-engine/                    # Go layer on top of anytype-heart (compiled to lib)
+├── protos/                       # Proto files used for speaking with anytype-heart
 ├── src/                          # Dioxus app
 │   ├── components/
 │   ├── engine.rs
 │   ├── helpers
 │   ├── main.rs
 │   ├── persistent_history.rs
-│   └── views/
+│   ├── components                # Repeating UI components (from dioxus-components and custom ones)
+│   └── views/                    # Possible UI views in the AnyTask
 ```
+
+## Dependencies
+
+NixOS is the primary target for development. But you can build and run the app localy after installing the development tools manually.
 
 ### Running
 
@@ -29,7 +35,7 @@ dx serve --platform desktop
   - Wireless debugging (turn on, then hold)
   - Pair device with pairing code (`ip:port`, `code`)
 - Terminal
-  - Connect to device
+  - Connect to device (on WSL you should first start adb service in Windows)
     - `adb pair ip:port` - connect to device with wireless debugging
     - `code` - verify with code
     - `adb devices` - check connected devices
@@ -46,17 +52,11 @@ dx serve --platform desktop
 #### Desktop
 
 ```bash
-dx bundle --desktop
+devenv tasks run bundle:windows
 ```
 
 #### Android
 
 ```bash
-dx bundle --android
-```
-
-or
-
-```bash
-(devenv) bundle-android-apk
+devenv tasks run bundle:android
 ```

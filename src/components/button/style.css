@@ -143,7 +143,11 @@
 }
 
 .dx-button[data-style="secondary"]:not(:disabled):hover {
-  background-color: color-mix(in oklab, var(--primary-color-5) 80%, transparent);
+  background-color: color-mix(
+    in oklab,
+    var(--primary-color-5) 80%,
+    transparent
+  );
 }
 
 .dx-button[data-style="ghost"] {
@@ -174,7 +178,10 @@
 
 .dx-button[data-style="destructive"] {
   background-color: var(--light, var(--primary-error-color))
-    var(--dark, color-mix(in oklab, var(--primary-error-color) 60%, transparent));
+    var(
+      --dark,
+      color-mix(in oklab, var(--primary-error-color) 60%, transparent)
+    );
   color: var(--contrast-error-color);
 }
 
@@ -188,8 +195,14 @@
 
 .dx-button[data-style="destructive"]:focus-visible {
   box-shadow: 0 0 0 3px
-    var(--light, color-mix(in oklab, var(--primary-error-color) 20%, transparent))
-    var(--dark, color-mix(in oklab, var(--primary-error-color) 40%, transparent));
+    var(
+      --light,
+      color-mix(in oklab, var(--primary-error-color) 20%, transparent)
+    )
+    var(
+      --dark,
+      color-mix(in oklab, var(--primary-error-color) 40%, transparent)
+    );
 }
 
 .dx-button[data-style="link"] {
@@ -215,6 +228,12 @@
 
 .dx-button[aria-invalid="true"]:focus-visible {
   box-shadow: 0 0 0 3px
-    var(--light, color-mix(in oklab, var(--primary-error-color) 20%, transparent))
-    var(--dark, color-mix(in oklab, var(--primary-error-color) 40%, transparent));
+    var(
+      --light,
+      color-mix(in oklab, var(--primary-error-color) 20%, transparent)
+    )
+    var(
+      --dark,
+      color-mix(in oklab, var(--primary-error-color) 40%, transparent)
+    );
 }

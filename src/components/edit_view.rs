@@ -1,5 +1,4 @@
 use crate::components::button::*;
-use crate::components::choose_view::ChooseView;
 use crate::components::column::*;
 use crate::components::relation_positions::*;
 use crate::components::row::*;
@@ -15,7 +14,6 @@ use std::vec;
 pub fn EditView(
     space_id: String,
     list_id: String,
-    view_id: Store<String>,
     positions: Store<TileTree>,
     all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
@@ -35,7 +33,6 @@ pub fn EditView(
                 //     style: "min-height: 50vh; max-height: 70vh;",
                 Column {
                     Row { position: RowPosition::Middle,
-                        ChooseView { space_id, list_id, view_id }
                         RelationPositionsCleaner { positions }
                     }
                     Separator {}

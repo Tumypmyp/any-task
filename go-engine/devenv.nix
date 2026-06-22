@@ -26,8 +26,12 @@ in {
 
   env = {
     LIBS_DIR = "${goEngineDir}/.devenv/libs";
-    OUTPUT_BASE = "${goEngineDir}/native-libs";
+    ENGINE_LIBS = "${goEngineDir}/native-libs";
     TANTIVY_VERSION = "v1.0.6";
+    ENGINE_NAME = "anytype_engine";
+    WINDOWS_ENGINE_LIB = "{env.ENGINE_LIBS}/windows/{env.ENGINE_NAME}.dll";
+    LINUX_ENGINE_LIB = "{env.ENGINE_LIBS}/linux/{env.ENGINE_NAME}.so";
+    ANDROID_ENGINE_LIB = "{env.ENGINE_LIBS}/android/{env.ENGINE_NAME}.so";
   };
   tasks = {
     "deps:download" = {
@@ -76,12 +80,11 @@ in {
         export CC="zig cc -target x86_64-windows-gnu"
         export CXX="zig c++ -target x86_64-windows-gnu"
 
-        export CGO_LDFLAGS="-L$LIBS_DIR/windows-amd64 -ltantivy_go -Wl,--out-implib,$OUTPUT_BASE/windows/libanytype_engine.lib"
-        # export CGO_LDFLAGS="-L$LIBS_DIR/windows-amd64 -ltantivy_go -Wl,--out-implib,$OUTPUT_BASE/windows/libanytype_engine.dll.a"
+        export CGO_LDFLAGS="-L$LIBS_DIR/windows-amd64 -ltantivy_go -Wl,--out-implib,$ENGINE_LIBS/windows/anytype_engine.lib"
         export RUSTFLAGS="-Clink-arg=-mwindows"
 
-        mkdir -p $OUTPUT_BASE/windows
-        go build -buildmode=c-shared -o $OUTPUT_BASE/windows/libanytype_engine.dll main.go
+        mkdir -p $ENGINE_LIBS/windows
+        go build -buildmode=c-shared -o $ENGINE_LIBS/windows/anytype_engine.dll main.go
       '';
     };
     "engine:build-linux" = {
@@ -93,8 +96,8 @@ in {
         export GOARCH=amd64
         export CGO_LDFLAGS="-L$LIBS_DIR/linux-musl -ltantivy_go"
 
-        mkdir -p $OUTPUT_BASE/linux
-        go build -buildmode=c-shared -o $OUTPUT_BASE/linux/libanytype_engine.so main.go
+        mkdir -p $ENGINE_LIBS/linux
+        go build -buildmode=c-shared -o $ENGINE_LIBS/linux/anytype_engine.so main.go
       '';
     };
 
@@ -145,13 +148,13 @@ in {
               ;;
           esac
 
-          OUT_DIR="$OUTPUT_BASE/android/$ARCH"
+          OUT_DIR="$ENGINE_LIBS/android/$ARCH"
           mkdir -p "$OUT_DIR"
 
-          go build -buildmode=c-shared -o "$OUT_DIR/libanytype_engine.so" main.go
+          go build -buildmode=c-shared -o "$OUT_DIR/anytype_engine.so" main.go
         done
 
-        echo "Successfully built libanytype_engine.so for all Android architectures!"
+        echo "Successfully built anytype_engine.so for all Android architectures!"
       '';
     };
 
@@ -165,7 +168,7 @@ in {
       ];
     };
   };
-  pre-commit.hooks = {
+  git-hooks.hooks = {
     alejandra.enable = true;
   };
 }
