@@ -8,7 +8,6 @@ use crate::protos::anytype_model::RelationFormat;
 use crate::protos::anytype_model::block::*;
 use crate::protos::anytype_model::object_type::*;
 use crate::protos::client_commands_client::ClientCommandsClient;
-// use crate::protos::client_commands_client::*;
 use crate::protos::event::Message;
 use crate::protos::event::message::Value::*;
 use crate::protos::event::object::details::*;
@@ -167,6 +166,110 @@ impl Client {
         let authenticated_client = ClientCommandsClient::with_interceptor(channel, interceptor);
         Ok(Self {
             client: authenticated_client,
+            account_id: account.id,
+            tech_space_id,
+            network_id,
+            token: session_res.token.clone(),
+        })
+    }
+    pub async fn recover_from_mnemonic(mnemonic: String, root_path_str: String) -> Result<Client> {
+        let addr = "127.0.0.1:31020";
+        let channel = Channel::from_shared(format!("http://{}", addr))?
+            .connect()
+            .await
+            .context("Failed to connect channel")?;
+        let mut setup_client = ClientCommandsClient::new(channel.clone());
+
+        // Step 1: Recover wallet (same as init_from_mnemonic)
+        setup_client
+            .wallet_recover(wallet::recover::Request {
+                root_path: root_path_str.clone(),
+                mnemonic: mnemonic.clone(),
+                ..Default::default()
+            })
+            .await
+            .context("Failed to recover wallet")?;
+
+        let _ = setup_client
+            .initial_set_parameters(initial::set_parameters::Request {
+                platform: "android".to_string(),
+                version: "0.0.1".to_string(),
+                workdir: root_path_str.clone(),
+                ..Default::default()
+            })
+            .await;
+
+        // Step 2: Create session — needed before account_recover
+        let session_res = setup_client
+            .wallet_create_session(wallet::create_session::Request {
+                auth: Some(wallet::create_session::request::Auth::Mnemonic(
+                    mnemonic.clone(),
+                )),
+            })
+            .await
+            .context("Failed to create wallet session")?
+            .into_inner();
+
+        let meta_val = MetadataValue::try_from(&session_res.token)
+            .map_err(|_| anyhow::anyhow!("Invalid token format"))?;
+        let interceptor = AuthInterceptor { token: meta_val };
+        let mut auth_client =
+            ClientCommandsClient::with_interceptor(channel.clone(), interceptor.clone());
+
+        // Step 3: Open event stream BEFORE triggering account_recover
+        // so we don't miss the Account.Show event
+        let mut event_stream = auth_client
+            .listen_session_events(StreamRequest {
+                token: session_res.token.clone(),
+            }) // adjust method name to match your proto
+            .await
+            .context("Failed to open event stream")?
+            .into_inner();
+
+        // Step 4: Trigger account discovery (empty request)
+        auth_client
+            .account_recover(account::recover::Request {})
+            .await
+            .context("Failed to trigger account recovery")?;
+
+        // Step 5: Wait for the first Account.Show event
+        let account_id = tokio::time::timeout(std::time::Duration::from_secs(30), async {
+            loop {
+                match event_stream.message().await {
+                    Ok(Some(event)) => {
+                        for msg in event.messages {
+                            if let Some(AccountShow(show)) = msg.value {
+                                if let Some(account) = show.account {
+                                    return Ok::<String, anyhow::Error>(account.id);
+                                }
+                            }
+                        }
+                    }
+                    Ok(None) => return Err(anyhow::anyhow!("Event stream closed unexpectedly")),
+                    Err(e) => return Err(anyhow::anyhow!("Event stream error: {e}")),
+                }
+            }
+        })
+        .await
+        .map_err(|_| anyhow::anyhow!("Account discovery timed out after 30s"))??;
+
+        // Step 6: Select the discovered account (same as init_from_mnemonic)
+        let account_res = auth_client
+            .account_select(account::select::Request {
+                root_path: root_path_str.clone(),
+                id: account_id,
+                ..Default::default()
+            })
+            .await
+            .context("Failed to select account")?
+            .into_inner();
+
+        let account = account_res.account.context("Account data missing")?;
+        let network_id = account.info.clone().unwrap_or_default().network_id;
+        let tech_space_id = account.info.unwrap_or_default().tech_space_id;
+
+        Ok(Self {
+            client: auth_client,
             account_id: account.id,
             tech_space_id,
             network_id,

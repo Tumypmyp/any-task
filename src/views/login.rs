@@ -3,7 +3,10 @@ use crate::AppSettings;
 use crate::Route;
 use crate::components::base::message;
 use crate::components::button::{Button, ButtonVariant};
-use crate::components::column::Column;
+use crate::components::column::*;
+use crate::components::header::{Header, Title};
+
+use crate::components::header::*;
 use crate::components::input::Input;
 use crate::helpers::api_client::Client;
 use crate::helpers::*;
@@ -42,7 +45,7 @@ pub fn get_app_data_dir() -> PathBuf {
         PathBuf::from(".anytask")
     }
 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum AppState {
     StartingEngine,
     NeedsAccount,
@@ -62,8 +65,9 @@ pub fn Login() -> Element {
                 return;
             };
             app_state.set(AppState::Processing(
-                format!("mnemonic is {}.", mnemonic).to_string() + "Recovering existing account...",
+                "Recovering existing account...".to_string(),
             ));
+
             let root_path_str = get_app_data_dir().to_string_lossy().to_string();
             match Client::init_from_mnemonic(mnemonic, account_id, root_path_str).await {
                 Ok(client) => {
@@ -104,14 +108,86 @@ pub fn Login() -> Element {
             nav.push(Route::Home {});
         });
     };
+    let nav = navigator();
     rsx! {
-        div { style: "padding: 40px; text-align: center; color: white;",
-            h2 { "Welcome to AnyTask" }
-            p { style: "margin-bottom: 20px;", "No existing account found." }
-            button {
-                onclick: handle_create_account,
-                style: "padding: 10px 20px; cursor: pointer; font-size: 16px;",
-                "Create New Account"
+        Column {
+            style: "padding: 20px; gap: 10px;",
+            position: ColumnPosition::Middle,
+            Header {
+                Title { title: "Welcome to AnyTask!" }
+            }
+            MnemonicInput {
+                loading: *app_state.read() == AppState::Processing("loading".to_string()),
+                on_submit: move |mnemonic: String| {
+                    app_state.set(AppState::Processing("loading".to_string()));
+                    spawn(async move {
+                        let root_path_str = get_app_data_dir().to_string_lossy().to_string();
+                        let mnemonic_clone = mnemonic.clone();
+                        match Client::recover_from_mnemonic(mnemonic_clone, root_path_str).await {
+                            Ok(client) => {
+                                save_mnemonic(&mnemonic).ok();
+                                settings.write().account_id = client.account_id.clone();
+                                *API_CLIENT.write() = Some(client);
+                                app_state.set(AppState::Ready);
+                                nav.push(Route::Home {});
+                            }
+                            Err(e) => app_state.set(AppState::Error(e.to_string())),
+                        }
+                    });
+                },
+            }
+            Header {
+                Title { title: "or" }
+            }
+            Button { onclick: handle_create_account, "Create New Account" }
+        }
+    }
+}
+
+#[derive(Props, Clone, PartialEq)]
+pub struct MnemonicInputProps {
+    pub on_submit: EventHandler<String>,
+    pub loading: bool,
+}
+
+#[component]
+pub fn MnemonicInput(props: MnemonicInputProps) -> Element {
+    let mut mnemonic = use_signal(|| String::new());
+
+    let on_submit = props.on_submit.clone();
+    let handle_submit = move |_| {
+        let value = mnemonic.read().trim().to_string();
+        if !value.is_empty() {
+            on_submit.call(value);
+        }
+    };
+
+    let on_submit2 = props.on_submit.clone();
+    let handle_keydown = move |evt: KeyboardEvent| {
+        if evt.key() == Key::Enter {
+            let value = mnemonic.read().trim().to_string();
+            if !value.is_empty() {
+                on_submit2.call(value);
+            }
+        }
+    };
+
+    rsx! {
+        Input {
+            placeholder: "Paste your mnemonic phrase...",
+            value: mnemonic.read().clone(),
+            oninput: move |evt: FormEvent| mnemonic.set(evt.value()),
+            onkeydown: handle_keydown,
+            disabled: props.loading,
+        }
+        Button {
+            onclick: handle_submit,
+            disabled: props.loading,
+            variant: ButtonVariant::Primary,
+            if props.loading {
+                "Recovering..."
+            } else {
+                "Recover Account"
             }
         }
     }

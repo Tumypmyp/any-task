@@ -19,7 +19,6 @@ in {
   languages.go.enable = true;
 
   packages = [
-    pkgs.curl
     pkgs.gnutar
     pkgs.zig
   ];
@@ -36,37 +35,33 @@ in {
   tasks = {
     "deps:download" = {
       description = "Download prebuilt tantivy-go static libs for Linux, Android, and Windows";
+      package = pkgs.nushell;
+      binary = "nu";
       exec = ''
-        mkdir -p $LIBS_DIR/linux-musl \
-                 $LIBS_DIR/windows-amd64 \
-                 $LIBS_DIR/android-arm64 \
-                 $LIBS_DIR/android-x86_64 \
-                 $LIBS_DIR/android-armv7 \
-                 $LIBS_DIR/android-i686
+        let base_url = $"https://github.com/anyproto/tantivy-go/releases/download/($env.TANTIVY_VERSION)"
 
-        TMP_DIR=$(mktemp -d)
+        let targets = [
+            {archive: "linux-amd64-musl",  dest: "linux-musl"},
+            {archive: "windows-amd64",     dest: "windows-amd64"},
+            {archive: "android-arm64",     dest: "android-arm64"},
+            {archive: "android-amd64",     dest: "android-x86_64"},
+            {archive: "android-arm",       dest: "android-armv7"},
+            {archive: "android-386",       dest: "android-i686"},
+        ]
 
-        download_and_extract() {
-          local url=$1
-          local dest=$2
-          echo "Downloading $dest..."
-          curl -sL "$url" | tar -xz -C $TMP_DIR
-          # Find libtantivy_go.a in extracted files and move it
-          find $TMP_DIR -name "libtantivy_go.a" -exec cp {} "$dest/" \;
-          rm -rf $TMP_DIR/*
+        $targets | each { |t| mkdir $"($env.LIBS_DIR)/($t.dest)" }
+
+        def download-and-extract [url: string, dest: string] {
+            let tmp = (^mktemp -d | str trim)
+            print $"Downloading ($dest)..."
+            http get $url | ^tar -xz -C $tmp
+            glob $"($tmp)/**/libtantivy_go.a" | each { |f| cp $f $dest }
+            rm -rf $tmp
         }
 
-        # Desktop
-        download_and_extract "https://github.com/anyproto/tantivy-go/releases/download/$TANTIVY_VERSION/linux-amd64-musl.tar.gz" "$LIBS_DIR/linux-musl"
-        download_and_extract "https://github.com/anyproto/tantivy-go/releases/download/$TANTIVY_VERSION/windows-amd64.tar.gz" "$LIBS_DIR/windows-amd64"
-
-        # Android
-        download_and_extract "https://github.com/anyproto/tantivy-go/releases/download/$TANTIVY_VERSION/android-arm64.tar.gz" "$LIBS_DIR/android-arm64"
-        download_and_extract "https://github.com/anyproto/tantivy-go/releases/download/$TANTIVY_VERSION/android-amd64.tar.gz" "$LIBS_DIR/android-x86_64"
-        download_and_extract "https://github.com/anyproto/tantivy-go/releases/download/$TANTIVY_VERSION/android-arm.tar.gz" "$LIBS_DIR/android-armv7"
-        download_and_extract "https://github.com/anyproto/tantivy-go/releases/download/$TANTIVY_VERSION/android-386.tar.gz" "$LIBS_DIR/android-i686"
-
-        rm -rf $TMP_DIR
+        for t in $targets {
+            download-and-extract $"($base_url)/($t.archive).tar.gz" $"($env.LIBS_DIR)/($t.dest)"
+        }
       '';
     };
     "engine:build-windows" = {
@@ -84,7 +79,7 @@ in {
         export RUSTFLAGS="-Clink-arg=-mwindows"
 
         mkdir -p $ENGINE_LIBS/windows
-        go build -buildmode=c-shared -o $WINDOWS_ENGINE_LIB main.go
+        go build -ldflags="-s -w" -buildmode=c-shared -o $WINDOWS_ENGINE_LIB main.go
       '';
     };
     "engine:build-linux" = {
@@ -104,57 +99,39 @@ in {
     "engine:build-android" = {
       description = "Build anytype-heart lib for Android";
       cwd = goEngineDir;
+      package = pkgs.nushell;
+      binary = "nu";
       exec = ''
-        NDK_BIN="$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin"
-        export CGO_ENABLED=1
-        export GOOS=android
-        export AR="$NDK_BIN/llvm-ar"
+        let ndk_bin = $"($env.ANDROID_NDK_ROOT)/toolchains/llvm/prebuilt/linux-x86_64/bin"
+        let api_level = 28
 
-        API_LEVEL=28
+        let archs = [
+            {arch: "aarch64", triple: $"aarch64-linux-android($api_level)",     goarch: "arm64", goarm: "",  libs_subdir: "android-arm64"}
+            {arch: "x86_64",  triple: $"x86_64-linux-android($api_level)",      goarch: "amd64", goarm: "",  libs_subdir: "android-x86_64"}
+            {arch: "armv7",   triple: $"armv7a-linux-androideabi($api_level)",  goarch: "arm",   goarm: "7", libs_subdir: "android-armv7"}
+            {arch: "i686",    triple: $"i686-linux-android($api_level)",        goarch: "386",   goarm: "",  libs_subdir: "android-i686"}
+        ]
 
-        ARCHS=("aarch64" "x86_64" "armv7" "i686")
+        $env.CGO_ENABLED = "1"
+        $env.GOOS = "android"
+        $env.AR = $"($ndk_bin)/llvm-ar"
 
-        for ARCH in "''${ARCHS[@]}"; do
-          echo "Building Go engine for Android ($ARCH)..."
+        for a in $archs {
+            print $"Building Go engine for Android \(($a.arch)\)..."
 
-          case "$ARCH" in
-            "aarch64")
-              export CC="$NDK_BIN/aarch64-linux-android$API_LEVEL-clang"
-              export CXX="$NDK_BIN/aarch64-linux-android$API_LEVEL-clang++"
-              export GOARCH=arm64
-              export GOARM=""
-              export CGO_LDFLAGS="-L$LIBS_DIR/android-arm64 -ltantivy_go"
-              ;;
-            "x86_64")
-              export CC="$NDK_BIN/x86_64-linux-android$API_LEVEL-clang"
-              export CXX="$NDK_BIN/x86_64-linux-android$API_LEVEL-clang++"
-              export GOARCH=amd64
-              export GOARM=""
-              export CGO_LDFLAGS="-L$LIBS_DIR/android-x86_64 -ltantivy_go"
-              ;;
-            "armv7")
-              export CC="$NDK_BIN/armv7a-linux-androideabi$API_LEVEL-clang"
-              export CXX="$NDK_BIN/armv7a-linux-androideabi$API_LEVEL-clang++"
-              export GOARCH=arm
-              export GOARM=7
-              export CGO_LDFLAGS="-L$LIBS_DIR/android-armv7 -ltantivy_go"
-              ;;
-            "i686")
-              export CC="$NDK_BIN/i686-linux-android$API_LEVEL-clang"
-              export CXX="$NDK_BIN/i686-linux-android$API_LEVEL-clang++"
-              export GOARCH=386
-              export GOARM=""
-              export CGO_LDFLAGS="-L$LIBS_DIR/android-i686 -ltantivy_go"
-              ;;
-          esac
+            let out_dir = $"($env.ENGINE_LIBS)/android/($a.arch)"
+            mkdir $out_dir
 
-          OUT_DIR="$ENGINE_LIBS/android/$ARCH"
-          mkdir -p "$OUT_DIR"
-
-          go build -buildmode=c-shared -o "$OUT_DIR/lib_anytype_engine.so" main.go
-        done
-
-        echo "Successfully built lib_anytype_engine.so for all Android architectures!"
+            with-env {
+                CC:          $"($ndk_bin)/($a.triple)-clang"
+                CXX:         $"($ndk_bin)/($a.triple)-clang++"
+                GOARCH:      $a.goarch
+                GOARM:       $a.goarm
+                CGO_LDFLAGS: $"-L($env.LIBS_DIR)/($a.libs_subdir) -ltantivy_go"
+            } {
+              ^go build -buildmode=c-shared -ldflags="-s -w" -o $"($out_dir)/lib_anytype_engine.so" main.go
+            }
+        }
       '';
     };
 

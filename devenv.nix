@@ -133,7 +133,7 @@ in {
 
       print "Re-injecting native libraries into the generated Android project..."
       mkdir $env.JNI_DIR
-      cp "go-engine/native-libs/android/aarch64/anytype_engine.so" $env.JNI_DIR
+      cp "go-engine/native-libs/android/aarch64/lib_anytype_engine.so" $env.JNI_DIR
       cp $"($env.ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" $env.JNI_DIR
 
       print "Building AAB via Gradle..."
