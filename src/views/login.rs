@@ -7,15 +7,19 @@ use crate::components::column::Column;
 use crate::components::input::Input;
 use crate::helpers::api_client::Client;
 use crate::helpers::*;
+use crate::mnemonic_store::*;
 use dioxus::prelude::*;
 use std::env;
 use std::path::PathBuf;
 #[component]
 pub fn Logout() -> Element {
+    let mut settings = use_context::<Signal<AppSettings>>();
     let nav = navigator();
     rsx! {
         Button {
             onclick: move |_| {
+                delete_mnemonic().ok();
+                settings.write().account_id = String::new();
                 *API_CLIENT.write() = None;
                 tracing::info!("removed the token");
                 nav.push(Route::Login {});
@@ -51,11 +55,12 @@ pub fn Login() -> Element {
     let mut settings = use_context::<Signal<AppSettings>>();
     let mut app_state = use_signal(|| AppState::StartingEngine);
     use_future(move || async move {
-        let mnemonic = settings.peek().mnemonic.clone();
         let account_id = settings.peek().account_id.clone();
-        if mnemonic.is_empty() {
-            app_state.set(AppState::NeedsAccount);
-        } else {
+        if !account_id.is_empty() {
+            let Ok(mnemonic) = load_mnemonic() else {
+                app_state.set(AppState::NeedsAccount);
+                return;
+            };
             app_state.set(AppState::Processing(
                 format!("mnemonic is {}.", mnemonic).to_string() + "Recovering existing account...",
             ));
@@ -81,7 +86,13 @@ pub fn Login() -> Element {
             let nav = navigator();
             match Client::init_new_account(root_path_str).await {
                 Ok((mnemonic, client)) => {
-                    settings.write().mnemonic = mnemonic;
+                    match save_mnemonic(&mnemonic) {
+                        Ok(()) => { /* success */ }
+                        Err(e) => {
+                            app_state.set(AppState::Error(e.to_string()));
+                            return;
+                        }
+                    }
                     settings.write().account_id = client.account_id.clone();
                     *API_CLIENT.write() = Some(client);
                     app_state.set(AppState::Ready);

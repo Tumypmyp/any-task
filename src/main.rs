@@ -3,6 +3,8 @@ use futures_util::StreamExt;
 use tonic::Streaming;
 mod engine;
 use engine::*;
+mod mnemonic_store;
+use mnemonic_store::*;
 mod protos;
 use dioxus::prelude::*;
 use dioxus_desktop;
@@ -30,7 +32,6 @@ use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Default)]
 pub struct AppSettings {
-    pub mnemonic: String,
     pub account_id: String,
 }
 const FAVICON: Asset = asset!("/assets/favicon.ico");
@@ -83,6 +84,7 @@ fn main() {
     };
     let cfg = cfg.with_background_color((0, 0, 0, 255));
     tracing::info!("config is ready");
+    keyring::use_native_store(false).expect("failed to open native credential store");
     dioxus_desktop::launch::launch(App, vec![], vec![Box::new(cfg)]);
 }
 pub fn get_app_data_dir() -> PathBuf {
@@ -107,19 +109,19 @@ fn App() -> Element {
     let settings =
         use_synced_storage::<LocalStorage, AppSettings>(USER_SETTINGS_KEY.into(), || AppSettings {
             account_id: "".to_string(),
-            mnemonic: "".to_string(),
         });
     use_context_provider(|| settings);
     use_future(move || async move {
-        let mnemonic = settings.peek().mnemonic.clone();
         let account_id = settings.peek().account_id.clone();
-        if !mnemonic.is_empty() {
-            let root_path_str = get_app_data_dir().to_string_lossy().to_string();
-            match Client::init_from_mnemonic(mnemonic, account_id, root_path_str).await {
-                Ok(client) => {
-                    *API_CLIENT.write() = Some(client);
+        if !account_id.is_empty() {
+            if let Ok(mnemonic) = load_mnemonic() {
+                let root_path_str = get_app_data_dir().to_string_lossy().to_string();
+                match Client::init_from_mnemonic(mnemonic, account_id, root_path_str).await {
+                    Ok(client) => {
+                        *API_CLIENT.write() = Some(client);
+                    }
+                    Err(_) => {}
                 }
-                Err(_) => {}
             }
         }
     });

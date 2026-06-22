@@ -72,11 +72,6 @@ in {
 
     # windows
   ];
-  # https://wiki.nixos.org/wiki/Tauri
-  # https://devenv.sh/processes/
-
-  # https://devenv.sh/basics/
-  # enterShell = '''';
 
   tasks."proto:download" = {
     env = {

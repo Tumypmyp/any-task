@@ -53,3 +53,8 @@ devenv tasks run bundle:android         # bundle android apk
 ```bash
 cargo install --git https://github.com/DioxusLabs/dioxus dioxus-cli --locked
 ```
+
+```bash
+just serve-windows
+just serve-android
+```
