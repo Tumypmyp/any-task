@@ -24,6 +24,9 @@ url = "2.5.8"
 anyhow = "1.0.102"
 prost = "0.14.4"
 tonic-prost = "0.14.6"
+keyring-core = "1.0.0"
+keyring = { version = "4.1.2", features = ["cli", "android-native-keyring-store"] }
+zeroize = "1.9.0"
 
 [build-dependencies]
 tonic-prost-build = "0.14.6"
