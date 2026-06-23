@@ -1,9 +1,9 @@
 set dotenv-load := true
 set shell := ["nu", "-c"]
 
-export NDK_HOME := env_var('NDK_HOME')
-export ANDROID_HOME := env_var('ANDROID_HOME')
-export JAVA_HOME := env_var('JAVA_HOME')
+export NDK_HOME := env('NDK_HOME')
+export ANDROID_HOME := env('ANDROID_HOME')
+export JAVA_HOME := env('JAVA_HOME')
 PROJECT_DIR := justfile_directory()
 export ENGINE_NAME := "lib_anytype_engine"
 export ENGINE_LIBS := PROJECT_DIR + "/go-engine/native-libs"

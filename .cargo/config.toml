@@ -6,3 +6,6 @@ rustflags = [
     "-C", "link-arg=-Wl,--disable-auto-image-base",
     "-C", "link-arg=-Wl,--high-entropy-va"
 ]
+
+[env]
+WINDOWS_ENGINE_LIB = { value = "go-engine/native-libs/windows/lib_anytype_engine.lib", relative = true }

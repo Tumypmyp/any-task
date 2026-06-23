@@ -7,7 +7,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "windows" => std::env::var("WINDOWS_ENGINE_LIB"),
         "linux" => std::env::var("LINUX_ENGINE_LIB"),
         "android" => std::env::var("ANDROID_ENGINE_LIB"),
-        _ => Err(std::env::VarError::NotPresent),
+        _ => return Err(format!("Unsupported target OS: {target_os}").into()),
     }?;
 
     // Normalize the mixed slashes from the justfile immediately

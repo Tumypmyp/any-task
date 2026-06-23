@@ -4,6 +4,7 @@ use crate::helpers::models::*;
 use crate::protos::Event;
 use crate::protos::StreamRequest;
 use crate::protos::anytype_model::RelationFormat;
+use crate::protos::anytype_model::SpaceStatus;
 // use crate::protos::anytype_model::block::content::dataview;
 use crate::protos::anytype_model::block::*;
 use crate::protos::anytype_model::object_type::*;
@@ -393,16 +394,41 @@ impl Client {
         let req = Request::new(object::search_subscribe::Request {
             space_id: self.tech_space_id.clone(),
             sub_id: SPACES_SUB.to_string(),
-            filters: vec![content::dataview::Filter {
-                relation_key: "resolvedLayout".to_string(),
-                condition: content::dataview::filter::Condition::Equal.into(),
-                value: Some(prost_types::Value {
-                    kind: Some(prost_types::value::Kind::NumberValue(
-                        Layout::SpaceView as i32 as f64,
-                    )),
-                }),
-                ..Default::default()
-            }],
+            filters: vec![
+                content::dataview::Filter {
+                    relation_key: "resolvedLayout".to_string(),
+                    condition: content::dataview::filter::Condition::Equal.into(),
+                    value: Some(prost_types::Value {
+                        kind: Some(prost_types::value::Kind::NumberValue(
+                            Layout::SpaceView as i32 as f64,
+                        )),
+                    }),
+                    ..Default::default()
+                },
+                content::dataview::Filter {
+                    relation_key: "spaceAccountStatus".to_string(),
+                    condition: content::dataview::filter::Condition::NotIn.into(),
+                    value: Some(prost_types::Value {
+                        kind: Some(prost_types::value::Kind::ListValue(
+                            prost_types::ListValue {
+                                values: vec![
+                                    prost_types::Value {
+                                        kind: Some(prost_types::value::Kind::NumberValue(
+                                            SpaceStatus::SpaceDeleted as i32 as f64,
+                                        )),
+                                    },
+                                    prost_types::Value {
+                                        kind: Some(prost_types::value::Kind::NumberValue(
+                                            SpaceStatus::SpaceRemoving as i32 as f64,
+                                        )),
+                                    },
+                                ],
+                            },
+                        )),
+                    }),
+                    ..Default::default()
+                },
+            ],
             sorts: vec![/* spaceOrder asc if you want ordering */],
             keys: vec![
                 "id".to_string(),

@@ -51,6 +51,11 @@ pub fn RelationPositionsEditor(
     let mut dragging = use_signal(|| false);
     let mut container_mounted = use_signal(|| None::<Rc<MountedData>>);
     let mut cached_rect = use_signal(|| None::<PixelsRect>);
+    let initial_ratio = match &node {
+        Node::Split { ratio, .. } => *ratio as f32,
+        _ => 0.5 as f32,
+    };
+    let mut live_ratio = use_signal(|| initial_ratio);
 
     match node {
         Node::Split {
@@ -73,7 +78,7 @@ pub fn RelationPositionsEditor(
 
             let children = rsx! {
                 if positions.read().nodes.contains_key(&first) {
-                    div { style: "flex: {ratio}; min-width: 0; min-height: 0;",
+                    div { style: "flex: {live_ratio}; min-width: 0; min-height: 0;",
                         // box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
                         RelationPositionsEditor { id: first, positions, all_properties }
                     }
@@ -116,7 +121,7 @@ pub fn RelationPositionsEditor(
                 }
 
                 if positions.read().nodes.contains_key(&second) {
-                    div { style: "flex: calc(1 - {ratio}); min-width: 0; min-height: 0;",
+                    div { style: "flex: calc(1 - {live_ratio}); min-width: 0; min-height: 0;",
                         // box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
                         RelationPositionsEditor { id: second, positions, all_properties }
                     }
@@ -142,25 +147,33 @@ pub fn RelationPositionsEditor(
                     SplitDirection::Row => (client_pos.x - rect.origin.x) / rect.size.width,
                     SplitDirection::Column => (client_pos.y - rect.origin.y) / rect.size.height,
                 };
-                let new_ratio = new_ratio.clamp(0.05, 0.95);
+                let new_ratio = new_ratio.clamp(0.05, 0.95) as f32;
+                live_ratio.set(new_ratio);
                 // tracing::info!(
                 //     "[drag] pointermove: pos=({:.1},{:.1}) → ratio={:.3}",
                 //     client_pos.x,
                 //     client_pos.y,
                 //     new_ratio
                 // );
-                positions.with_mut(|tree| {
-                    if let Some(node) = tree.nodes.get_mut(&id) {
-                        if let Node::Split { ratio, .. } = node {
-                            *ratio = new_ratio as f32;
-                        }
-                    }
-                });
+                // positions.with_mut(|tree| {
+                //     if let Some(node) = tree.nodes.get_mut(&id) {
+                //         if let Node::Split { ratio, .. } = node {
+                //             *ratio = new_ratio as f32;
+                //         }
+                //     }
+                // });
             };
 
             let on_pointer_up = move |e: PointerEvent| {
                 if dragging() {
                     e.stop_propagation();
+                    let final_ratio = live_ratio();
+                    positions.with_mut(|tree| {
+                        if let Some(Node::Split { ratio, .. }) = tree.nodes.get_mut(&id) {
+                            *ratio = final_ratio;
+                        }
+                    });
+
                     // tracing::info!("[drag] pointerup: drag ended");
                     dragging.set(false);
                     cached_rect.set(None);
