@@ -174,6 +174,7 @@ pub fn MnemonicInput(props: MnemonicInputProps) -> Element {
 
     rsx! {
         Input {
+            r#type: "password",
             placeholder: "Paste your mnemonic phrase...",
             value: mnemonic.read().clone(),
             oninput: move |evt: FormEvent| mnemonic.set(evt.value()),
