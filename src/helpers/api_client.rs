@@ -540,6 +540,7 @@ impl Client {
                 keys: all_keys,
                 filters,
                 sorts,
+                limit: 100,
                 ..Default::default()
             }))
             .await
