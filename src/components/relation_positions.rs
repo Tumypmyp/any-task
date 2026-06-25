@@ -188,9 +188,9 @@ pub fn RelationPositionsEditor(
             rsx! {
                 div {
                     style: "display: flex; flex-direction: {flex_direction}; \
-                            width: 100%; height: 100%; \
+                            width: 100%; \
                             box-shadow: inset 0 0 0 1px var(--secondary-color-6); \
-                            user-select: none; touch-action: none;",
+                            user-select: none;",
                     onmounted: move |e: MountedEvent| {
                         // tracing::info!("[drag] container mounted");
                         container_mounted.set(Some(e.data()));

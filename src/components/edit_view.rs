@@ -28,22 +28,21 @@ pub fn EditView(
             SheetContent {
                 side: SheetSide::Bottom,
                 style: "min-height: 50vh; max-height: 80vh;",
-                // ScrollArea {
-                //     direction: ScrollDirection::Vertical,
-                //     style: "min-height: 50vh; max-height: 70vh;",
-                Column {
-                    Row { position: RowPosition::Middle,
-                        RelationPositionsCleaner { positions }
-                    }
-                    Separator {}
-
-                    RelationPositionsEditor {
-                        id: positions().root,
-                        positions,
-                        all_properties,
+                ScrollArea {
+                    direction: ScrollDirection::Vertical,
+                    style: "overflow: hidden auto; overscroll-behavior: contain; \
+                            min-height: 50vh; max-height: 70vh;",
+                    Column {
+                        Row { position: RowPosition::Middle,
+                            RelationPositionsCleaner { positions }
+                        }
+                        RelationPositionsEditor {
+                            id: positions().root,
+                            positions,
+                            all_properties,
+                        }
                     }
                 }
-                // }
             }
         }
     }
