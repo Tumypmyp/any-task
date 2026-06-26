@@ -7,8 +7,6 @@ use std::collections::HashMap;
 
 #[derive(Clone, Props, PartialEq)]
 pub struct ObjectProps {
-    // pub space_id: ReadSignal<String>,
-    // pub id: ReadSignal<String>,
     pub positions: Store<TileTree>,
     pub details: ObjectDetails,
     pub all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,

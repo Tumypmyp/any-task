@@ -5,6 +5,8 @@ use crate::components::base::message;
 use crate::components::button::{Button, ButtonVariant};
 use crate::components::column::*;
 use crate::components::header::{Header, Title};
+use crate::components::row::*;
+use dioxus_icons::lucide::{Eye, EyeOff};
 
 use crate::components::header::*;
 use crate::components::input::Input;
@@ -153,6 +155,7 @@ pub struct MnemonicInputProps {
 #[component]
 pub fn MnemonicInput(props: MnemonicInputProps) -> Element {
     let mut mnemonic = use_signal(|| String::new());
+    let mut show = use_signal(|| false);
 
     let on_submit = props.on_submit.clone();
     let handle_submit = move |_| {
@@ -173,13 +176,32 @@ pub fn MnemonicInput(props: MnemonicInputProps) -> Element {
     };
 
     rsx! {
-        Input {
-            r#type: "password",
-            placeholder: "Paste your mnemonic phrase...",
-            value: mnemonic.read().clone(),
-            oninput: move |evt: FormEvent| mnemonic.set(evt.value()),
-            onkeydown: handle_keydown,
-            disabled: props.loading,
+        // div { style: "position: relative; display: flex; align-items: center;",
+        Row { style: "position: relative; width: 100%; display: flex;",
+            Input {
+                r#type: if show() { "text" } else { "password" },
+                style: if show() {
+                    "width: 100%; padding-right: 2.5rem; box-sizing: border-box; -webkit-text-security: none;"
+                } else {
+                    "width: 100%; padding-right: 2.5rem; box-sizing: border-box; -webkit-text-security: disc;"
+                },
+                placeholder: "Paste your mnemonic phrase...",
+                value: mnemonic.read().clone(),
+                oninput: move |evt: FormEvent| mnemonic.set(evt.value()),
+                onkeydown: handle_keydown,
+                disabled: props.loading,
+            }
+            button {
+                r#type: "button",
+                style: "position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; display: flex; align-items: center; color: inherit; padding: 0;",
+                onclick: move |_| show.toggle(),
+                aria_label: if show() { "Hide mnemonic" } else { "Show mnemonic" },
+                if show() {
+                    EyeOff { size: "1rem" }
+                } else {
+                    Eye { size: "1rem" }
+                }
+            }
         }
         Button {
             onclick: handle_submit,

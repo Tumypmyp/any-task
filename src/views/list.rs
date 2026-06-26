@@ -201,6 +201,7 @@ pub fn Objects(
             if set_of_ids.is_empty() {
                 return;
             }
+            // preload first objects of a set
             let phase1 = tokio::spawn({
                 let client = client.clone();
                 let sid = sid.clone();
@@ -234,13 +235,16 @@ pub fn Objects(
                 Err(e) => tracing::error!("subscribe_list_objects phase1 panicked: {e}"),
             }
 
+            // load 100 objects of a set (with all objects tile edit is still slow)
+            // todo: load all objects
+            let phase1 = tokio::spawn({
             let phase2 = tokio::spawn({
                 let client = client.clone();
                 let sid = sid.clone();
                 let lid = lid.clone();
                 async move {
                     client
-                        .subscribe_list_objects(&sid, &lid, set_of_ids, keys, filters, sorts, 0)
+                        .subscribe_list_objects(&sid, &lid, set_of_ids, keys, filters, sorts, 100)
                         .await
                 }
             });
