@@ -237,7 +237,6 @@ pub fn Objects(
 
             // load 100 objects of a set (with all objects tile edit is still slow)
             // todo: load all objects
-            let phase1 = tokio::spawn({
             let phase2 = tokio::spawn({
                 let client = client.clone();
                 let sid = sid.clone();

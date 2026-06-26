@@ -176,17 +176,11 @@ pub fn MnemonicInput(props: MnemonicInputProps) -> Element {
     };
 
     rsx! {
-        // div { style: "position: relative; display: flex; align-items: center;",
-        Row { style: "position: relative; width: 100%; display: flex;",
+        Row { style: "position: relative; width: 100%;",
             Input {
-                r#type: if show() { "text" } else { "password" },
-                style: if show() {
-                    "width: 100%; padding-right: 2.5rem; box-sizing: border-box; -webkit-text-security: none;"
-                } else {
-                    "width: 100%; padding-right: 2.5rem; box-sizing: border-box; -webkit-text-security: disc;"
-                },
+                r#type: "text",
+                style: if show() { "width: 100%; padding-right: 2.5rem; box-sizing: border-box; -webkit-text-security: none;" } else { "width: 100%; padding-right: 2.5rem; box-sizing: border-box; -webkit-text-security: disc;" },
                 placeholder: "Paste your mnemonic phrase...",
-                value: mnemonic.read().clone(),
                 oninput: move |evt: FormEvent| mnemonic.set(evt.value()),
                 onkeydown: handle_keydown,
                 disabled: props.loading,
