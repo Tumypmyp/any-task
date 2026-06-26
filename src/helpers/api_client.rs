@@ -525,6 +525,7 @@ impl Client {
         keys: Vec<String>,
         filters: Vec<content::dataview::Filter>,
         sorts: Vec<content::dataview::Sort>,
+        limit: i64,
     ) -> Result<object::search_subscribe::Response> {
         let mut client = self.client.clone();
         let mut all_keys = keys;
@@ -540,7 +541,7 @@ impl Client {
                 keys: all_keys,
                 filters,
                 sorts,
-                limit: 100,
+                limit,
                 ..Default::default()
             }))
             .await

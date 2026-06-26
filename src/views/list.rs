@@ -197,30 +197,73 @@ pub fn Objects(
         let keys = pane_keys(&positions.read());
         let client = API_CLIENT.read().as_ref().cloned();
         async move {
-            let Some(client) = client else {
-                return;
-            };
+            let Some(client) = client else { return };
             if set_of_ids.is_empty() {
-                return; // wait until meta arrives
+                return;
             }
-            let mut state = LIST_OBJECTS.write();
-            state.order.clear();
-            state.details.clear();
-            drop(state);
-            match client
-                .subscribe_list_objects(&sid, &lid, set_of_ids, keys, filters, sorts)
-                .await
-            {
-                Ok(resp) => {
-                    let mut state = LIST_OBJECTS.write();
+            // preload first objects of a set
+            let phase1 = tokio::spawn({
+                let client = client.clone();
+                let sid = sid.clone();
+                let lid = lid.clone();
+                let set_of_ids = set_of_ids.clone();
+                let keys = keys.clone();
+                let filters = filters.clone();
+                let sorts = sorts.clone();
+                async move {
+                    client
+                        .subscribe_list_objects(&sid, &lid, set_of_ids, keys, filters, sorts, 15)
+                        .await
+                }
+            });
+
+            match phase1.await {
+                Ok(Ok(resp)) => {
+                    let mut new_order = Vec::new();
+                    let mut new_details = HashMap::new();
                     for record in resp.records {
                         let id = extract_string(record.fields.get("id"));
                         let det = parse_object_details(&id, &record.fields);
-                        state.order.push(id.clone());
-                        state.details.insert(id, det);
+                        new_order.push(id.clone());
+                        new_details.insert(id, det);
                     }
+                    let mut state = LIST_OBJECTS.write();
+                    state.order = new_order;
+                    state.details = new_details;
                 }
-                Err(e) => tracing::error!("subscribe_list_objects: {e:#}"),
+                Ok(Err(e)) => tracing::error!("subscribe_list_objects phase1: {e:#}"),
+                Err(e) => tracing::error!("subscribe_list_objects phase1 panicked: {e}"),
+            }
+
+            // load 100 objects of a set (with all objects tile edit is still slow)
+            // todo: load all objects
+            let phase2 = tokio::spawn({
+                let client = client.clone();
+                let sid = sid.clone();
+                let lid = lid.clone();
+                async move {
+                    client
+                        .subscribe_list_objects(&sid, &lid, set_of_ids, keys, filters, sorts, 100)
+                        .await
+                }
+            });
+
+            match phase2.await {
+                Ok(Ok(resp)) => {
+                    let mut new_order = Vec::new();
+                    let mut new_details = HashMap::new();
+                    for record in resp.records {
+                        let id = extract_string(record.fields.get("id"));
+                        let det = parse_object_details(&id, &record.fields);
+                        new_order.push(id.clone());
+                        new_details.insert(id, det);
+                    }
+                    let mut state = LIST_OBJECTS.write();
+                    state.order = new_order;
+                    state.details = new_details;
+                }
+                Ok(Err(e)) => tracing::error!("subscribe_list_objects phase2: {e:#}"),
+                Err(e) => tracing::error!("subscribe_list_objects phase2 panicked: {e}"),
             }
         }
     });
