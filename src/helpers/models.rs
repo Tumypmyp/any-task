@@ -281,12 +281,6 @@ pub struct RelationInfo {
     pub format: RelationFormat,
 }
 
-#[derive(Clone, PartialEq, Default)]
-pub struct SpacesState {
-    pub order: Vec<String>,
-    pub details: HashMap<String, SpaceDetails>,
-}
-
 #[derive(Clone, PartialEq)]
 pub struct SpaceDetails {
     pub object_id: String,
@@ -294,12 +288,6 @@ pub struct SpaceDetails {
     pub name: String,
     pub icon_image: String,
     pub description: String,
-}
-
-#[derive(Clone, PartialEq, Default)]
-pub struct SetsState {
-    pub order: Vec<String>,
-    pub details: HashMap<String, SetDetails>,
 }
 
 #[derive(Clone, PartialEq, Debug)]

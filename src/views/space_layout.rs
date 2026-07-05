@@ -52,5 +52,8 @@ pub fn SpaceLayout(space_id: String) -> Element {
         *RELATION_OPTIONS.write() = RelationOptionsState::default();
     });
 
-    rsx! {Outlet::<Route> {}}
+    rsx! {
+        Outlet::<Route> {}
+
+    }
 }

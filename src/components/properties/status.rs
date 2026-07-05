@@ -1,7 +1,6 @@
 use crate::components::button::*;
-use dioxus::prelude::*;
-
 use crate::helpers::RELATION_OPTIONS;
+use dioxus::prelude::*;
 
 #[component]
 pub fn StatusValue(data: ReadSignal<prost_types::Value>) -> Element {
@@ -23,9 +22,7 @@ pub fn StatusValue(data: ReadSignal<prost_types::Value>) -> Element {
             .map(|opt| opt.name.clone())
             .unwrap_or_default()
     });
-    tracing::debug!("relations: {:#?}", RELATION_OPTIONS.read());
-    tracing::debug!("data: {:#?}, name: {:#?}", data, name);
     rsx! {
-        Button { "{name}" }
+        Button { variant: ButtonVariant::Outline, "{name}" }
     }
 }
