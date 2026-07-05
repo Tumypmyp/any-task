@@ -43,15 +43,18 @@ static LICENSES: Asset = asset!("/assets/LICENSE-ANYTYPE.md");
 #[rustfmt::skip]
 enum Route {
     #[route("/")]
-    #[redirect("/:.._s", |_s:Vec<String>|Route::Home{})]
+    #[redirect("/:.._s", |_s: Vec<String>| Route::Home {})]
     Home {},
     #[route("/login")]
     Login {},
-    #[route("/space/:space_id")]
-    Space { space_id: String },
-    #[route("/space/:space_id/list/:list_id")]
-    List { space_id: String, list_id: String },
+    #[nest("/space/:space_id")]
+        #[layout(SpaceLayout)]
+            #[route("/")]
+            Space { space_id: String },
+            #[route("/list/:list_id")]
+            List { space_id: String, list_id: String },
 }
+
 #[cfg_attr(feature = "bundle", windows_subsystem = "windows")]
 fn main() {
     dioxus::logger::initialize_default();

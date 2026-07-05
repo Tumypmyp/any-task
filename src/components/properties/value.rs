@@ -21,6 +21,11 @@ pub fn PropertyValue(
                 CheckboxValue { data }
             };
         }
+        Some(info) if info.format == RelationFormat::Status => {
+            return rsx! {
+                StatusValue { data }
+            };
+        }
         _ => {}
     }
 

@@ -4,4 +4,6 @@ mod checkbox;
 pub use checkbox::CheckboxValue;
 mod date;
 pub use date::DateValue;
+mod status;
+pub use status::StatusValue;
 mod text;

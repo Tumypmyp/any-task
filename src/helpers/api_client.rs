@@ -1,11 +1,8 @@
-use std::collections::HashMap;
-
 use crate::helpers::models::*;
 use crate::protos::Event;
 use crate::protos::StreamRequest;
 use crate::protos::anytype_model::RelationFormat;
 use crate::protos::anytype_model::SpaceStatus;
-// use crate::protos::anytype_model::block::content::dataview;
 use crate::protos::anytype_model::block::*;
 use crate::protos::anytype_model::object_type::*;
 use crate::protos::client_commands_client::ClientCommandsClient;
@@ -17,7 +14,7 @@ use crate::protos::rpc::*;
 use anyhow::Context;
 use anyhow::Result;
 use dioxus::prelude::*;
-// use std::collections::HashMap;
+use std::collections::HashMap;
 use tonic::Request;
 use tonic::metadata::MetadataValue;
 use tonic::service::interceptor::InterceptedService;
@@ -389,6 +386,37 @@ impl Client {
         Ok(properties)
     }
 
+    pub async fn subscribe_relation_options(
+        &self,
+        space_id: &str,
+    ) -> Result<object::search_subscribe::Response> {
+        let mut client = self.client.clone();
+        client
+            .object_search_subscribe(Request::new(object::search_subscribe::Request {
+                space_id: space_id.to_string(),
+                sub_id: format!("relation-options-{}", space_id),
+                filters: vec![content::dataview::Filter {
+                    relation_key: "resolvedLayout".to_string(),
+                    condition: content::dataview::filter::Condition::Equal.into(),
+                    value: Some(prost_types::Value {
+                        kind: Some(prost_types::value::Kind::NumberValue(
+                            Layout::RelationOption as i32 as f64, // 13
+                        )),
+                    }),
+                    ..Default::default()
+                }],
+                keys: vec![
+                    "id".to_string(),
+                    "name".to_string(),
+                    "relationKey".to_string(),
+                    "relationOptionColor".to_string(),
+                ],
+                ..Default::default()
+            }))
+            .await
+            .context("subscribe_relation_options failed")
+            .map(|r| r.into_inner())
+    }
     pub async fn subscribe_spaces(&self) -> Result<()> {
         let mut grpc_client = self.client.clone();
         let req = Request::new(object::search_subscribe::Request {
@@ -655,12 +683,13 @@ impl Client {
         let sub_id = SetsState::sub_id(space_id);
         self.unsubscribe(sub_id).await
     }
+    pub async fn unsubscribe_relation_options(&self, space_id: &str) -> Result<()> {
+        self.unsubscribe(format!("relation-options-{}", space_id))
+            .await
+    }
     pub async fn unsubscribe_list_objects(&self, list_id: &str) -> Result<()> {
         self.unsubscribe(format!("list-{}", list_id)).await
     }
-    // pub async fn unsubscribe_set_meta(&self, set_id: &str) -> Result<()> {
-    //     self.unsubscribe(format!("set-meta-{}", set_id)).await
-    // }
 }
 
 use url::Url;
@@ -723,6 +752,46 @@ pub fn handle_msg(context_id: &str, msg: Message) {
                 LIST_OBJECTS.write().details.insert(v.id, det);
             } else if v.sub_ids.is_empty() && SET_META.read().id.contains(context_id) {
                 SET_META.write().handle_set(v);
+            } else if v.sub_ids.iter().any(|s| s.starts_with("relation-options-")) {
+                let fields = v.details.as_ref().map(|d| &d.fields);
+                let relation_key = extract_string(fields.and_then(|f| f.get("relationKey")));
+                let opt = RelationOptionDetails {
+                    id: v.id.clone(),
+                    name: extract_string(fields.and_then(|f| f.get("name"))),
+                    color: extract_string(fields.and_then(|f| f.get("relationOptionColor"))),
+                    relation_key: relation_key.clone(),
+                };
+                let mut state = RELATION_OPTIONS.write();
+                state
+                    .by_relation
+                    .entry(relation_key)
+                    .or_default()
+                    .push(v.id.clone());
+                state.details.insert(v.id, opt);
+            }
+        }
+        Some(ObjectDetailsUnset(v)) => {
+            if v.sub_ids.iter().any(|s| s.starts_with(LIST_SUB_PREFIX)) {
+                let mut state = LIST_OBJECTS.write();
+                if let Some(det) = state.details.get_mut(&v.id) {
+                    for key in &v.keys {
+                        det.fields.remove(key);
+                        if key == "name" {
+                            det.name = String::new();
+                        }
+                    }
+                }
+            } else if v.sub_ids.iter().any(|s| s.starts_with("relation-options-")) {
+                let mut state = RELATION_OPTIONS.write();
+                if let Some(opt) = state.details.get_mut(&v.id) {
+                    for key in &v.keys {
+                        match key.as_str() {
+                            "name" => opt.name = String::new(),
+                            "relationOptionColor" => opt.color = String::new(),
+                            _ => {}
+                        }
+                    }
+                }
             }
         }
         Some(ObjectDetailsAmend(v)) => {
@@ -744,6 +813,19 @@ pub fn handle_msg(context_id: &str, msg: Message) {
                 }
             } else if v.sub_ids.is_empty() && SET_META.read().id.contains(context_id) {
                 SET_META.write().handle_amend(v);
+            } else if v.sub_ids.iter().any(|s| s.starts_with("relation-options-")) {
+                let mut state = RELATION_OPTIONS.write();
+                if let Some(opt) = state.details.get_mut(&v.id) {
+                    for kv in v.details {
+                        match kv.key.as_str() {
+                            "name" => opt.name = get_string(kv.value.unwrap_or_default()),
+                            "relationOptionColor" => {
+                                opt.color = get_string(kv.value.unwrap_or_default())
+                            }
+                            _ => {}
+                        }
+                    }
+                }
             }
         }
         Some(SubscriptionAdd(v)) => {
@@ -829,10 +911,10 @@ pub static SETS: GlobalSignal<SetsState> = Signal::global(SetsState::default);
 
 impl SetsState {
     pub fn matches_sub_id(sub_id: &str) -> bool {
-        sub_id.starts_with("sets-")
+        sub_id.starts_with("sets-sub")
     }
     pub fn sub_id(space_id: &str) -> String {
-        format!("sets-{}", space_id)
+        format!("sets-sub{}", space_id)
     }
     pub fn handle_add(&mut self, v: Add) {
         insert_ordered(&mut self.order, v.id, &v.after_id);
@@ -1098,4 +1180,23 @@ fn insert_pos_by_id<'a>(after_id: &str, mut ids: impl Iterator<Item = &'a str>) 
     ids.position(|id| id == after_id)
         .map(|i| i + 1)
         .unwrap_or(0)
+}
+
+pub static RELATION_OPTIONS: GlobalSignal<RelationOptionsState> =
+    Signal::global(RelationOptionsState::default);
+
+#[derive(Default, Clone, Debug)]
+pub struct RelationOptionsState {
+    /// relation_key -> list of option ids (ordered)
+    pub by_relation: HashMap<String, Vec<String>>,
+    /// option_id -> option details
+    pub details: HashMap<String, RelationOptionDetails>,
+}
+
+#[derive(Clone, Debug)]
+pub struct RelationOptionDetails {
+    pub id: String,
+    pub name: String,
+    pub relation_key: String,
+    pub color: String,
 }

@@ -6,3 +6,6 @@ mod space;
 pub use space::*;
 mod list;
 pub use list::List;
+
+mod space_layout;
+pub use space_layout::SpaceLayout;
