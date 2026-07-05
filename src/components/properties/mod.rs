@@ -1,3 +1,5 @@
 mod value;
 pub use value::PropertyValue;
+mod checkbox;
+pub use checkbox::CheckboxValue;
 mod text;

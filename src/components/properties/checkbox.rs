@@ -1,53 +1,18 @@
-use crate::API_CLIENT;
 use crate::components::checkbox::Checkbox;
-use crate::helpers::*;
 use dioxus::prelude::*;
 use dioxus_primitives::checkbox::CheckboxState;
-use openapi::models::CheckboxPropertyValue;
-impl PropertyRenderer for CheckboxPropertyValue {
-    fn render(
-        &self,
-        space_id: String,
-        object_id: String,
-        _info: PropertyInfo,
-        settings: PropertySettings,
-    ) -> Element {
-        match settings {
-            PropertySettings::Checkbox(s) => {
-                rsx! {
-                    CheckboxValue {
-                        space_id: &space_id,
-                        object_id: &object_id,
-                        prop: self.clone(),
-                    }
-                }
-            }
-            _ => rsx! {},
-        }
-    }
-}
+
 #[component]
-pub fn CheckboxValue(
-    space_id: String,
-    object_id: String,
-    prop: CheckboxPropertyValue,
-) -> Element {
-    let mut value = use_signal(|| prop);
+pub fn CheckboxValue(data: ReadSignal<prost_types::Value>) -> Element {
+    let checked = use_memo(move || match data().kind {
+        Some(prost_types::value::Kind::BoolValue(v)) => Some(if v {
+            CheckboxState::Checked
+        } else {
+            CheckboxState::Unchecked
+        }),
+        _ => None,
+    });
     rsx! {
-        Checkbox {
-            width: "100%",
-            height: "100%",
-            on_checked_change: move |e| {
-                let sp = space_id.clone();
-                let ob = object_id.clone();
-                value.write().checkbox = if e == CheckboxState::Checked {
-                    Some(true)
-                } else {
-                    Some(false)
-                };
-                API_CLIENT.read().update_done_property(sp, ob, value.read().checkbox);
-            },
-            default_checked: if value().checkbox.unwrap_or_default() { CheckboxState::Checked } else { CheckboxState::Unchecked },
-        }
+        Checkbox { disabled: true, checked }
     }
 }
