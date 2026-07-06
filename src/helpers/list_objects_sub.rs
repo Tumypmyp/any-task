@@ -17,15 +17,14 @@ pub struct ObjectDetails {
     pub fields: std::collections::BTreeMap<String, prost_types::Value>,
 }
 
-const LIST_SUB_PREFIX: &str = "list";
 pub static LIST_OBJECTS: GlobalSignal<ListObjectsState> = Signal::global(ListObjectsState::default);
 
 impl ListObjectsState {
     pub fn matches_sub_id(sub_id: &str) -> bool {
-        sub_id.starts_with(LIST_SUB_PREFIX)
+        sub_id.starts_with("list-") && !sub_id.ends_with("/dep")
     }
     pub fn sub_id(list_id: &str) -> String {
-        format!("{LIST_SUB_PREFIX}-{}", list_id)
+        format!("list-{}", list_id)
     }
     pub fn handle_add(&mut self, v: Add) {
         insert_ordered(&mut self.order, v.id, &v.after_id);

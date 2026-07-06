@@ -43,7 +43,6 @@ impl SetMetaState {
     }
     pub fn handle_view_delete(&mut self, v: ViewDelete) {
         self.views.retain(|view| view.id != v.view_id);
-
         if self.active_view_id == v.view_id {
             self.active_view_id = self
                 .views

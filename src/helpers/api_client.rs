@@ -1,3 +1,4 @@
+use crate::components::base::message;
 use crate::protos::Event;
 use crate::protos::StreamRequest;
 use crate::protos::anytype_model::RelationFormat;
@@ -563,7 +564,7 @@ impl Client {
         client
             .object_search_subscribe(Request::new(object::search_subscribe::Request {
                 space_id: space_id.to_string(),
-                sub_id: format!("list-{}", list_id),
+                sub_id: ListObjectsState::sub_id(list_id),
                 source: set_of,
                 keys: all_keys,
                 filters,
@@ -687,7 +688,7 @@ impl Client {
             .await
     }
     pub async fn unsubscribe_list_objects(&self, list_id: &str) -> Result<()> {
-        self.unsubscribe(format!("list-{}", list_id)).await
+        self.unsubscribe(ListObjectsState::sub_id(list_id)).await
     }
 }
 
@@ -729,6 +730,7 @@ pub fn parse_invite_url(invite_url: &str) -> Result<ParsedInvite> {
 }
 
 pub fn handle_msg(context_id: &str, msg: Message) {
+    // tracing::debug!("got message: {:#?}", msg);
     match msg.value {
         Some(ObjectDetailsSet(v)) => {
             if v.sub_ids.iter().any(|s| SpacesState::matches_sub_id(s)) {
