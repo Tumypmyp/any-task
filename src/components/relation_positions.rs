@@ -6,7 +6,6 @@ use dioxus_html::MountedData;
 use dioxus_html::geometry::PixelsRect;
 use std::collections::HashMap;
 use std::rc::Rc;
-// use crate::components::properties::*;
 use crate::components::row::*;
 use crate::helpers::*;
 use dioxus::prelude::*;

@@ -3,7 +3,6 @@ use crate::components::column::*;
 use crate::components::relation_positions::*;
 use crate::components::row::*;
 use crate::components::scroll_area::*;
-use crate::components::separator::Separator;
 use crate::components::sheet::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
