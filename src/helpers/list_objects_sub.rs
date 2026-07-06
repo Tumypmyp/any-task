@@ -5,26 +5,27 @@ use dioxus::prelude::*;
 use std::collections::HashMap;
 
 #[derive(Clone, PartialEq, Default)]
-pub struct SetsState {
+pub struct ListObjectsState {
     pub order: Vec<String>,
-    pub details: HashMap<String, SetDetails>,
+    pub details: HashMap<String, ObjectDetails>,
 }
 
-#[derive(Clone, PartialEq, Debug)]
-pub struct SetDetails {
-    pub object_id: String,
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ObjectDetails {
+    pub id: String,
     pub name: String,
-    pub layout: i32,
+    pub fields: std::collections::BTreeMap<String, prost_types::Value>,
 }
 
-pub static SETS: GlobalSignal<SetsState> = Signal::global(SetsState::default);
+const LIST_SUB_PREFIX: &str = "list";
+pub static LIST_OBJECTS: GlobalSignal<ListObjectsState> = Signal::global(ListObjectsState::default);
 
-impl SetsState {
+impl ListObjectsState {
     pub fn matches_sub_id(sub_id: &str) -> bool {
-        sub_id.starts_with("sets-sub-")
+        sub_id.starts_with(LIST_SUB_PREFIX)
     }
-    pub fn sub_id(space_id: &str) -> String {
-        format!("sets-sub-{}", space_id)
+    pub fn sub_id(list_id: &str) -> String {
+        format!("{LIST_SUB_PREFIX}-{}", list_id)
     }
     pub fn handle_add(&mut self, v: Add) {
         insert_ordered(&mut self.order, v.id, &v.after_id);
@@ -34,27 +35,27 @@ impl SetsState {
         self.details.remove(&v.id);
     }
     pub fn handle_set(&mut self, v: Set) {
-        let det = SetDetails {
-            object_id: v.id.clone(),
-            name: extract_string(v.details.as_ref().and_then(|d| d.fields.get("name"))),
-            layout: extract_number(
-                v.details
-                    .as_ref()
-                    .and_then(|d| d.fields.get("resolvedLayout")),
-            ),
+        let fields: std::collections::BTreeMap<String, prost_types::Value> = v
+            .details
+            .as_ref()
+            .map(|d| d.fields.clone().into_iter().collect())
+            .unwrap_or_default();
+        let det = ObjectDetails {
+            id: v.id.clone(),
+            name: extract_string(fields.get("name")),
+            fields,
         };
         self.details.insert(v.id, det);
     }
     pub fn handle_amend(&mut self, v: Amend) {
-        let Some(details) = self.details.get_mut(&v.id) else {
-            tracing::warn!("got amend, but set was not loaded");
-            return;
-        };
-        for kv in v.details {
-            match kv.key.as_str() {
-                "name" => details.name = get_string(kv.value.unwrap()),
-                "resolvedLayout" => details.layout = extract_number((&kv.value).into()),
-                _ => {}
+        if let Some(det) = self.details.get_mut(&v.id) {
+            for kv in v.details {
+                let val = kv.value.unwrap_or_default();
+                match kv.key.as_str() {
+                    "name" => det.name = get_string(val.clone()),
+                    _ => {}
+                }
+                det.fields.insert(kv.key, val);
             }
         }
     }

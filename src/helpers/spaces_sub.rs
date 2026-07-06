@@ -79,7 +79,7 @@ fn get_string(v: prost_types::Value) -> String {
     }
 }
 
-pub fn extract_string(val: Option<&prost_types::Value>) -> String {
+fn extract_string(val: Option<&prost_types::Value>) -> String {
     if let Some(prost_types::Value {
         kind: Some(prost_types::value::Kind::StringValue(s)),
     }) = val
