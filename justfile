@@ -17,7 +17,7 @@ serve-android:
 
 serve-windows:
     @echo "Running windows desktop app..."
-    dx serve --platform desktop
+    dx serve --platform desktop --hot-reload false
 
 bundle-android:
     @echo "Building android aab bundle..."

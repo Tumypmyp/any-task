@@ -22,9 +22,9 @@
 
 - [x] Standalone app (`anytype-heart` library is embedded)
 - [x] Views: Spaces, Lists, Objects
-- [x] Properties: Text, Checkbox, Date, Number, etc.
-- [x] Customize properties appearence in Lists
-- [x] Live property update on value change
+- [x] Relations: Text, Checkbox, Date, Number, Status, etc.
+- [x] Customize relations appearence in Lists
+- [x] Live relation updates
 - [x] Use different List views
 - [x] Open last visited view after app reload
 <!--- [ ] Timeline/Calendar view-->

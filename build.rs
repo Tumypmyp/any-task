@@ -43,15 +43,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "windows" => {
             // Windows needs the companion .dll copied next to the executable
             let src_dll = engine_path.with_extension("dll");
+
             if src_dll.exists() {
                 let pkg_name = std::env::var("CARGO_PKG_NAME")?;
+                let dll_name = src_dll.file_name().unwrap();
+
+                // 1. Copy to standard Cargo output (Required for `dx serve` and `cargo run`)
+                let cargo_out_dir = std::path::PathBuf::from(&manifest_dir)
+                    .join("target")
+                    .join(&profile);
+                std::fs::create_dir_all(&cargo_out_dir).ok();
+                std::fs::copy(&src_dll, cargo_out_dir.join(dll_name)).ok();
+
+                // 2. Copy to Dioxus bundle output (Required for `dx bundle`)
                 let dx_app_dir = std::path::PathBuf::from(&manifest_dir)
                     .join("target/dx")
                     .join(&pkg_name)
                     .join(&profile)
                     .join("windows/app");
                 std::fs::create_dir_all(&dx_app_dir).ok();
-                std::fs::copy(&src_dll, dx_app_dir.join("lib_anytype_engine.dll")).ok();
+                std::fs::copy(&src_dll, dx_app_dir.join(dll_name)).ok();
+            } else {
+                // Add a warning so you see it in the terminal if the source DLL goes missing
+                println!(
+                    "cargo:warning=Companion DLL not found at {}",
+                    src_dll.display()
+                );
             }
         }
         "android" => {

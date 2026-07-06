@@ -1,29 +1,26 @@
-use std::collections::HashMap;
-
-use crate::helpers::models::*;
+use crate::components::base::message;
 use crate::protos::Event;
 use crate::protos::StreamRequest;
 use crate::protos::anytype_model::RelationFormat;
 use crate::protos::anytype_model::SpaceStatus;
-// use crate::protos::anytype_model::block::content::dataview;
 use crate::protos::anytype_model::block::*;
 use crate::protos::anytype_model::object_type::*;
 use crate::protos::client_commands_client::ClientCommandsClient;
 use crate::protos::event::Message;
 use crate::protos::event::message::Value::*;
-use crate::protos::event::object::details::*;
-use crate::protos::event::object::subscription::*;
 use crate::protos::rpc::*;
 use anyhow::Context;
 use anyhow::Result;
 use dioxus::prelude::*;
-// use std::collections::HashMap;
+use std::collections::HashMap;
 use tonic::Request;
 use tonic::metadata::MetadataValue;
 use tonic::service::interceptor::InterceptedService;
 use tonic::transport::Channel;
 pub static API_CLIENT: GlobalSignal<Option<Client>> = Signal::global(|| None);
 pub static RECONNECT_COUNT: GlobalSignal<u32> = Signal::global(|| 0);
+
+use crate::helpers::*;
 
 #[derive(Clone, Debug)]
 pub struct Client {
@@ -389,11 +386,42 @@ impl Client {
         Ok(properties)
     }
 
+    pub async fn subscribe_relation_options(
+        &self,
+        space_id: &str,
+    ) -> Result<object::search_subscribe::Response> {
+        let mut client = self.client.clone();
+        client
+            .object_search_subscribe(Request::new(object::search_subscribe::Request {
+                space_id: space_id.to_string(),
+                sub_id: format!("relation-options-{}", space_id),
+                filters: vec![content::dataview::Filter {
+                    relation_key: "resolvedLayout".to_string(),
+                    condition: content::dataview::filter::Condition::Equal.into(),
+                    value: Some(prost_types::Value {
+                        kind: Some(prost_types::value::Kind::NumberValue(
+                            Layout::RelationOption as i32 as f64, // 13
+                        )),
+                    }),
+                    ..Default::default()
+                }],
+                keys: vec![
+                    "id".to_string(),
+                    "name".to_string(),
+                    "relationKey".to_string(),
+                    "relationOptionColor".to_string(),
+                ],
+                ..Default::default()
+            }))
+            .await
+            .context("subscribe_relation_options failed")
+            .map(|r| r.into_inner())
+    }
     pub async fn subscribe_spaces(&self) -> Result<()> {
         let mut grpc_client = self.client.clone();
         let req = Request::new(object::search_subscribe::Request {
             space_id: self.tech_space_id.clone(),
-            sub_id: SPACES_SUB.to_string(),
+            sub_id: SpacesState::sub_id(),
             filters: vec![
                 content::dataview::Filter {
                     relation_key: "resolvedLayout".to_string(),
@@ -536,7 +564,7 @@ impl Client {
         client
             .object_search_subscribe(Request::new(object::search_subscribe::Request {
                 space_id: space_id.to_string(),
-                sub_id: format!("list-{}", list_id),
+                sub_id: ListObjectsState::sub_id(list_id),
                 source: set_of,
                 keys: all_keys,
                 filters,
@@ -596,7 +624,7 @@ impl Client {
             .unwrap_or_default();
         let set_of = fields
             .and_then(|f| f.get("setOf"))
-            .map(|v| extract_list_strings_from_value(Some(v)))
+            .map(|v| extract_list_strings(Some(v)))
             .unwrap_or_default();
         let dv_block = object_view
             .blocks
@@ -649,18 +677,19 @@ impl Client {
     }
 
     pub async fn unsubscribe_spaces(&self) -> Result<()> {
-        self.unsubscribe(SPACES_SUB.to_string()).await
+        self.unsubscribe(SpacesState::sub_id()).await
     }
     pub async fn unsubscribe_sets(&self, space_id: &str) -> Result<()> {
         let sub_id = SetsState::sub_id(space_id);
         self.unsubscribe(sub_id).await
     }
-    pub async fn unsubscribe_list_objects(&self, list_id: &str) -> Result<()> {
-        self.unsubscribe(format!("list-{}", list_id)).await
+    pub async fn unsubscribe_relation_options(&self, space_id: &str) -> Result<()> {
+        self.unsubscribe(format!("relation-options-{}", space_id))
+            .await
     }
-    // pub async fn unsubscribe_set_meta(&self, set_id: &str) -> Result<()> {
-    //     self.unsubscribe(format!("set-meta-{}", set_id)).await
-    // }
+    pub async fn unsubscribe_list_objects(&self, list_id: &str) -> Result<()> {
+        self.unsubscribe(ListObjectsState::sub_id(list_id)).await
+    }
 }
 
 use url::Url;
@@ -700,70 +729,86 @@ pub fn parse_invite_url(invite_url: &str) -> Result<ParsedInvite> {
     anyhow::bail!("Invalid invite url scheme: {}", invite_url)
 }
 
-use crate::protos::event::block::dataview::view_update::*;
-use crate::protos::event::block::dataview::*;
 pub fn handle_msg(context_id: &str, msg: Message) {
+    // tracing::debug!("got message: {:#?}", msg);
     match msg.value {
         Some(ObjectDetailsSet(v)) => {
-            if v.sub_ids.iter().any(|s| s == SPACES_SUB) {
+            if v.sub_ids.iter().any(|s| SpacesState::matches_sub_id(s)) {
                 SPACES.write().handle_set(v);
             } else if v.sub_ids.iter().any(|s| SetsState::matches_sub_id(s)) {
                 SETS.write().handle_set(v);
-            } else if v.sub_ids.iter().any(|s| s.starts_with(LIST_SUB_PREFIX)) {
-                let fields: std::collections::BTreeMap<String, prost_types::Value> = v
-                    .details
-                    .as_ref()
-                    .map(|d| d.fields.clone().into_iter().collect())
-                    .unwrap_or_default();
-                let det = ObjectDetails {
-                    id: v.id.clone(),
-                    name: extract_string(fields.get("name")),
-                    fields,
-                };
-                LIST_OBJECTS.write().details.insert(v.id, det);
+            } else if v
+                .sub_ids
+                .iter()
+                .any(|s| ListObjectsState::matches_sub_id(s))
+            {
+                LIST_OBJECTS.write().handle_set(v);
             } else if v.sub_ids.is_empty() && SET_META.read().id.contains(context_id) {
                 SET_META.write().handle_set(v);
+            } else if v.sub_ids.iter().any(|s| s.starts_with("relation-options-")) {
+                RELATION_OPTIONS.write().handle_set(v);
+            }
+        }
+        Some(ObjectDetailsUnset(v)) => {
+            if v.sub_ids
+                .iter()
+                .any(|s| ListObjectsState::matches_sub_id(s))
+            {
+                let mut state = LIST_OBJECTS.write();
+                if let Some(det) = state.details.get_mut(&v.id) {
+                    for key in &v.keys {
+                        det.fields.remove(key);
+                        if key == "name" {
+                            det.name = String::new();
+                        }
+                    }
+                }
+            } else if v.sub_ids.iter().any(|s| s.starts_with("relation-options-")) {
+                let mut state = RELATION_OPTIONS.write();
+                if let Some(opt) = state.details.get_mut(&v.id) {
+                    for key in &v.keys {
+                        match key.as_str() {
+                            "name" => opt.name = String::new(),
+                            "relationOptionColor" => opt.color = String::new(),
+                            _ => {}
+                        }
+                    }
+                }
             }
         }
         Some(ObjectDetailsAmend(v)) => {
-            if v.sub_ids.iter().any(|s| s == SPACES_SUB) {
+            if v.sub_ids.iter().any(|s| SpacesState::matches_sub_id(s)) {
                 SPACES.write().handle_amend(v);
             } else if v.sub_ids.iter().any(|s| SetsState::matches_sub_id(s)) {
                 SETS.write().handle_amend(v);
-            } else if v.sub_ids.iter().any(|s| s.starts_with(LIST_SUB_PREFIX)) {
-                let mut state = LIST_OBJECTS.write();
-                if let Some(det) = state.details.get_mut(&v.id) {
-                    for kv in v.details {
-                        let val = kv.value.unwrap_or_default();
-                        match kv.key.as_str() {
-                            "name" => det.name = get_string(val.clone()),
-                            _ => {}
-                        }
-                        det.fields.insert(kv.key, val);
-                    }
-                }
+            } else if v
+                .sub_ids
+                .iter()
+                .any(|s| ListObjectsState::matches_sub_id(s))
+            {
+                LIST_OBJECTS.write().handle_amend(v);
             } else if v.sub_ids.is_empty() && SET_META.read().id.contains(context_id) {
                 SET_META.write().handle_amend(v);
+            } else if v.sub_ids.iter().any(|s| s.starts_with("relation-options-")) {
+                RELATION_OPTIONS.write().handle_amend(v);
             }
         }
         Some(SubscriptionAdd(v)) => {
-            if v.sub_id == SPACES_SUB {
+            if SpacesState::matches_sub_id(&v.sub_id) {
                 SPACES.write().handle_add(v);
             } else if SetsState::matches_sub_id(&v.sub_id) {
                 SETS.write().handle_add(v);
-            } else if v.sub_id.starts_with(LIST_SUB_PREFIX) {
-                insert_ordered(&mut LIST_OBJECTS.write().order, v.id, &v.after_id);
+            } else if ListObjectsState::matches_sub_id(&v.sub_id) {
+                LIST_OBJECTS.write().handle_add(v);
             }
         }
         Some(SubscriptionRemove(v)) => {
-            if v.sub_id == SPACES_SUB {
+            if SpacesState::matches_sub_id(&v.sub_id) {
                 SPACES.write().handle_remove(v);
             } else if SetsState::matches_sub_id(&v.sub_id) {
                 SETS.write().handle_remove(v);
-            } else if v.sub_id.starts_with(LIST_SUB_PREFIX) {
-                let mut state = LIST_OBJECTS.write();
-                state.order.retain(|id| id != &v.id);
-                state.details.remove(&v.id);
+            } else if ListObjectsState::matches_sub_id(&v.sub_id) {
+                LIST_OBJECTS.write().handle_remove(v);
             }
         }
         Some(BlockDataviewViewSet(v)) => {
@@ -781,93 +826,6 @@ pub fn handle_msg(context_id: &str, msg: Message) {
         _ => {}
     }
 }
-
-pub static SPACES: GlobalSignal<SpacesState> = Signal::global(SpacesState::default);
-pub const SPACES_SUB: &str = "spaces";
-pub fn parse_space_details(
-    object_id: &str,
-    fields: &std::collections::BTreeMap<String, prost_types::Value>,
-) -> SpaceDetails {
-    SpaceDetails {
-        object_id: object_id.to_string(),
-        target_space_id: extract_string(fields.get("targetSpaceId")),
-        name: extract_string(fields.get("name")),
-        icon_image: extract_string(fields.get("iconImage")),
-        description: extract_string(fields.get("description")),
-    }
-}
-
-impl SpacesState {
-    pub fn handle_add(&mut self, v: Add) {
-        insert_ordered(&mut self.order, v.id, &v.after_id);
-    }
-    pub fn handle_remove(&mut self, v: Remove) {
-        self.order.retain(|id| id != &v.id);
-        self.details.remove(&v.id);
-    }
-    pub fn handle_set(&mut self, v: Set) {
-        let det = parse_space_details(&v.id, &v.details.unwrap_or_default().fields);
-        self.details.insert(v.id, det);
-    }
-    pub fn handle_amend(&mut self, v: Amend) {
-        let Some(det) = self.details.get_mut(&v.id) else {
-            tracing::warn!("got amend, but space was not loaded");
-            return;
-        };
-        for kv in v.details {
-            match kv.key.as_str() {
-                "name" => det.name = get_string(kv.value.unwrap()),
-                "iconImage" => det.icon_image = get_string(kv.value.unwrap()),
-                "description" => det.description = get_string(kv.value.unwrap()),
-                "targetSpaceId" => det.target_space_id = get_string(kv.value.unwrap()),
-                _ => {}
-            }
-        }
-    }
-}
-pub static SETS: GlobalSignal<SetsState> = Signal::global(SetsState::default);
-
-impl SetsState {
-    pub fn matches_sub_id(sub_id: &str) -> bool {
-        sub_id.starts_with("sets-")
-    }
-    pub fn sub_id(space_id: &str) -> String {
-        format!("sets-{}", space_id)
-    }
-    pub fn handle_add(&mut self, v: Add) {
-        insert_ordered(&mut self.order, v.id, &v.after_id);
-    }
-    pub fn handle_remove(&mut self, v: Remove) {
-        self.order.retain(|id| id != &v.id);
-        self.details.remove(&v.id);
-    }
-    pub fn handle_set(&mut self, v: Set) {
-        let det = SetDetails {
-            object_id: v.id.clone(),
-            name: extract_string(v.details.as_ref().and_then(|d| d.fields.get("name"))),
-            layout: extract_number(
-                v.details
-                    .as_ref()
-                    .and_then(|d| d.fields.get("resolvedLayout")),
-            ),
-        };
-        self.details.insert(v.id, det);
-    }
-    pub fn handle_amend(&mut self, v: Amend) {
-        let Some(details) = self.details.get_mut(&v.id) else {
-            tracing::warn!("got amend, but set was not loaded");
-            return;
-        };
-        for kv in v.details {
-            match kv.key.as_str() {
-                "name" => details.name = get_string(kv.value.unwrap()),
-                "resolvedLayout" => details.layout = extract_number((&kv.value).into()),
-                _ => {}
-            }
-        }
-    }
-}
-
 pub fn extract_list_strings(v: Option<&prost_types::Value>) -> Vec<String> {
     v.and_then(|v| {
         if let Some(prost_types::value::Kind::ListValue(lv)) = &v.kind {
@@ -890,10 +848,6 @@ pub fn extract_list_strings(v: Option<&prost_types::Value>) -> Vec<String> {
     .unwrap_or_default()
 }
 
-pub fn extract_list_strings_from_value(v: Option<&prost_types::Value>) -> Vec<String> {
-    extract_list_strings(v)
-}
-
 pub fn extract_string(val: Option<&prost_types::Value>) -> String {
     if let Some(prost_types::Value {
         kind: Some(prost_types::value::Kind::StringValue(s)),
@@ -904,7 +858,7 @@ pub fn extract_string(val: Option<&prost_types::Value>) -> String {
         String::new()
     }
 }
-pub fn extract_number(val: Option<&prost_types::Value>) -> i32 {
+fn extract_number(val: Option<&prost_types::Value>) -> i32 {
     if let Some(prost_types::Value {
         kind: Some(prost_types::value::Kind::NumberValue(n)),
     }) = val
@@ -912,163 +866,6 @@ pub fn extract_number(val: Option<&prost_types::Value>) -> i32 {
         *n as i32
     } else {
         0
-    }
-}
-
-pub const LIST_SUB_PREFIX: &str = "list";
-pub static LIST_OBJECTS: GlobalSignal<ListObjectsState> = Signal::global(ListObjectsState::default);
-
-pub static SET_META: GlobalSignal<SetMetaState> = Signal::global(SetMetaState::default);
-
-impl SetMetaState {
-    pub fn handle_set(&mut self, v: Set) {
-        let Some(fields) = v.details.map(|d| d.fields) else {
-            return;
-        };
-        self.name = extract_string(fields.get("name"));
-        self.set_of = extract_list_strings(fields.get("setOf"));
-    }
-    pub fn handle_amend(&mut self, v: Amend) {
-        for kv in v.details {
-            match kv.key.as_str() {
-                "name" => self.name = get_string(kv.value.unwrap_or_default()),
-                "setOf" => self.set_of = extract_list_strings_from_value(kv.value.as_ref()),
-                _ => {}
-            }
-        }
-    }
-    pub fn handle_view_set(&mut self, v: ViewSet) {
-        let Some(new_view) = v.view else { return };
-
-        if let Some(existing) = self.views.iter_mut().find(|view| view.id == v.view_id) {
-            *existing = new_view;
-        } else {
-            self.views.push(new_view);
-        }
-    }
-    pub fn handle_view_delete(&mut self, v: ViewDelete) {
-        self.views.retain(|view| view.id != v.view_id);
-
-        if self.active_view_id == v.view_id {
-            self.active_view_id = self
-                .views
-                .first()
-                .map(|view| view.id.clone())
-                .unwrap_or_default();
-        }
-    }
-
-    pub fn handle_view_update(&mut self, v: ViewUpdate) {
-        let Some(view) = self.views.iter_mut().find(|view| view.id == v.view_id) else {
-            tracing::error!("got update on nonexisting view: {}", v.view_id);
-            return;
-        };
-
-        if let Some(f) = v.fields {
-            view.name = f.name;
-        }
-
-        // --- Filters ---
-        for change in v.filter {
-            match change.operation {
-                Some(filter::Operation::Add(add)) => {
-                    let pos =
-                        insert_pos_by_id(&add.after_id, view.filters.iter().map(|f| f.id.as_str()));
-                    for (i, item) in add.items.into_iter().enumerate() {
-                        view.filters.insert(pos + i, item);
-                    }
-                }
-                Some(filter::Operation::Remove(rem)) => {
-                    view.filters.retain(|f| !rem.ids.contains(&f.id));
-                }
-                Some(filter::Operation::Update(u)) => {
-                    if let Some(f) = view.filters.iter_mut().find(|f| f.id == u.id) {
-                        if let Some(item) = u.item {
-                            *f = item;
-                        }
-                    }
-                }
-                Some(filter::Operation::Move(mv)) => {
-                    let mut moved = Vec::with_capacity(mv.ids.len());
-
-                    for target_id in &mv.ids {
-                        if let Some(idx) = view.filters.iter().position(|s| s.id == *target_id) {
-                            moved.push(view.filters.remove(idx));
-                        }
-                    }
-
-                    let pos =
-                        insert_pos_by_id(&mv.after_id, view.filters.iter().map(|s| s.id.as_str()));
-
-                    for (i, item) in moved.into_iter().enumerate() {
-                        view.filters.insert(pos + i, item);
-                    }
-                }
-                None => {}
-            }
-        }
-
-        // --- Sorts ---
-        for change in v.sort {
-            match change.operation {
-                Some(sort::Operation::Add(add)) => {
-                    let pos =
-                        insert_pos_by_id(&add.after_id, view.sorts.iter().map(|s| s.id.as_str()));
-                    for (i, item) in add.items.into_iter().enumerate() {
-                        view.sorts.insert(pos + i, item);
-                    }
-                }
-                Some(sort::Operation::Remove(rem)) => {
-                    view.sorts.retain(|s| !rem.ids.contains(&s.id));
-                }
-                Some(sort::Operation::Update(u)) => {
-                    if let Some(s) = view.sorts.iter_mut().find(|s| s.id == u.id) {
-                        if let Some(item) = u.item {
-                            *s = item;
-                        }
-                    }
-                }
-                Some(sort::Operation::Move(mv)) => {
-                    let mut moved = Vec::with_capacity(mv.ids.len());
-
-                    for target_id in &mv.ids {
-                        if let Some(idx) = view.sorts.iter().position(|s| s.id == *target_id) {
-                            moved.push(view.sorts.remove(idx));
-                        }
-                    }
-
-                    let pos =
-                        insert_pos_by_id(&mv.after_id, view.sorts.iter().map(|s| s.id.as_str()));
-
-                    for (i, item) in moved.into_iter().enumerate() {
-                        view.sorts.insert(pos + i, item);
-                    }
-                }
-                None => {}
-            }
-        }
-    }
-    pub fn handle_view_order(&mut self, v: ViewOrder) {
-        self.views.sort_by_cached_key(|view| {
-            v.view_ids
-                .iter()
-                .position(|id| id == &view.id)
-                .unwrap_or(usize::MAX)
-        });
-    }
-}
-
-fn insert_ordered(order: &mut Vec<String>, id: String, after_id: &str) {
-    order.retain(|existing| existing != &id);
-    if after_id.is_empty() {
-        order.insert(0, id);
-    } else {
-        let pos = order
-            .iter()
-            .position(|existing| existing == after_id)
-            .map(|i| i + 1)
-            .unwrap_or(order.len());
-        order.insert(pos, id);
     }
 }
 pub fn parse_object_details(
@@ -1080,22 +877,4 @@ pub fn parse_object_details(
         name: extract_string(fields.get("name")),
         fields: fields.clone(),
     }
-}
-
-fn get_string(v: prost_types::Value) -> String {
-    match v.kind {
-        Some(prost_types::value::Kind::StringValue(s)) => s,
-        _ => String::new(),
-    }
-}
-
-/// Finds the insertion index for a new item.
-/// If `after_id` is empty, or if the ID is not found, it defaults to index 0.
-fn insert_pos_by_id<'a>(after_id: &str, mut ids: impl Iterator<Item = &'a str>) -> usize {
-    if after_id.is_empty() {
-        return 0;
-    }
-    ids.position(|id| id == after_id)
-        .map(|i| i + 1)
-        .unwrap_or(0)
 }
