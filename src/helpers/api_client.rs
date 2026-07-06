@@ -7,8 +7,6 @@ use crate::protos::anytype_model::object_type::*;
 use crate::protos::client_commands_client::ClientCommandsClient;
 use crate::protos::event::Message;
 use crate::protos::event::message::Value::*;
-use crate::protos::event::object::details::*;
-use crate::protos::event::object::subscription::*;
 use crate::protos::rpc::*;
 use anyhow::Context;
 use anyhow::Result;
@@ -625,7 +623,7 @@ impl Client {
             .unwrap_or_default();
         let set_of = fields
             .and_then(|f| f.get("setOf"))
-            .map(|v| extract_list_strings_from_value(Some(v)))
+            .map(|v| extract_list_strings(Some(v)))
             .unwrap_or_default();
         let dv_block = object_view
             .blocks
@@ -746,21 +744,7 @@ pub fn handle_msg(context_id: &str, msg: Message) {
             } else if v.sub_ids.is_empty() && SET_META.read().id.contains(context_id) {
                 SET_META.write().handle_set(v);
             } else if v.sub_ids.iter().any(|s| s.starts_with("relation-options-")) {
-                let fields = v.details.as_ref().map(|d| &d.fields);
-                let relation_key = extract_string(fields.and_then(|f| f.get("relationKey")));
-                let opt = RelationOptionDetails {
-                    id: v.id.clone(),
-                    name: extract_string(fields.and_then(|f| f.get("name"))),
-                    color: extract_string(fields.and_then(|f| f.get("relationOptionColor"))),
-                    relation_key: relation_key.clone(),
-                };
-                let mut state = RELATION_OPTIONS.write();
-                state
-                    .by_relation
-                    .entry(relation_key)
-                    .or_default()
-                    .push(v.id.clone());
-                state.details.insert(v.id, opt);
+                RELATION_OPTIONS.write().handle_set(v);
             }
         }
         Some(ObjectDetailsUnset(v)) => {
@@ -804,18 +788,7 @@ pub fn handle_msg(context_id: &str, msg: Message) {
             } else if v.sub_ids.is_empty() && SET_META.read().id.contains(context_id) {
                 SET_META.write().handle_amend(v);
             } else if v.sub_ids.iter().any(|s| s.starts_with("relation-options-")) {
-                let mut state = RELATION_OPTIONS.write();
-                if let Some(opt) = state.details.get_mut(&v.id) {
-                    for kv in v.details {
-                        match kv.key.as_str() {
-                            "name" => opt.name = get_string(kv.value.unwrap_or_default()),
-                            "relationOptionColor" => {
-                                opt.color = get_string(kv.value.unwrap_or_default())
-                            }
-                            _ => {}
-                        }
-                    }
-                }
+                RELATION_OPTIONS.write().handle_amend(v);
             }
         }
         Some(SubscriptionAdd(v)) => {
@@ -873,10 +846,6 @@ pub fn extract_list_strings(v: Option<&prost_types::Value>) -> Vec<String> {
     .unwrap_or_default()
 }
 
-pub fn extract_list_strings_from_value(v: Option<&prost_types::Value>) -> Vec<String> {
-    extract_list_strings(v)
-}
-
 pub fn extract_string(val: Option<&prost_types::Value>) -> String {
     if let Some(prost_types::Value {
         kind: Some(prost_types::value::Kind::StringValue(s)),
@@ -887,7 +856,7 @@ pub fn extract_string(val: Option<&prost_types::Value>) -> String {
         String::new()
     }
 }
-pub fn extract_number(val: Option<&prost_types::Value>) -> i32 {
+fn extract_number(val: Option<&prost_types::Value>) -> i32 {
     if let Some(prost_types::Value {
         kind: Some(prost_types::value::Kind::NumberValue(n)),
     }) = val
@@ -906,30 +875,4 @@ pub fn parse_object_details(
         name: extract_string(fields.get("name")),
         fields: fields.clone(),
     }
-}
-
-fn get_string(v: prost_types::Value) -> String {
-    match v.kind {
-        Some(prost_types::value::Kind::StringValue(s)) => s,
-        _ => String::new(),
-    }
-}
-
-pub static RELATION_OPTIONS: GlobalSignal<RelationOptionsState> =
-    Signal::global(RelationOptionsState::default);
-
-#[derive(Default, Clone, Debug)]
-pub struct RelationOptionsState {
-    /// relation_key -> list of option ids (ordered)
-    pub by_relation: HashMap<String, Vec<String>>,
-    /// option_id -> option details
-    pub details: HashMap<String, RelationOptionDetails>,
-}
-
-#[derive(Clone, Debug)]
-pub struct RelationOptionDetails {
-    pub id: String,
-    pub name: String,
-    pub relation_key: String,
-    pub color: String,
 }
