@@ -1,4 +1,3 @@
-use crate::components::base::message;
 use crate::protos::Event;
 use crate::protos::StreamRequest;
 use crate::protos::anytype_model::RelationFormat;
@@ -8,6 +7,7 @@ use crate::protos::anytype_model::object_type::*;
 use crate::protos::client_commands_client::ClientCommandsClient;
 use crate::protos::event::Message;
 use crate::protos::event::message::Value::*;
+use crate::protos::rpc::block_dataview::*;
 use crate::protos::rpc::*;
 use anyhow::Context;
 use anyhow::Result;
@@ -577,24 +577,6 @@ impl Client {
             .map(|r| r.into_inner())
     }
 
-    // pub async fn subscribe_set_meta(
-    //     &self,
-    //     space_id: &str,
-    //     set_id: &str,
-    // ) -> Result<object::subscribe_ids::Response> {
-    //     let mut client = self.client.clone();
-    //     client
-    //         .object_subscribe_ids(Request::new(object::subscribe_ids::Request {
-    //             space_id: space_id.to_string(),
-    //             sub_id: format!("set-meta-{}", set_id),
-    //             ids: vec![set_id.to_string()],
-    //             keys: vec!["id".into(), "name".into(), "setOf".into()],
-    //             ..Default::default()
-    //         }))
-    //         .await
-    //         .context("subscribe_set_meta failed")
-    //         .map(|r| r.into_inner())
-    // }
     pub async fn object_open(&self, space_id: &str, object_id: &str) -> Result<()> {
         let resp = self
             .client
@@ -602,7 +584,7 @@ impl Client {
             .object_open(Request::new(object::open::Request {
                 space_id: space_id.to_string(),
                 object_id: object_id.to_string(),
-                include_relations_as_dependent_objects: true,
+                include_relations_as_dependent_objects: false,
                 ..Default::default()
             }))
             .await
@@ -665,6 +647,24 @@ impl Client {
             .map(|r| r.into_inner())
     }
 
+    pub async fn set_active_view(
+        &self,
+        space_id: &str,
+        object_id: &str,
+        view_id: &str,
+    ) -> Result<()> {
+        self.client
+            .clone()
+            .block_dataview_view_set_active(Request::new(view::set_active::Request {
+                context_id: object_id.to_string(),
+                block_id: "dataview".to_string(),
+                view_id: view_id.to_string(),
+                ..Default::default()
+            }))
+            .await
+            .context("set_active_view failed")?;
+        Ok(())
+    }
     async fn unsubscribe(&self, sub_id: String) -> Result<()> {
         self.client
             .clone()

@@ -1,5 +1,4 @@
 use crate::components::action::{ActionHolder, BaseActions};
-use crate::components::base::message;
 use crate::components::column::*;
 use crate::components::edit_view::*;
 use crate::components::header::{Header, Title};
@@ -14,7 +13,6 @@ use std::vec;
 
 #[component]
 pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Element {
-    tracing::info!("loading space {space_id}, list {list_id}");
     let view_id = use_store(|| "".to_string());
     let storage_view_tree_key = format!("list-view-relations-tree-{}", list_id());
 
@@ -62,13 +60,6 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
             .ok_or_else(|| anyhow::anyhow!("No API client available"))?;
         client.fetch_properties(&space_id()).await
     });
-
-    match &*all_properties_res.read_unchecked() {
-        None => return rsx! { "Loading..." },
-        Some(Err(e)) => return rsx! { "Error: {e}" },
-        Some(Ok(_)) => {}
-    }
-
     let all_properties: Memo<HashMap<RelationKey, RelationInfo>> = use_memo(move || {
         all_properties_res
             .read()
@@ -77,6 +68,12 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
             .cloned()
             .unwrap_or_default()
     });
+
+    match &*all_properties_res.read_unchecked() {
+        None => return rsx! { "Loading..." },
+        Some(Err(e)) => return rsx! { "Error: {e}" },
+        Some(Ok(_)) => {}
+    }
 
     rsx! {
         ListHeader {
@@ -108,7 +105,7 @@ pub fn ListHeader(
     rsx! {
         Header {
             Title { title: "{name}" }
-            Views {}
+            Views { list_id, space_id }
             EditView {
                 space_id,
                 list_id,
@@ -120,7 +117,7 @@ pub fn ListHeader(
 }
 
 #[component]
-pub fn Views() -> Element {
+pub fn Views(list_id: ReadSignal<String>, space_id: ReadSignal<String>) -> Element {
     let selected = use_memo(move || Some(SET_META.read().active_view_id.clone()));
     let selected_signal: ReadSignal<Option<String>> = selected.into();
 
@@ -136,7 +133,12 @@ pub fn Views() -> Element {
             value: Some(selected_signal),
             on_value_change: move |new_id: Option<String>| {
                 if let Some(id) = new_id {
-                    SET_META.write().active_view_id = id;
+                    SET_META.write().active_view_id = id.clone();
+                    spawn(async move {
+                        if let Some(client) = API_CLIENT.read().as_ref().cloned() {
+                            client.set_active_view(&space_id(), &list_id(), &id).await.ok();
+                        }
+                    });
                 }
             },
             SelectTrigger { SelectValue {} }
@@ -178,6 +180,7 @@ pub fn Objects(
             }
         }
     });
+    let keys = use_memo(move || pane_keys(&positions.read()));
     use_resource(move || {
         let _reconnect = RECONNECT_COUNT.read();
         let sid = space_id.read().clone();
@@ -194,7 +197,6 @@ pub fn Objects(
             .unwrap_or_default();
         drop(meta);
 
-        let keys = pane_keys(&positions.read());
         let client = API_CLIENT.read().as_ref().cloned();
         async move {
             let Some(client) = client else { return };
@@ -207,7 +209,7 @@ pub fn Objects(
                 let sid = sid.clone();
                 let lid = lid.clone();
                 let set_of_ids = set_of_ids.clone();
-                let keys = keys.clone();
+                let keys = keys();
                 let filters = filters.clone();
                 let sorts = sorts.clone();
                 async move {
@@ -241,6 +243,7 @@ pub fn Objects(
                 let client = client.clone();
                 let sid = sid.clone();
                 let lid = lid.clone();
+                let keys = keys();
                 async move {
                     client
                         .subscribe_list_objects(&sid, &lid, set_of_ids, keys, filters, sorts, 100)
