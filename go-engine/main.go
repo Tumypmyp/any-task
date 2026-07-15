@@ -12,6 +12,7 @@ import (
 
 	"github.com/anyproto/any-sync/app"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/anyproto/anytype-heart/core"
 	"github.com/anyproto/anytype-heart/core/event"
@@ -97,9 +98,28 @@ func StartAnytypeEngine(cGrpcAddr *C.char) C.int {
 		return resp, err
 	})
 
+	streamInterceptor := func(
+		srv interface{},
+		ss grpc.ServerStream,
+		info *grpc.StreamServerInfo,
+		handler grpc.StreamHandler,
+	) error {
+		log.Infof("stream RPC started: %s", info.FullMethod)
+		// Force headers immediately — ListenSessionEvents never calls Send/SendHeader
+		// before blocking on select, causing the client to deadlock on first login.
+		if err := ss.SendHeader(metadata.MD{}); err != nil {
+			log.Errorf("SendHeader failed for %s: %v", info.FullMethod, err)
+			return err
+		}
+		err := handler(srv, ss)
+		log.Infof("stream RPC ended: %s (err=%v)", info.FullMethod, err)
+		return err
+	}
+
 	grpcServer := grpc.NewServer(
 		grpc.MaxRecvMsgSize(20*1024*1024),
 		grpc.ChainUnaryInterceptor(interceptors...),
+		grpc.ChainStreamInterceptor(streamInterceptor),
 	)
 
 	service.RegisterClientCommandsServer(grpcServer, mw)

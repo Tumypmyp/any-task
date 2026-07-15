@@ -92,21 +92,6 @@ fn main() {
     keyring::use_native_store(false).expect("failed to open native credential store");
     dioxus_desktop::launch::launch(App, vec![], vec![Box::new(cfg)]);
 }
-pub fn get_app_data_dir() -> PathBuf {
-    if cfg!(target_os = "windows") {
-        PathBuf::from(env::var("LOCALAPPDATA").expect("LOCALAPPDATA not found")).join("AnyTask")
-    } else if cfg!(target_os = "linux") {
-        let base = env::var("XDG_DATA_HOME").unwrap_or_else(|_| {
-            format!("{}/.local/share", env::var("HOME").expect("HOME not found"))
-        });
-        PathBuf::from(base).join("AnyTask")
-    } else if cfg!(target_os = "android") {
-        PathBuf::from("/data/user/0/com.Tumypmyp.AnyTask/files")
-    } else {
-        PathBuf::from(".anytask")
-    }
-}
-
 #[component]
 fn App() -> Element {
     set_theme(true);
