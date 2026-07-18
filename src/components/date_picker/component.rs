@@ -2,6 +2,7 @@ use dioxus::prelude::*;
 
 use dioxus_icons::lucide::ChevronDown;
 use dioxus_primitives::{
+    ContentAlign,
     calendar::DateRange,
     date_picker::{
         self, DatePickerDaySegmentProps, DatePickerInputProps, DatePickerMonthSegmentProps,
@@ -11,7 +12,6 @@ use dioxus_primitives::{
     dioxus_attributes::attributes,
     merge_attributes,
     popover::{PopoverContentProps, PopoverTriggerProps},
-    ContentAlign,
 };
 use time::{Date, Month};
 
@@ -233,22 +233,22 @@ pub(crate) fn DatePickerInput(props: DatePickerInputProps) -> Element {
                 on_format_month_placeholder: props.on_format_month_placeholder,
                 on_format_year_placeholder: props.on_format_year_placeholder,
                 DatePickerYearSegment {}
-                DatePickerSeparator {}
+                // DatePickerSeparator { symbol: '.' }
                 DatePickerMonthSegment {}
-                DatePickerSeparator {}
+                // DatePickerSeparator { symbol: '.' }
                 DatePickerDaySegment {}
             }
             if let Some(extra_children) = extra_children {
                 {extra_children}
             }
-            DatePickerPopoverTrigger {}
-            DatePickerPopoverContent { align: ContentAlign::Center,
-                date_picker::DatePickerCalendar { calendar: CalendarRoot,
-                    for offset in 0..month_count {
-                        CalendarMonthView { key: "{offset}", offset, month_count }
-                    }
-                }
-            }
+            // DatePickerPopoverTrigger {}
+            // DatePickerPopoverContent { align: ContentAlign::Center,
+            //     date_picker::DatePickerCalendar { calendar: CalendarRoot,
+            //         for offset in 0..month_count {
+            //             CalendarMonthView { key: "{offset}", offset, month_count }
+            //         }
+            //     }
+            // }
         }
     }
 }
@@ -426,5 +426,4 @@ mod tests {
         assert!(html.contains("11"));
         assert!(html.contains("Show Calendar"));
     }
-
 }
