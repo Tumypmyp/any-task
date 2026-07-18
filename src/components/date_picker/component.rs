@@ -233,9 +233,9 @@ pub(crate) fn DatePickerInput(props: DatePickerInputProps) -> Element {
                 on_format_month_placeholder: props.on_format_month_placeholder,
                 on_format_year_placeholder: props.on_format_year_placeholder,
                 DatePickerYearSegment {}
-                // DatePickerSeparator { symbol: '.' }
+                DatePickerSeparator { symbol: '.' }
                 DatePickerMonthSegment {}
-                // DatePickerSeparator { symbol: '.' }
+                DatePickerSeparator { symbol: '.' }
                 DatePickerDaySegment {}
             }
             if let Some(extra_children) = extra_children {

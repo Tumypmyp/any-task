@@ -16,6 +16,6 @@ pub fn DateValue(data: ReadSignal<prost_types::Value>) -> Element {
         _ => None,
     });
     rsx! {
-        DatePicker { selected_date, disabled: true, read_only: true }
+        DatePicker { selected_date, read_only: true }
     }
 }
