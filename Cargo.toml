@@ -27,12 +27,8 @@ tonic-prost = "0.14"
 keyring-core = "1.0"
 keyring = { version = "4.1", features = ["cli", "android-native-keyring-store"] }
 zeroize = "1.9"
+[target.'cfg(not(target_os = "android"))'.dependencies]
 arboard = "3.6"
-
-[build-dependencies]
-tonic-prost-build = "0.14"
-protoc-bin-vendored = "3.0"
-
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 time = { version = "0.3.44", features = ["local-offset"] }
 hyper = { version = "1", features = ["full"] }
@@ -45,6 +41,11 @@ form_urlencoded = "1"
 http = "1"
 futures-util = { version = "0.3", default-features = false }
 hyper-util = { version = "0.1", features = ["tokio"] }
+
+
+[build-dependencies]
+tonic-prost-build = "0.14"
+protoc-bin-vendored = "3.0"
 
 # [target.x86_64-pc-windows-gnu]
 # rustflags = ["-L", "native/"]

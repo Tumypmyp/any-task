@@ -22,8 +22,8 @@ pub fn EditView(
         Button {
             variant: ButtonVariant::Secondary,
             onclick: move |_| open.set(true),
+            aria_label: "Edit view",
             Settings2 {}
-
         }
         Sheet { open: open(), on_open_change: move |v| open.set(v),
             SheetContent {

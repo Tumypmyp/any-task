@@ -19,11 +19,12 @@ pub fn Home() -> Element {
         }
         Spaces {}
         JoinSpace {}
-        ActionHolder { position: Position::Left,
+        Actions { position: Position::Left,
             Button {
                 onclick: move |_| {
                     nav.push(Route::Settings {});
                 },
+                aria_label: "Go to settings",
                 Settings {}
             }
         }

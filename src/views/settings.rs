@@ -33,8 +33,7 @@ pub fn Settings() -> Element {
                 r#"await navigator.clipboard.writeText({text:?});"#
             ))
             .await
-            .map(|r| r.is_ok())
-            .unwrap_or(false);
+            .is_ok();
 
             if copied {
                 message::info("Key was copied to clipboard", "");
@@ -52,8 +51,7 @@ pub fn Settings() -> Element {
                     variant: ButtonVariant::Ghost,
                     onclick: copy_to_clipboard,
                     style: format!(
-                        "width: 100%; padding-right: 2.5rem; box-sizing: border-box; \
-                                                                         word-break: break-all; -webkit-text-security: {};",
+                        "width: 100%; padding-right: 2.5rem; box-sizing: border-box; word-break: break-all; -webkit-text-security: {};",
                         if show() { "none" } else { "disc" },
                     ),
                     "{mnemonic}"
@@ -62,6 +60,6 @@ pub fn Settings() -> Element {
             }
             Logout {}
         }
-        ActionHolder { BaseActions {} }
+        Actions { GoBack {} }
     }
 }
