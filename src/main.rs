@@ -11,7 +11,6 @@ use dioxus_desktop;
 use dioxus_desktop::wry::dpi::PhysicalSize;
 use dioxus_desktop::{Config, WindowBuilder};
 use dioxus_router::components::{HistoryProvider, Router};
-use std::env;
 use std::path::PathBuf;
 use views::home::*;
 
@@ -53,6 +52,10 @@ enum Route {
             Space { space_id: String },
             #[route("/list/:list_id")]
             List { space_id: String, list_id: String },
+        #[end_layout]
+    #[end_nest]
+    #[route("/settings")]
+    Settings {},
 }
 
 #[cfg_attr(feature = "bundle", windows_subsystem = "windows")]

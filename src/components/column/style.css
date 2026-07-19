@@ -1,10 +1,22 @@
 .column {
-  display: flex;
-  box-sizing: border-box;
-  min-width: 0;
-  min-height: 0;
-  /*width: 100%;*/
-  /*height: 100%;*/
-  align-items: stretch;
-  flex-direction: column;
+    display: flex;
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    align-items: stretch;
+    flex-direction: column;
+}
+
+.column[data-position="middle"],
+.column[data-position="middle_x"] {
+    align-items: center;
+}
+
+.column[data-position="middle"],
+.column[data-position="middle_y"] {
+    justify-content: center;
+}
+
+.column[data-position="right"] {
+    align-items: flex-end;
 }

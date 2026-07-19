@@ -90,7 +90,6 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
             all_properties,
             positions: positions_store,
         }
-        ActionHolder { BaseActions {} }
     }
 }
 #[component]

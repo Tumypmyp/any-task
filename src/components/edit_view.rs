@@ -6,6 +6,7 @@ use crate::components::scroll_area::*;
 use crate::components::sheet::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
+use dioxus_icons::lucide::Settings2;
 use dioxus_primitives::scroll_area::ScrollDirection;
 use std::collections::HashMap;
 use std::vec;
@@ -21,7 +22,8 @@ pub fn EditView(
         Button {
             variant: ButtonVariant::Secondary,
             onclick: move |_| open.set(true),
-            "Edit view"
+            Settings2 {}
+
         }
         Sheet { open: open(), on_open_change: move |v| open.set(v),
             SheetContent {

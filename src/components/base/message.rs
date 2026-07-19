@@ -11,10 +11,10 @@ pub fn error_with_description(text: &str, description: &str) -> () {
             .permanent(false),
     );
 }
-pub fn info(text: String, description: String) -> () {
+pub fn info(text: &str, description: &str) -> () {
     let toast_api = use_toast();
     toast_api.info(
-        text,
+        text.to_string(),
         ToastOptions::new()
             .description(description)
             .duration(Duration::from_secs(3))

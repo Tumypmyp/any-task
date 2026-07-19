@@ -2,24 +2,31 @@ use crate::API_CLIENT;
 use crate::Logout;
 use crate::Route;
 use crate::components::action::*;
-use crate::components::button::Button;
-use crate::components::button::ButtonVariant;
-use crate::components::column::Column;
+use crate::components::button::*;
+use crate::components::column::*;
 use crate::components::header::{Header, Title};
 use crate::components::input::*;
-use crate::components::row::RowPosition;
 use crate::components::row::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
+use dioxus_icons::lucide::Settings;
 #[component]
 pub fn Home() -> Element {
+    let nav = navigator();
     rsx! {
         Header {
             Title { title: "Spaces" }
         }
         Spaces {}
         JoinSpace {}
-        ActionHolder { position: Position::Left, Logout {} }
+        ActionHolder { position: Position::Left,
+            Button {
+                onclick: move |_| {
+                    nav.push(Route::Settings {});
+                },
+                Settings {}
+            }
+        }
     }
 }
 #[component]
@@ -46,7 +53,7 @@ fn Spaces() -> Element {
     });
     let spaces = SPACES.read();
     rsx! {
-        Column { style: "align-items: center; gap: 6px;",
+        Column { position: ColumnPosition::Middle, style: "gap: 6px;",
             for obj_id in &spaces.order {
                 if let Some(det) = spaces.details.get(obj_id) {
                     SpaceButton {
