@@ -54,6 +54,6 @@ pub fn SpaceLayout(space_id: String) -> Element {
 
     rsx! {
         Outlet::<Route> {}
-
+        BaseActions {}
     }
 }

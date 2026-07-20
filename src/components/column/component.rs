@@ -3,15 +3,20 @@ use dioxus::prelude::*;
 pub enum ColumnPosition {
     #[default]
     Left,
-    Middle,
     Right,
+    Middle,  // both axes
+    MiddleX, // horizontal
+    MiddleY, // vertical
 }
+
 impl ColumnPosition {
     pub fn as_str(&self) -> &'static str {
         match self {
             ColumnPosition::Left => "left",
-            ColumnPosition::Middle => "middle",
             ColumnPosition::Right => "right",
+            ColumnPosition::Middle => "middle",
+            ColumnPosition::MiddleX => "middle_x",
+            ColumnPosition::MiddleY => "middle_y",
         }
     }
 }

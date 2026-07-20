@@ -1,4 +1,3 @@
-use crate::components::action::{ActionHolder, BaseActions};
 use crate::components::column::*;
 use crate::components::edit_view::*;
 use crate::components::header::{Header, Title};
@@ -90,7 +89,6 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
             all_properties,
             positions: positions_store,
         }
-        ActionHolder { BaseActions {} }
     }
 }
 #[component]

@@ -1,6 +1,7 @@
 use crate::Route;
 use crate::components::button::Button;
 use dioxus::prelude::*;
+use dioxus_icons::lucide::{ArrowLeft, House};
 #[derive(Copy, Clone, PartialEq, Default)]
 #[non_exhaustive]
 pub enum Position {
@@ -17,28 +18,52 @@ impl Position {
     }
 }
 #[component]
-pub fn ActionHolder(#[props(default)] position: Position, children: Element) -> Element {
+pub fn Actions(#[props(default)] position: Position, children: Element) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
-        div { class: "action-holder", "data-position": position.as_str(), {children} }
+        div {
+            class: "action-holder",
+            "data-position": position.as_str(),
+            style: "gap: 30px;",
+            {children}
+        }
     }
 }
 #[component]
 pub fn BaseActions() -> Element {
+    rsx! {
+        Actions {
+            GoHome {}
+            GoBack {}
+        }
+    }
+}
+
+#[component]
+pub fn GoHome() -> Element {
     let nav = navigator();
     rsx! {
         Button {
             onclick: move |_| {
                 nav.push(Route::Home {});
             },
-            "Home"
+            aria_label: "Go to home",
+            House {}
         }
+    }
+}
+
+#[component]
+pub fn GoBack() -> Element {
+    let nav = navigator();
+    rsx! {
         if nav.can_go_back() {
             Button {
                 onclick: move |_| {
                     nav.go_back();
                 },
-                "Back"
+                aria_label: "Go back",
+                ArrowLeft {}
             }
         }
     }

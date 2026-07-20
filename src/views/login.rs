@@ -7,6 +7,7 @@ use crate::components::column::*;
 use crate::components::header::{Header, Title};
 use crate::components::input::Input;
 use crate::components::row::*;
+use crate::components::show_hide_button::ShowHideButton;
 use crate::helpers::api_client::Client;
 use crate::helpers::*;
 use crate::mnemonic_store::*;
@@ -108,7 +109,7 @@ pub struct MnemonicInputProps {
 #[component]
 pub fn MnemonicInput(props: MnemonicInputProps) -> Element {
     let mut mnemonic = use_signal(|| String::new());
-    let mut show = use_signal(|| false);
+    let show: Signal<bool> = use_signal(|| false);
 
     let on_submit = props.on_submit;
 
@@ -135,18 +136,8 @@ pub fn MnemonicInput(props: MnemonicInputProps) -> Element {
                 },
                 disabled: props.loading,
             }
-            button {
-                r#type: "button",
-                style: "position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; display: flex; align-items: center; color: inherit; padding: 0;",
-                onclick: move |_| show.toggle(),
-                aria_label: if show() { "Hide mnemonic" } else { "Show mnemonic" },
-                if show() {
-                    EyeOff { size: "1rem" }
-                } else {
-                    Eye { size: "1rem" }
-                }
-            }
-        }
+            ShowHideButton { show }
+       }
         Button {
             onclick: move |_| try_submit(()),
             disabled: props.loading,
