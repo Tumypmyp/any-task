@@ -63,6 +63,15 @@ pub enum SplitDirection {
 }
 
 impl TileTree {
+    fn next_id(&self) -> NodeId {
+        let max_val = self
+            .nodes
+            .keys()
+            .map(|node_id| node_id.0)
+            .max()
+            .unwrap_or(0);
+        NodeId(max_val + 1)
+    }
     fn generate_2_ids(&self) -> (NodeId, NodeId) {
         let max_val = self
             .nodes
@@ -150,44 +159,55 @@ impl TileTree {
             },
         );
     }
-    pub fn add_up(&mut self, node_id: NodeId) -> () {
-        let (id_first, id_second) = self.generate_2_ids();
-        let Node::Pane {
-            parent,
-            relation_key,
-        } = self
+    pub fn add_up(&mut self, node_id: NodeId) {
+        let parent = self
             .nodes
             .get(&node_id)
-            .expect("parent node dissapered from tree")
-            .clone()
-        else {
-            return;
-        };
+            .expect("node disappeared from tree")
+            .parent();
+
+        let (new_split_id, new_pane_id) = self.generate_2_ids();
+
         self.nodes.insert(
-            id_first,
+            new_pane_id,
             Node::Pane {
-                parent: Some(node_id),
-                relation_key: RelationKey::default(),
+                parent: Some(new_split_id),
+                relation_key: RelationKey::empty(),
             },
         );
+
         self.nodes.insert(
-            id_second,
-            Node::Pane {
-                parent: Some(node_id),
-                relation_key,
-            },
-        );
-        self.nodes.insert(
-            node_id,
+            new_split_id,
             Node::Split {
                 parent,
                 direction: SplitDirection::Column,
                 ratio: 0.5,
-                first: id_first,
-                second: id_second,
+                first: new_pane_id,
+                second: node_id,
             },
         );
+
+        self.nodes
+            .get_mut(&node_id)
+            .unwrap()
+            .set_parent(Some(new_split_id));
+
+        match parent {
+            Some(parent_id) => {
+                if let Some(Node::Split { first, second, .. }) = self.nodes.get_mut(&parent_id) {
+                    if *first == node_id {
+                        *first = new_split_id;
+                    } else if *second == node_id {
+                        *second = new_split_id;
+                    }
+                }
+            }
+            None => {
+                self.root = new_split_id;
+            }
+        }
     }
+
     pub fn add_down(&mut self, node_id: NodeId) -> () {
         let (id_first, id_second) = self.generate_2_ids();
         let Node::Pane {
@@ -288,4 +308,21 @@ pub struct SpaceDetails {
     pub name: String,
     pub icon_image: String,
     pub description: String,
+}
+
+#[derive(Clone, PartialEq, Debug, Default)]
+pub struct NewPaneDrag {
+    pub is_dragging: bool,
+    pub cursor_x: f64,
+    pub cursor_y: f64,
+    pub hover_node: Option<NodeId>,
+    pub drop_zone: Option<DropZone>,
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub enum DropZone {
+    Top,
+    Bottom,
+    Left,
+    Right,
 }

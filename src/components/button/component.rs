@@ -68,6 +68,7 @@ pub fn Button(
     attributes: Vec<Attribute>,
     onclick: Option<EventHandler<MouseEvent>>,
     onmousedown: Option<EventHandler<MouseEvent>>,
+    onpointerdown: Option<EventHandler<PointerEvent>>,
     onmouseup: Option<EventHandler<MouseEvent>>,
     onkeydown: Option<EventHandler<KeyboardEvent>>,
     children: Element,
@@ -83,6 +84,11 @@ pub fn Button(
         button {
             onclick: move |event| {
                 if let Some(f) = &onclick {
+                    f.call(event);
+                }
+            },
+            onpointerdown: move |event| {
+                if let Some(f) = &onpointerdown {
                     f.call(event);
                 }
             },
