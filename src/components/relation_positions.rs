@@ -343,8 +343,7 @@ fn PaneDropZones(id: NodeId, mut new_pane_drag: Signal<NewPaneDrag>) -> Element 
             div {
                 key: "hit-{zone:?}",
                 style: format!(
-                    "position: absolute; inset: 0; z-index: 51; \
-                                         clip-path: {}; pointer-events: all;",
+                    "position: absolute; inset: 0; z-index: 51; clip-path: {}; pointer-events: all;",
                     tri_clip,
                 ),
                 onpointerenter: move |_| {
@@ -352,16 +351,20 @@ fn PaneDropZones(id: NodeId, mut new_pane_drag: Signal<NewPaneDrag>) -> Element 
                     s.hover_node = Some(id);
                     s.drop_zone = Some(zone.clone());
                 },
+                onpointerleave: move |_| {
+                    let mut s = new_pane_drag.write();
+                    if s.hover_node == Some(id) && s.drop_zone == Some(zone.clone()) {
+                        s.hover_node = None;
+                        s.drop_zone = None;
+                    }
+                },
             }
         }
         for (zone, _tri_clip, rect_clip) in ZONES {
             div {
                 key: "vis-{zone:?}",
                 style: format!(
-                    "position: absolute; inset: 0; z-index: 50; \
-                                         clip-path: {}; pointer-events: none; \
-                                         background-color: var(--secondary-color-5); \
-                                         opacity: {};",
+                    "position: absolute; inset: 0; z-index: 50; clip-path: {}; pointer-events: none; background-color: var(--secondary-color-5); opacity: {};",
                     rect_clip,
                     if is_active(zone.clone()) { "0.5" } else { "0" },
                 ),
