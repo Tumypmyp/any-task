@@ -69,6 +69,9 @@ pub fn Button(
     onclick: Option<EventHandler<MouseEvent>>,
     onmousedown: Option<EventHandler<MouseEvent>>,
     onpointerdown: Option<EventHandler<PointerEvent>>,
+    onpointerenter: Option<EventHandler<PointerEvent>>,
+    onpointerleave: Option<EventHandler<PointerEvent>>,
+    onpointerup: Option<EventHandler<PointerEvent>>,
     onmouseup: Option<EventHandler<MouseEvent>>,
     onkeydown: Option<EventHandler<KeyboardEvent>>,
     children: Element,
@@ -84,6 +87,21 @@ pub fn Button(
         button {
             onclick: move |event| {
                 if let Some(f) = &onclick {
+                    f.call(event);
+                }
+            },
+            onpointerenter: move |event| {
+                if let Some(f) = &onpointerenter {
+                    f.call(event);
+                }
+            },
+            onpointerleave: move |event| {
+                if let Some(f) = &onpointerleave {
+                    f.call(event);
+                }
+            },
+            onpointerup: move |event| {
+                if let Some(f) = &onpointerup {
                     f.call(event);
                 }
             },

@@ -1,4 +1,5 @@
 use crate::protos::anytype_model::*;
+use anyhow::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -81,17 +82,25 @@ impl TileTree {
             .unwrap_or(0);
         (NodeId(max_val + 1), NodeId(max_val + 2))
     }
-    pub fn remove_node(&mut self, node_id: NodeId) {
-        let parent_id = match self
+    pub fn clean(&mut self) -> () {
+        self.root = NodeId(0);
+        self.nodes.clear();
+        self.nodes.insert(
+            NodeId(0),
+            Node::Pane {
+                parent: None,
+                relation_key: RelationKey("name".to_string()),
+            },
+        );
+    }
+    pub fn remove_node(&mut self, node_id: NodeId) -> Result<()> {
+        let parent_id = self
             .nodes
-            .remove(&node_id)
-            .expect("node should exist")
+            .get(&node_id)
+            .context("node not found")?
             .parent()
-        {
-            Some(p) => p,
-            None => return,
-        };
-
+            .context("node is the root (has no parent)")?;
+        self.nodes.remove(&node_id);
         let (first, second, grand_parent) = match self.nodes.remove(&parent_id) {
             Some(Node::Split {
                 first,
@@ -99,7 +108,7 @@ impl TileTree {
                 parent,
                 ..
             }) => (first, second, parent),
-            _ => return,
+            _ => anyhow::bail!("parent node {parent_id:?} is not a Split node"),
         };
 
         let sibling_id = if node_id == first { second } else { first };
@@ -108,97 +117,88 @@ impl TileTree {
             sibling.set_parent(grand_parent);
         }
 
-        let Some(gp_id) = grand_parent else {
-            self.root = sibling_id;
-            return;
-        };
-        if let Some(Node::Split { first, second, .. }) = self.nodes.get_mut(&gp_id) {
-            if *first == parent_id {
-                *first = sibling_id;
-            } else if *second == parent_id {
-                *second = sibling_id;
+        match grand_parent {
+            None => self.root = sibling_id,
+            Some(gp_id) => {
+                if let Some(Node::Split { first, second, .. }) = self.nodes.get_mut(&gp_id) {
+                    if *first == parent_id {
+                        *first = sibling_id;
+                    } else if *second == parent_id {
+                        *second = sibling_id;
+                    }
+                }
             }
         }
+
+        Ok(())
     }
 
-    pub fn add_right(&mut self, node_id: NodeId) -> () {
-        let (id_first, id_second) = self.generate_2_ids();
-        let Node::Pane {
-            parent,
-            relation_key,
-        } = self
-            .nodes
-            .get(&node_id)
-            .expect("current node dissapered from tree")
-            .clone()
-        else {
-            return;
+    pub fn add_pane_at(&mut self, node_id: NodeId, zone: DropZone, key: RelationKey) {
+        let direction = match zone {
+            DropZone::Top | DropZone::Bottom => SplitDirection::Column,
+            DropZone::Left | DropZone::Right => SplitDirection::Row,
         };
-        self.nodes.insert(
-            id_second,
-            Node::Pane {
-                parent: Some(node_id),
-                relation_key: RelationKey::default(),
-            },
-        );
-        self.nodes.insert(
-            node_id,
-            Node::Split {
-                parent: parent,
-                direction: SplitDirection::Row,
-                ratio: 0.5,
-                first: id_first,
-                second: id_second,
-            },
-        );
-        self.nodes.insert(
-            id_first,
-            Node::Pane {
-                parent: Some(node_id),
-                relation_key,
-            },
-        );
-    }
-    pub fn add_up(&mut self, node_id: NodeId) {
-        let parent = self
-            .nodes
-            .get(&node_id)
-            .expect("node disappeared from tree")
-            .parent();
+        let first_is_new = matches!(zone, DropZone::Top | DropZone::Left);
 
-        let (new_split_id, new_pane_id) = self.generate_2_ids();
-
+        let new_pane_id = self.next_id();
         self.nodes.insert(
             new_pane_id,
             Node::Pane {
-                parent: Some(new_split_id),
-                relation_key: RelationKey::empty(),
+                parent: None, // will be set below
+                relation_key: key,
             },
         );
+
+        let new_split_id = self.next_id();
+        let (first, second) = if first_is_new {
+            (new_pane_id, node_id)
+        } else {
+            (node_id, new_pane_id)
+        };
+
+        // find parent of node_id
+        let parent = self.nodes.get(&node_id).and_then(|n| match n {
+            Node::Pane { parent, .. } | Node::Split { parent, .. } => *parent,
+        });
 
         self.nodes.insert(
             new_split_id,
             Node::Split {
                 parent,
-                direction: SplitDirection::Column,
+                direction,
                 ratio: 0.5,
-                first: new_pane_id,
-                second: node_id,
+                first,
+                second,
             },
         );
 
-        self.nodes
-            .get_mut(&node_id)
-            .unwrap()
-            .set_parent(Some(new_split_id));
+        // update children's parent pointer
+        if let Some(n) = self.nodes.get_mut(&new_pane_id) {
+            if let Node::Pane { parent: p, .. } = n {
+                *p = Some(new_split_id);
+            }
+        }
+        if let Some(n) = self.nodes.get_mut(&node_id) {
+            match n {
+                Node::Pane { parent: p, .. } | Node::Split { parent: p, .. } => {
+                    *p = Some(new_split_id)
+                }
+            }
+        }
 
+        // update grandparent or root
         match parent {
-            Some(parent_id) => {
-                if let Some(Node::Split { first, second, .. }) = self.nodes.get_mut(&parent_id) {
-                    if *first == node_id {
-                        *first = new_split_id;
-                    } else if *second == node_id {
-                        *second = new_split_id;
+            Some(gp_id) => {
+                if let Some(Node::Split {
+                    first: f,
+                    second: s,
+                    ..
+                }) = self.nodes.get_mut(&gp_id)
+                {
+                    if *f == node_id {
+                        *f = new_split_id;
+                    } else if *s == node_id {
+                        *s = new_split_id;
                     }
                 }
             }
@@ -206,83 +206,6 @@ impl TileTree {
                 self.root = new_split_id;
             }
         }
-    }
-
-    pub fn add_down(&mut self, node_id: NodeId) -> () {
-        let (id_first, id_second) = self.generate_2_ids();
-        let Node::Pane {
-            parent,
-            relation_key,
-        } = self
-            .nodes
-            .get(&node_id)
-            .expect("parent node dissapered from tree")
-            .clone()
-        else {
-            return;
-        };
-        self.nodes.insert(
-            id_second,
-            Node::Pane {
-                parent: Some(node_id),
-                relation_key: RelationKey::default(),
-            },
-        );
-        self.nodes.insert(
-            id_first,
-            Node::Pane {
-                parent: Some(node_id),
-                relation_key,
-            },
-        );
-        self.nodes.insert(
-            node_id,
-            Node::Split {
-                parent,
-                direction: SplitDirection::Column,
-                ratio: 0.5,
-                first: id_first,
-                second: id_second,
-            },
-        );
-    }
-    pub fn add_left(&mut self, node_id: NodeId) -> () {
-        let (id_first, id_second) = self.generate_2_ids();
-        let Node::Pane {
-            parent,
-            relation_key,
-        } = self
-            .nodes
-            .get(&node_id)
-            .expect("parent node dissapered from tree")
-            .clone()
-        else {
-            return;
-        };
-        self.nodes.insert(
-            id_first,
-            Node::Pane {
-                parent: Some(node_id),
-                relation_key: RelationKey::default(),
-            },
-        );
-        self.nodes.insert(
-            id_second,
-            Node::Pane {
-                parent: Some(node_id),
-                relation_key,
-            },
-        );
-        self.nodes.insert(
-            node_id,
-            Node::Split {
-                parent,
-                direction: SplitDirection::Row,
-                ratio: 0.5,
-                first: id_first,
-                second: id_second,
-            },
-        );
     }
 }
 
@@ -317,6 +240,9 @@ pub struct NewPaneDrag {
     pub cursor_y: f64,
     pub hover_node: Option<NodeId>,
     pub drop_zone: Option<DropZone>,
+    pub dragging_node: Option<NodeId>,
+    pub dragging_key: Option<RelationKey>,
+    pub hover_delete: bool,
 }
 
 #[derive(Clone, PartialEq, Debug)]

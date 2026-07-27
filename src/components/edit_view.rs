@@ -6,6 +6,7 @@ use crate::components::scroll_area::*;
 use crate::components::sheet::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
+use dioxus_icons::lucide::Plus;
 use dioxus_icons::lucide::Settings2;
 use dioxus_icons::lucide::SquarePlus;
 use dioxus_icons::lucide::Trash2;
@@ -23,14 +24,27 @@ pub fn EditView(
     let mut delete_mode = use_signal(|| false);
     let mut new_pane_drag: Signal<NewPaneDrag> = use_signal(NewPaneDrag::default);
     use_context_provider(|| new_pane_drag);
+    let on_move = move |e: PointerEvent| {
+        if new_pane_drag.read().is_dragging {
+            let pos = e.client_coordinates();
+            spawn(async move {
+                document::eval(&format!(
+                    r#"const g=document.querySelector('[data-drag-ghost]');if(g){{g.style.left='{}px';g.style.top='{}px';}}"#,
+                    pos.x, pos.y
+                )).await.ok();
+            });
+        }
+    };
     rsx! {
         if new_pane_drag().is_dragging {
             div {
                 "data-drag-ghost": "",
-                style: "position: fixed; width: 32px; height: 32px; \
-                            background: var(--primary-color); opacity: 0.8; \
+                style: "position: fixed; width: 45px; height: 32px; \
+                            background: var(--secondary-color); opacity: 0.5; \
                             border-radius: 6px; pointer-events: none; z-index: 9999; \
                             transform: translate(-50%, -50%);",
+                Plus {}
+
             }
         }
         Button {
@@ -48,33 +62,30 @@ pub fn EditView(
                 }
             },
             div {
-                onpointermove: move |e: PointerEvent| {
-                    if new_pane_drag.read().is_dragging {
-                        let x = e.client_coordinates().x;
-                        let y = e.client_coordinates().y;
-                        spawn(async move {
-                            document::eval(
-                                    &format!(
-                                        r#"const g = document.querySelector('[data-drag-ghost]');
-                                                                                                                           if (g) {{ g.style.left = '{x}px'; g.style.top = '{y}px'; }}"#,
-                                    ),
-                                )
-                                .await
-                                .ok();
-                        });
-                    }
-                },
+                onpointermove: on_move,
                 onpointerup: move |_| {
                     let state = new_pane_drag.read().clone();
                     if state.is_dragging {
-                        if let (Some(node_id), Some(zone)) = (state.hover_node, state.drop_zone) {
-                            positions
-                                .with_mut(|p| match zone {
-                                    DropZone::Top => p.add_up(node_id),
-                                    DropZone::Bottom => p.add_down(node_id),
-                                    DropZone::Left => p.add_left(node_id),
-                                    DropZone::Right => p.add_right(node_id),
-                                });
+                        match (
+                            state.hover_delete,
+                            state.hover_node,
+                            state.drop_zone,
+                            state.dragging_key,
+                        ) {
+                            (true, _, _, _) => {
+                                tracing::debug!("pane dropped on delete button, discarding");
+                            }
+                            (false, Some(node_id), Some(zone), key) => {
+                                positions
+                                    .with_mut(|p| match (key, zone) {
+                                        (Some(key), z) => p.add_pane_at(node_id, z, key),
+                                        (None, z) => p.add_pane_at(node_id, z, RelationKey::empty()),
+                                    });
+                            }
+                            (false, _, _, Some(key)) => {
+                                positions.with_mut(|p| p.add_pane_at(p.root, DropZone::Right, key));
+                            }
+                            _ => {}
                         }
                         *new_pane_drag.write() = NewPaneDrag::default();
                     }
@@ -83,49 +94,59 @@ pub fn EditView(
                 SheetContent {
                     side: SheetSide::Bottom,
                     style: "min-height: 50vh; max-height: 80vh;",
-                    ScrollArea {
-                        direction: ScrollDirection::Vertical,
-                        style: "overflow: hidden auto; overscroll-behavior: contain; \
-                                    min-height: 50vh; max-height: 70vh;",
-                        Column {
-                            Row { position: RowPosition::Middle,
-                                Button {
-                                    style: "touch-action: none;", // prevents browser scroll on touch before handler runs
-                                    "data-drag-btn": "",
-                                    onpointerdown: move |e: PointerEvent| {
-                                        e.prevent_default(); // prevents scroll on pointer drag
-                                        e.stop_propagation();
-                                        delete_mode.set(false);
-                                        new_pane_drag.write().is_dragging = true;
+                    Column {
+                        Row { position: RowPosition::Middle,
+                            Button {
+                                style: "touch-action: none;", // prevents browser scroll on touch before handler runs
+                                "data-drag-btn": "",
+                                disabled: new_pane_drag().is_dragging,
+                                onpointerdown: move |e: PointerEvent| {
+                                    e.prevent_default(); // prevents scroll on pointer drag
+                                    e.stop_propagation();
+                                    delete_mode.set(false);
+                                    new_pane_drag.write().is_dragging = true;
 
-                                        let pointer_id = e.pointer_id();
-                                        spawn(async move {
-                                            document::eval(
-                                                    &format!(
-                                                        r#"document.querySelector('[data-drag-btn]')?.releasePointerCapture({pointer_id});"#,
-                                                    ),
-                                                )
-                                                .await
-                                                .ok();
-                                        });
-                                    },
+                                    let pointer_id = e.pointer_id();
+                                    spawn(async move {
+                                        document::eval(
+                                                &format!(
+                                                    r#"document.querySelector('[data-drag-btn]')?.releasePointerCapture({pointer_id});"#,
+                                                ),
+                                            )
+                                            .await
+                                            .ok();
+                                    });
+                                },
 
-                                    aria_label: "Add new relation",
-                                    SquarePlus {}
-                                }
-                                Button {
-                                    onclick: move |_| delete_mode.toggle(),
-                                    aria_label: "Delete mode",
-                                    Trash2 {}
-                                }
-                                RelationPositionsCleaner { positions }
+                                aria_label: "Add new relation",
+                                SquarePlus {}
                             }
-                            RelationPositionsEditor {
-                                id: positions().root,
-                                delete_mode,
-                                positions,
-                                all_properties,
+                            Button {
+                                variant: if new_pane_drag().hover_delete && new_pane_drag().is_dragging { ButtonVariant::Destructive } else { ButtonVariant::Primary },
+                                onclick: move |_| {
+                                    if !new_pane_drag.read().is_dragging {
+                                        delete_mode.toggle();
+                                    }
+                                },
+                                onpointerenter: move |_| {
+                                    if new_pane_drag.read().is_dragging {
+                                        new_pane_drag.write().hover_delete = true;
+                                    }
+                                },
+                                onpointerleave: move |_| {
+                                    new_pane_drag.write().hover_delete = false;
+                                },
+                                aria_label: "Delete mode",
+                                Trash2 {}
                             }
+                            RelationPositionsCleaner { positions }
+                        }
+                        RelationPositionsEditor {
+                            id: positions().root,
+                            delete_mode,
+                            positions,
+                            all_properties,
+
                         }
                     }
                 }
