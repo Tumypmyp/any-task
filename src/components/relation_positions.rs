@@ -51,7 +51,6 @@ pub fn RelationPositionsEditor(
     match node {
         Node::Split {
             direction,
-            ratio,
             first,
             second,
             ..
@@ -248,7 +247,7 @@ pub fn Property(
     rsx! {
         div { style: "position: relative; display: flex; width: 100%; align-items: center;",
             div {
-                style: "cursor: grab; padding: 0 4px; touch-action: none; flex-shrink: 0;",
+                style: "cursor: grab; padding: 0 4px; touch-action: none; flex-shrink: 0; color: var(--secondary-color);",
                 "data-pane-drag-handle": "",
                 onpointerdown: move |e: PointerEvent| {
                     e.prevent_default();
@@ -290,7 +289,6 @@ pub fn Property(
                 GripVertical {}
             }
             div { style: "flex: 1; display: flex; justify-content: center; min-width: 0;",
-
                 Combobox::<RelationKey> {
                     value: Some(current_relation.into()),
                     query: Some(query()),

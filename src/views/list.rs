@@ -1,10 +1,13 @@
+use crate::components::button::*;
 use crate::components::column::*;
 use crate::components::edit_view::*;
 use crate::components::header::{Header, Title};
 use crate::components::object::*;
+use crate::components::row::*;
 use crate::components::select::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
+use dioxus_icons::lucide::Settings2;
 use dioxus_sdk_storage::LocalStorage;
 use dioxus_sdk_storage::use_synced_storage;
 use std::collections::HashMap;
@@ -100,11 +103,23 @@ pub fn ListHeader(
     all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
     let name = SET_META.read().name.clone();
+    let mut open = use_signal(|| false);
     rsx! {
-        Header {
-            Title { title: "{name}" }
-            Views { list_id, space_id }
+
+        Column {
+            Row {
+                Title { title: "{name}" }
+                Views { list_id, space_id }
+
+                Button {
+                    variant: ButtonVariant::Secondary,
+                    onclick: move |_| open.toggle(),
+                    aria_label: "Edit view",
+                    Settings2 {}
+                }
+            }
             EditView {
+                open,
                 space_id,
                 list_id,
                 positions,
