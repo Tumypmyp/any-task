@@ -105,17 +105,19 @@ pub fn ListHeader(
     let name = SET_META.read().name.clone();
     let mut open = use_signal(|| false);
     rsx! {
-
         Column {
             Row {
-                Title { title: "{name}" }
-                Views { list_id, space_id }
-
-                Button {
-                    variant: ButtonVariant::Secondary,
-                    onclick: move |_| open.toggle(),
-                    aria_label: "Edit view",
-                    Settings2 {}
+                Row { position: RowPosition::Middle,
+                    Title { title: "{name}" }
+                }
+                Row { position: RowPosition::Right,
+                    Views { list_id, space_id }
+                    Button {
+                        variant: ButtonVariant::Secondary,
+                        onclick: move |_| open.toggle(),
+                        aria_label: "Edit view",
+                        Settings2 {}
+                    }
                 }
             }
             EditView {

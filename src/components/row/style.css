@@ -3,7 +3,7 @@
   box-sizing: border-box;
   min-width: 0;
   min-height: 0;
-  /*width: 100%;*/
+  width: 100%;
   align-items: stretch;
   flex-direction: row;
 }

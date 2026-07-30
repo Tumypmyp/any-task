@@ -236,8 +236,6 @@ pub struct SpaceDetails {
 #[derive(Clone, PartialEq, Debug, Default)]
 pub struct NewPaneDrag {
     pub is_dragging: bool,
-    pub cursor_x: f64,
-    pub cursor_y: f64,
     pub hover_node: Option<NodeId>,
     pub drop_zone: Option<DropZone>,
     pub dragging_node: Option<NodeId>,
@@ -245,7 +243,7 @@ pub struct NewPaneDrag {
     pub hover_delete: bool,
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum DropZone {
     Top,
     Bottom,

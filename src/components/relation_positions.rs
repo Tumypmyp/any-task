@@ -1,7 +1,6 @@
 use crate::components::button::*;
-use crate::components::column::*;
 use crate::components::combobox::*;
-use crate::components::label::*;
+use crate::components::drop_zone::Dropzone;
 use crate::components::row::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
@@ -147,13 +146,6 @@ pub fn RelationPositionsEditor(
                     };
                     let new_ratio = new_ratio.clamp(0.05, 0.95) as f32;
                     live_ratio.set(new_ratio);
-                }
-
-                if new_pane_drag.read().is_dragging {
-                    let pos = e.client_coordinates();
-                    let mut state = new_pane_drag.write();
-                    state.cursor_x = pos.x;
-                    state.cursor_y = pos.y;
                 }
             };
 
@@ -359,20 +351,18 @@ fn PaneDropZones(id: NodeId, mut new_pane_drag: Signal<NewPaneDrag>) -> Element 
 
     rsx! {
         for (zone, tri_clip, _rect_clip) in ZONES {
-            div {
+            Dropzone {
                 key: "hit-{zone:?}",
-                style: format!(
-                    "position: absolute; inset: 0; z-index: 51; clip-path: {}; pointer-events: all;",
-                    tri_clip,
-                ),
+                style: format!("inset: 0; clip-path: {tri_clip}; z-index: 51;"),
+                dragging: true,
                 onpointerenter: move |_| {
                     let mut s = new_pane_drag.write();
                     s.hover_node = Some(id);
-                    s.drop_zone = Some(zone.clone());
+                    s.drop_zone = Some(*zone);
                 },
                 onpointerleave: move |_| {
                     let mut s = new_pane_drag.write();
-                    if s.hover_node == Some(id) && s.drop_zone == Some(zone.clone()) {
+                    if s.hover_node == Some(id) && s.drop_zone == Some(*zone) {
                         s.hover_node = None;
                         s.drop_zone = None;
                     }
@@ -380,13 +370,11 @@ fn PaneDropZones(id: NodeId, mut new_pane_drag: Signal<NewPaneDrag>) -> Element 
             }
         }
         for (zone, _tri_clip, rect_clip) in ZONES {
-            div {
+            Dropzone {
                 key: "vis-{zone:?}",
-                style: format!(
-                    "position: absolute; inset: 0; z-index: 50; clip-path: {}; pointer-events: none; background-color: var(--secondary-color-5); opacity: {};",
-                    rect_clip,
-                    if is_active(zone.clone()) { "0.5" } else { "0" },
-                ),
+                style: format!("inset: 0; clip-path: {rect_clip}; pointer-events: none;"),
+                active: is_active(*zone),
+                dragging: false,
             }
         }
     }

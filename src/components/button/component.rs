@@ -68,12 +68,12 @@ pub fn Button(
     attributes: Vec<Attribute>,
     onclick: Option<EventHandler<MouseEvent>>,
     onmousedown: Option<EventHandler<MouseEvent>>,
-    onpointerdown: Option<EventHandler<PointerEvent>>,
+    onmouseup: Option<EventHandler<MouseEvent>>,
+    onkeydown: Option<EventHandler<KeyboardEvent>>,
     onpointerenter: Option<EventHandler<PointerEvent>>,
     onpointerleave: Option<EventHandler<PointerEvent>>,
     onpointerup: Option<EventHandler<PointerEvent>>,
-    onmouseup: Option<EventHandler<MouseEvent>>,
-    onkeydown: Option<EventHandler<KeyboardEvent>>,
+    onpointerdown: Option<EventHandler<PointerEvent>>,
     children: Element,
 ) -> Element {
     let base = attributes!(button {
@@ -85,11 +85,6 @@ pub fn Button(
 
     rsx! {
         button {
-            onclick: move |event| {
-                if let Some(f) = &onclick {
-                    f.call(event);
-                }
-            },
             onpointerenter: move |event| {
                 if let Some(f) = &onpointerenter {
                     f.call(event);
@@ -100,13 +95,18 @@ pub fn Button(
                     f.call(event);
                 }
             },
+            onpointerdown: move |event| {
+                if let Some(f) = &onpointerdown {
+                    f.call(event);
+                }
+            },
             onpointerup: move |event| {
                 if let Some(f) = &onpointerup {
                     f.call(event);
                 }
             },
-            onpointerdown: move |event| {
-                if let Some(f) = &onpointerdown {
+            onclick: move |event| {
+                if let Some(f) = &onclick {
                     f.call(event);
                 }
             },

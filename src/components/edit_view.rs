@@ -1,4 +1,7 @@
 use crate::components::button::*;
+
+use crate::components::drop_zone::Dropzone;
+
 use crate::components::column::*;
 use crate::components::relation_positions::*;
 use crate::components::row::*;
@@ -118,7 +121,16 @@ pub fn EditView(
                             aria_label: "Delete mode",
                             Trash2 {}
                         }
-                        RelationPositionsCleaner { positions }
+                        Row { position: RowPosition::Right,
+
+                            RelationPositionsCleaner { positions }
+                        }
+                    }
+
+                    RootDropZone {
+                        positions,
+                        new_pane_drag,
+                        zone: DropZone::Top,
                     }
                     RelationPositionsEditor {
                         id: positions().root,
@@ -126,8 +138,47 @@ pub fn EditView(
                         positions,
                         all_properties,
                     }
+                    RootDropZone {
+                        positions,
+                        new_pane_drag,
+                        zone: DropZone::Bottom,
+                    }
                 }
             }
+        }
+    }
+}
+#[component]
+fn RootDropZone(
+    positions: Store<TileTree>,
+    mut new_pane_drag: Signal<NewPaneDrag>,
+    zone: DropZone,
+) -> Element {
+    let root_id = positions().root;
+    let dragging = new_pane_drag().is_dragging;
+    let is_active = dragging
+        && new_pane_drag().hover_node == Some(root_id)
+        && new_pane_drag().drop_zone == Some(zone);
+
+    rsx! {
+        Dropzone {
+            style: "position: relative; height: 15px; width: 100%; flex-shrink: 0;",
+            active: is_active,
+            dragging,
+            onpointerenter: move |_| {
+                if new_pane_drag.read().is_dragging {
+                    let mut s = new_pane_drag.write();
+                    s.hover_node = Some(root_id);
+                    s.drop_zone = Some(zone);
+                }
+            },
+            onpointerleave: move |_| {
+                let mut s = new_pane_drag.write();
+                if s.hover_node == Some(root_id) && s.drop_zone == Some(zone) {
+                    s.hover_node = None;
+                    s.drop_zone = None;
+                }
+            },
         }
     }
 }
