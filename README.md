@@ -23,10 +23,11 @@
 - [x] Standalone app (`anytype-heart` library is embedded)
 - [x] Views: Spaces, Lists, Objects
 - [x] Relations: Text, Checkbox, Date, Number, Status, etc.
-- [x] Customize relations appearence in Lists
+- [x] Customize relations in Lists
+- [x] List views
 - [x] Live relation updates
-- [x] Use different List views
 - [x] Open last visited view after app reload
+
 <!--- [ ] Timeline/Calendar view-->
 
 ## Developing
