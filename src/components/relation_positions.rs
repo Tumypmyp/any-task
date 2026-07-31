@@ -1,35 +1,24 @@
 use crate::components::button::*;
-use crate::components::column::*;
 use crate::components::combobox::*;
-use crate::components::label::*;
-use dioxus_html::MountedData;
-use dioxus_html::geometry::PixelsRect;
-use std::collections::HashMap;
-use std::rc::Rc;
+use crate::components::drop_zone::Dropzone;
 use crate::components::row::*;
 use crate::helpers::*;
 use dioxus::prelude::*;
+use dioxus_html::MountedData;
+use dioxus_html::geometry::PixelsRect;
+use dioxus_icons::lucide::GripVertical;
+use dioxus_icons::lucide::X;
+use std::collections::HashMap;
+use std::rc::Rc;
 use std::vec;
 
 #[component]
 pub fn RelationPositionsCleaner(positions: Store<TileTree>) -> Element {
     rsx! {
         Button {
-            variant: ButtonVariant::Destructive,
+            variant: ButtonVariant::Ghost,
             onclick: move |_| {
-                positions
-                    .with_mut(|v| {
-                        v.root = NodeId(0);
-                        v.nodes.clear();
-                        v.nodes
-                            .insert(
-                                NodeId(0),
-                                Node::Pane {
-                                    parent: None,
-                                    relation_key: RelationKey("name".to_string()),
-                                },
-                            );
-                    });
+                positions.write().clean();
             },
             "Clean"
         }
@@ -38,6 +27,7 @@ pub fn RelationPositionsCleaner(positions: Store<TileTree>) -> Element {
 #[component]
 pub fn RelationPositionsEditor(
     id: NodeId,
+    delete_mode: ReadSignal<bool>,
     positions: Store<TileTree>,
     all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
@@ -55,11 +45,11 @@ pub fn RelationPositionsEditor(
         _ => 0.5 as f32,
     };
     let mut live_ratio = use_signal(|| initial_ratio);
+    let mut new_pane_drag = use_context::<Signal<NewPaneDrag>>();
 
     match node {
         Node::Split {
             direction,
-            ratio,
             first,
             second,
             ..
@@ -70,16 +60,33 @@ pub fn RelationPositionsEditor(
                    flex-shrink: 0; z-index: 1; touch-action: none;"
                 }
                 SplitDirection::Column => {
-                    "height: 8px; cursor: row-resize; background: var(--secondary-color-6); \
+                    "height: 2px; cursor: row-resize; background: var(--secondary-color-6); \
                    flex-shrink: 0; z-index: 1; touch-action: none;"
                 }
             };
 
+            let first_flex = match direction {
+                SplitDirection::Row => {
+                    format!("flex: {}; min-width: 0; min-height: 0;", live_ratio())
+                }
+                SplitDirection::Column => "min-width: 0; min-height: 0;".to_string(),
+            };
+            let second_flex = match direction {
+                SplitDirection::Row => format!(
+                    "flex: calc(1 - {}); min-width: 0; min-height: 0;",
+                    live_ratio()
+                ),
+                SplitDirection::Column => "min-width: 0; min-height: 0;".to_string(),
+            };
             let children = rsx! {
                 if positions.read().nodes.contains_key(&first) {
-                    div { style: "flex: {live_ratio}; min-width: 0; min-height: 0;",
-                        // box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
-                        RelationPositionsEditor { id: first, positions, all_properties }
+                    div { style: "{first_flex}",
+                        RelationPositionsEditor {
+                            id: first,
+                            delete_mode,
+                            positions,
+                            all_properties,
+                        }
                     }
                 }
 
@@ -88,10 +95,6 @@ pub fn RelationPositionsEditor(
                     prevent_default: "onpointerdown",
                     onpointerdown: move |e: PointerEvent| {
                         e.stop_propagation();
-                        // tracing::info!("[drag] pointerdown (type={})", e.pointer_type());
-                        // Set dragging=true IMMEDIATELY before the async rect fetch.
-                        // Without this, onpointermove fires while dragging() is still
-                        // false and every move event is silently dropped.
                         dragging.set(true);
 
                         let Some(mounted) = container_mounted.read().clone() else {
@@ -104,10 +107,6 @@ pub fn RelationPositionsEditor(
                         spawn(async move {
                             match mounted.get_client_rect().await {
                                 Ok(rect) => {
-                                    // tracing::info!(
-                                    //     "[drag] rect cached: origin=({:.1},{:.1}) size={:.1}x{:.1}", rect
-                                    //     .origin.x, rect.origin.y, rect.size.width, rect.size.height
-                                    // );
                                     cached_rect.set(Some(rect));
                                 }
                                 Err(e) => {
@@ -120,47 +119,34 @@ pub fn RelationPositionsEditor(
                 }
 
                 if positions.read().nodes.contains_key(&second) {
-                    div { style: "flex: calc(1 - {live_ratio}); min-width: 0; min-height: 0;",
-                        // box-sizing: border-box; box-shadow: inset 0 0 0 1px var(--secondary-color-6);",
-                        RelationPositionsEditor { id: second, positions, all_properties }
+                    div { style: "{second_flex}",
+                        RelationPositionsEditor {
+                            id: second,
+                            delete_mode,
+                            positions,
+                            all_properties,
+                        }
                     }
                 }
             };
 
             let on_pointer_move = move |e: PointerEvent| {
-                if !dragging() {
-                    return;
-                }
-                // Prevent the browser from panning/scrolling the page
-                e.prevent_default();
-                e.stop_propagation();
-                let Some(rect) = cached_rect() else {
-                    // dragging=true but rect not yet fetched — skip this frame
-                    // tracing::info!("[drag] pointermove: waiting for rect...");
-                    return;
-                };
+                if dragging() {
+                    e.prevent_default();
+                    e.stop_propagation();
+                    let Some(rect) = cached_rect() else {
+                        return;
+                    };
 
-                let client_pos = e.client_coordinates();
-                let direction = direction; // copy
-                let new_ratio = match direction {
-                    SplitDirection::Row => (client_pos.x - rect.origin.x) / rect.size.width,
-                    SplitDirection::Column => (client_pos.y - rect.origin.y) / rect.size.height,
-                };
-                let new_ratio = new_ratio.clamp(0.05, 0.95) as f32;
-                live_ratio.set(new_ratio);
-                // tracing::info!(
-                //     "[drag] pointermove: pos=({:.1},{:.1}) → ratio={:.3}",
-                //     client_pos.x,
-                //     client_pos.y,
-                //     new_ratio
-                // );
-                // positions.with_mut(|tree| {
-                //     if let Some(node) = tree.nodes.get_mut(&id) {
-                //         if let Node::Split { ratio, .. } = node {
-                //             *ratio = new_ratio as f32;
-                //         }
-                //     }
-                // });
+                    let client_pos = e.client_coordinates();
+                    let direction = direction; // copy
+                    let new_ratio = match direction {
+                        SplitDirection::Row => (client_pos.x - rect.origin.x) / rect.size.width,
+                        SplitDirection::Column => (client_pos.y - rect.origin.y) / rect.size.height,
+                    };
+                    let new_ratio = new_ratio.clamp(0.05, 0.95) as f32;
+                    live_ratio.set(new_ratio);
+                }
             };
 
             let on_pointer_up = move |e: PointerEvent| {
@@ -172,8 +158,6 @@ pub fn RelationPositionsEditor(
                             *ratio = final_ratio;
                         }
                     });
-
-                    // tracing::info!("[drag] pointerup: drag ended");
                     dragging.set(false);
                     cached_rect.set(None);
                 }
@@ -187,11 +171,10 @@ pub fn RelationPositionsEditor(
             rsx! {
                 div {
                     style: "display: flex; flex-direction: {flex_direction}; \
-                            width: 100%; \
+                            width: 100%; height: 100%; \
                             box-shadow: inset 0 0 0 1px var(--secondary-color-6); \
                             user-select: none;",
                     onmounted: move |e: MountedEvent| {
-                        // tracing::info!("[drag] container mounted");
                         container_mounted.set(Some(e.data()));
                     },
                     onpointermove: on_pointer_move,
@@ -201,14 +184,18 @@ pub fn RelationPositionsEditor(
             }
         }
         Node::Pane { .. } => rsx! {
-            div { style: "display: flex; align-items: center; justify-content: center; \
+            div { style: "position: relative; display: flex; align-items: center; justify-content: center; \
                         width: 100%; height: 100%; min-width: 0; min-height: 0; \
                         box-sizing: border-box;",
                 Property {
                     key: "{id:#?}",
                     id,
+                    delete_mode,
                     positions,
                     all_properties,
+                }
+                if new_pane_drag().is_dragging {
+                    PaneDropZones { id, new_pane_drag }
                 }
             }
         },
@@ -218,6 +205,7 @@ pub fn RelationPositionsEditor(
 pub fn Property(
     id: NodeId,
     positions: Store<TileTree>,
+    delete_mode: ReadSignal<bool>,
     all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
     let mut query = use_signal(String::new);
@@ -227,30 +215,72 @@ pub fn Property(
             _ => None,
         })
     });
-    rsx! {
-        Column {
-            Button {
-                size: ButtonSize::Xs,
-                onclick: move |_| {
-                    positions
-                        .with_mut(|v| {
-                            v.add_up(id);
-                        });
-                },
-                "+"
-            }
+
+    let mut new_pane_drag = use_context::<Signal<NewPaneDrag>>();
+    if delete_mode() {
+        return rsx! {
             Row { position: RowPosition::Middle,
                 Button {
-                    size: ButtonSize::Xs,
-                    style: "align-self: stretch; height: auto;",
+                    variant: ButtonVariant::Destructive,
                     onclick: move |_| {
                         positions
                             .with_mut(|v| {
-                                v.add_left(id);
+                                if let Err(e) = v.remove_node(id) {
+                                    tracing::warn!("Could not remove the node: {e}");
+                                }
                             });
                     },
-                    "+"
+                    aria_label: "Remove",
+                    X {}
                 }
+            }
+        };
+    }
+    rsx! {
+        div { style: "position: relative; display: flex; width: 100%; align-items: center;",
+            div {
+                style: "cursor: grab; padding: 0 4px; touch-action: none; flex-shrink: 0; color: var(--secondary-color);",
+                "data-pane-drag-handle": "",
+                onpointerdown: move |e: PointerEvent| {
+                    e.prevent_default();
+                    e.stop_propagation();
+
+                    let key = positions
+                        .read()
+                        .nodes
+                        .get(&id)
+                        .and_then(|n| match n {
+                            Node::Pane { relation_key, .. } => Some(relation_key.clone()),
+                            _ => None,
+                        });
+                    let Some(key) = key else { // release pointer capture so onpointerenter fires on drop zones
+                        return;
+                    };
+
+                    if let Err(e) = positions.with_mut(|p| p.remove_node(id)) {
+                        tracing::debug!("Can not remove this node: {}", e);
+                        return;
+                    }
+                    let pointer_id = e.pointer_id();
+                    {
+                        let mut drag = new_pane_drag.write();
+                        drag.is_dragging = true;
+                        drag.dragging_node = Some(id);
+                        drag.dragging_key = Some(key);
+                    }
+                    spawn(async move {
+                        document::eval(
+                                &format!(
+                                    r#"document.querySelector('[data-pane-drag-handle]')?.releasePointerCapture({pointer_id});"#,
+                                ),
+                            )
+                            .await
+                            .ok();
+                    });
+                },
+                GripVertical {}
+            }
+            div { style: "flex: 1; display: flex; justify-content: center; min-width: 0;",
                 Combobox::<RelationKey> {
                     value: Some(current_relation.into()),
                     query: Some(query()),
@@ -271,42 +301,6 @@ pub fn Property(
                     ComboboxEmpty { "No relations match." }
                     PropertyOptions { all_properties }
                 }
-                Button {
-                    size: ButtonSize::Xs,
-                    style: "align-self: center;",
-                    variant: ButtonVariant::Destructive,
-                    onclick: move |_| {
-                        positions
-                            .with_mut(|v| {
-                                if v.root != id {
-                                    v.remove_node(id);
-                                }
-                                tracing::debug!("map: {:#?}", v);
-                            });
-                    },
-                    "X"
-                }
-                Button {
-                    size: ButtonSize::Xs,
-                    style: "align-self: stretch; height: auto;",
-                    onclick: move |_| {
-                        positions
-                            .with_mut(|v| {
-                                v.add_right(id);
-                            });
-                    },
-                    "+"
-                }
-            }
-            Button {
-                size: ButtonSize::Xs,
-                onclick: move |_| {
-                    positions
-                        .with_mut(|v| {
-                            v.add_down(id);
-                        });
-                },
-                "+"
             }
         }
     }
@@ -322,6 +316,65 @@ fn PropertyOptions(all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>
                 value: info.key.clone(),
                 text_value: info.name.clone(),
                 {info.name.clone()}
+            }
+        }
+    }
+}
+#[component]
+fn PaneDropZones(id: NodeId, mut new_pane_drag: Signal<NewPaneDrag>) -> Element {
+    const ZONES: &[(DropZone, &str, &str)] = &[
+        (
+            DropZone::Top,
+            "polygon(0% 0%, 100% 0%, 50% 50%)",
+            "polygon(0% 0%, 100% 0%, 100% 50%, 0% 50%)",
+        ),
+        (
+            DropZone::Bottom,
+            "polygon(0% 100%, 100% 100%, 50% 50%)",
+            "polygon(0% 50%, 100% 50%, 100% 100%, 0% 100%)",
+        ),
+        (
+            DropZone::Left,
+            "polygon(0% 0%, 0% 100%, 50% 50%)",
+            "polygon(0% 0%, 50% 0%, 50% 100%, 0% 100%)",
+        ),
+        (
+            DropZone::Right,
+            "polygon(100% 0%, 100% 100%, 50% 50%)",
+            "polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%)",
+        ),
+    ];
+    let is_active = move |zone: DropZone| {
+        let s = new_pane_drag();
+        s.hover_node == Some(id) && s.drop_zone == Some(zone)
+    };
+
+    rsx! {
+        for (zone, tri_clip, _rect_clip) in ZONES {
+            Dropzone {
+                key: "hit-{zone:?}",
+                style: format!("inset: 0; clip-path: {tri_clip}; z-index: 51;"),
+                dragging: true,
+                onpointerenter: move |_| {
+                    let mut s = new_pane_drag.write();
+                    s.hover_node = Some(id);
+                    s.drop_zone = Some(*zone);
+                },
+                onpointerleave: move |_| {
+                    let mut s = new_pane_drag.write();
+                    if s.hover_node == Some(id) && s.drop_zone == Some(*zone) {
+                        s.hover_node = None;
+                        s.drop_zone = None;
+                    }
+                },
+            }
+        }
+        for (zone, _tri_clip, rect_clip) in ZONES {
+            Dropzone {
+                key: "vis-{zone:?}",
+                style: format!("inset: 0; clip-path: {rect_clip}; pointer-events: none;"),
+                active: is_active(*zone),
+                dragging: false,
             }
         }
     }

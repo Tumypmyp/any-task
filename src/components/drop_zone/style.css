@@ -1,0 +1,13 @@
+.dx-drop-zone {
+  position: absolute;
+  z-index: 50;
+  background-color: var(--secondary-color-5);
+  pointer-events: none;
+  opacity: 0;
+}
+.dx-drop-zone[data-dragging="true"] {
+  pointer-events: all;
+}
+.dx-drop-zone[data-active="true"] {
+  opacity: 0.5;
+}

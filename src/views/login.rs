@@ -137,7 +137,7 @@ pub fn MnemonicInput(props: MnemonicInputProps) -> Element {
                 disabled: props.loading,
             }
             ShowHideButton { show }
-       }
+        }
         Button {
             onclick: move |_| try_submit(()),
             disabled: props.loading,
