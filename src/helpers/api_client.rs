@@ -17,6 +17,7 @@ use tonic::Request;
 use tonic::metadata::MetadataValue;
 use tonic::service::interceptor::InterceptedService;
 use tonic::transport::Channel;
+pub static AUTH_CHECKED: GlobalSignal<bool> = Signal::global(|| false);
 pub static API_CLIENT: GlobalSignal<Option<Client>> = Signal::global(|| None);
 pub static RECONNECT_COUNT: GlobalSignal<u32> = Signal::global(|| 0);
 
