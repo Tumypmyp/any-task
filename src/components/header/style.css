@@ -1,9 +1,11 @@
 .header {
+  position: relative;
   /*align-items: center;*/
   flex-direction: row;
   display: flex;
   gap: 5px;
-  justify-content: center;
+  min-height: 40px;
+  /*justify-content: center;*/
   /*justify-content: space-between;
  padding: 0.5rem 0;*/
 }
