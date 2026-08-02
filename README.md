@@ -1,5 +1,4 @@
 # AnyTask: Cross-Platform Client for Anytype
-
 **A modern, lightweight client for Anytype built with Rust and Dioxus.**
 
 [Anytype](https://github.com/anyproto/) has a great desktop, Android and iOS clients. This project focuses on cross-platform implementation of the client using [Dioxus](https://github.com/DioxusLabs/dioxus), a modern Rust framework. The goal is to raise phone and tablet experience to the level of the Anytype desktop app.
@@ -7,7 +6,14 @@
 **⚠️ AnyTask is currently in early development.**
 
 <div align="center">
-  <img src="./notes/android_demo.webm" height="500">
+  <video src="https://github.com/user-attachments/assets/3623b9e3-dc50-4790-85f8-03b692b74ad5"
+         height="500" 
+         autoplay 
+         loop 
+         muted 
+         playsinline 
+         preload="metadata">
+  </video>
 </div>
 
 ## Features
