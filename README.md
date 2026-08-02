@@ -1,3 +1,6 @@
+
+
+
 # AnyTask: Cross-Platform Client for Anytype
 
 **A modern, lightweight client for Anytype built with Rust and Dioxus.**
@@ -7,7 +10,7 @@
 **⚠️ AnyTask is currently in early development.**
 
 <div align="center">
-  <video src="https://github.com/user-attachments/assets/40a74fc0-86d7-447c-a4ef-3eaa1de76ba9"
+  <video src="https://github.com/user-attachments/assets/3623b9e3-dc50-4790-85f8-03b692b74ad5"
          height="500" 
          autoplay 
          loop 
