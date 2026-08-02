@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 #[derive(Clone, Props, PartialEq)]
 pub struct ObjectProps {
-    pub positions: Store<TileTree>,
+    pub positions: ReadSignal<TileTree>,
     pub details: ObjectDetails,
     pub all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 }
@@ -33,7 +33,7 @@ pub fn Object(props: ObjectProps) -> Element {
 #[component]
 pub fn ObjectRelations(
     id: NodeId,
-    positions: Store<TileTree>,
+    positions: ReadSignal<TileTree>,
     values: HashMap<String, prost_types::Value>,
     all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
