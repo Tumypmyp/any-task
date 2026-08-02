@@ -7,7 +7,7 @@
 **⚠️ AnyTask is currently in early development.**
 
 <div align="center">
-  <img src="./notes/android_demo.webm" height="500">
+  <img src="./notes/android_demo.mp4" height="500">
 </div>
 
 ## Features
