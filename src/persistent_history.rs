@@ -15,7 +15,7 @@ pub struct PersistentHistory {
 }
 impl Default for PersistentHistory {
     fn default() -> Self {
-        Self::with_initial_path("/")
+        Self::with_initial_path("/login")
     }
 }
 impl PersistentHistory {

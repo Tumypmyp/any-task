@@ -6,16 +6,8 @@
 
 **⚠️ AnyTask is currently in early development.**
 
-## Real-time Property Management
-
 <div align="center">
-  <img src="./notes/windows_demo.webp" width="700">
-</div>
-
-## Customizable Object Views
-
-<div align="center">
-  <img src="./notes/android_demo.webp" height="500">
+  <img src="./notes/android_demo.webm" height="500">
 </div>
 
 ## Features
@@ -23,10 +15,11 @@
 - [x] Standalone app (`anytype-heart` library is embedded)
 - [x] Views: Spaces, Lists, Objects
 - [x] Relations: Text, Checkbox, Date, Number, Status, etc.
-- [x] Customize relations appearence in Lists
+- [x] Customize relations in Lists
+- [x] List views
 - [x] Live relation updates
-- [x] Use different List views
 - [x] Open last visited view after app reload
+
 <!--- [ ] Timeline/Calendar view-->
 
 ## Developing

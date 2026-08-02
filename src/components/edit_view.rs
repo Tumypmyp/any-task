@@ -121,16 +121,16 @@ pub fn EditView(
                             aria_label: "Delete mode",
                             Trash2 {}
                         }
-                        Row { position: RowPosition::Right,
 
-                            RelationPositionsCleaner { positions }
-                        }
+                        RelationPositionsCleaner { positions }
                     }
 
-                    RootDropZone {
-                        positions,
-                        new_pane_drag,
-                        zone: DropZone::Top,
+                    if positions().nodes.len() > 1 {
+                        RootDropZone {
+                            positions,
+                            new_pane_drag,
+                            zone: DropZone::Top,
+                        }
                     }
                     RelationPositionsEditor {
                         id: positions().root,
@@ -138,10 +138,12 @@ pub fn EditView(
                         positions,
                         all_properties,
                     }
-                    RootDropZone {
-                        positions,
-                        new_pane_drag,
-                        zone: DropZone::Bottom,
+                    if positions().nodes.len() > 1 {
+                        RootDropZone {
+                            positions,
+                            new_pane_drag,
+                            zone: DropZone::Bottom,
+                        }
                     }
                 }
             }

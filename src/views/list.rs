@@ -103,7 +103,7 @@ pub fn ListHeader(
     all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
     let name = SET_META.read().name.clone();
-    let mut open = use_signal(|| false);
+    let mut open = use_signal(|| true);
     rsx! {
         Column {
             Row {

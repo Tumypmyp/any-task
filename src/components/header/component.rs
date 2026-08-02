@@ -3,7 +3,11 @@ use dioxus::prelude::*;
 #[component]
 pub fn Title(title: String) -> Element {
     rsx! {
-        Button { width: "50vw", variant: ButtonVariant::Ghost, "{title}" }
+        Button {
+            style: "position: absolute; left: 50%; transform: translateX(-50%); width: auto; max-width: 50vw; z-index: 10;",
+            variant: ButtonVariant::Ghost,
+            "{title}"
+        }
     }
 }
 #[component]
