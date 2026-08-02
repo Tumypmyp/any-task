@@ -41,39 +41,21 @@ static LICENSES: Asset = asset!("/assets/LICENSE-ANYTYPE.md");
 #[derive(Clone, Routable)]
 #[rustfmt::skip]
 enum Route {
-    #[layout(AuthGuard)]
-        #[route("/")]
-        #[redirect("/:.._s", |_s: Vec<String>| Route::Home {})]
-        Home {},
-        #[route("/login")]
-        Login {},
-        #[nest("/space/:space_id")]
-            #[layout(SpaceLayout)]
-                #[route("/")]
-                Space { space_id: String },
-                #[route("/list/:list_id")]
-                List { space_id: String, list_id: String },
-            #[end_layout]
-        #[end_nest]
-        #[route("/settings")]
-        Settings {},
-}
-
-#[component]
-fn AuthGuard() -> Element {
-    let navigator = use_navigator();
-    let route = use_route::<Route>();
-
-    use_effect(move || {
-        // only redirect once the client-init check has finished
-        if AUTH_CHECKED() && API_CLIENT.read().is_none() && !matches!(route, Route::Login {}) {
-            navigator.replace(Route::Login {});
-        }
-    });
-
-    rsx! {
-        Outlet::<Route> {}
-    }
+    #[route("/")]
+    #[redirect("/:.._s", |_s: Vec<String>| Route::Home {})]
+    Home {},
+    #[route("/login")]
+    Login {},
+    #[nest("/space/:space_id")]
+        #[layout(SpaceLayout)]
+            #[route("/")]
+            Space { space_id: String },
+            #[route("/list/:list_id")]
+            List { space_id: String, list_id: String },
+        #[end_layout]
+    #[end_nest]
+    #[route("/settings")]
+    Settings {},
 }
 
 #[cfg_attr(feature = "bundle", windows_subsystem = "windows")]
@@ -135,7 +117,6 @@ fn App() -> Element {
                 }
             }
         }
-        *AUTH_CHECKED.write() = true;
     });
     use_drop(move || {
         tracing::info!("App closing. Stopping engine...");

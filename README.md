@@ -6,16 +6,8 @@
 
 **⚠️ AnyTask is currently in early development.**
 
-## Real-time Property Management
-
 <div align="center">
-  <img src="./notes/windows_demo.webp" width="700">
-</div>
-
-## Customizable Object Views
-
-<div align="center">
-  <img src="./notes/android_demo.webp" height="500">
+  <img src="./notes/android_demo.webm" height="500">
 </div>
 
 ## Features
