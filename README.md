@@ -7,7 +7,14 @@
 **⚠️ AnyTask is currently in early development.**
 
 <div align="center">
-  <video src="./notes/android_demo.webm" height="500" autoplay loop muted playsinline></video>
+  <video src="https://github.com/user-attachments/assets/40a74fc0-86d7-447c-a4ef-3eaa1de76ba9"
+         height="500" 
+         autoplay 
+         loop 
+         muted 
+         playsinline 
+         preload="metadata">
+  </video>
 </div>
 
 ## Features
