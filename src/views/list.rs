@@ -15,8 +15,31 @@ use std::vec;
 
 #[component]
 pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Element {
+    use_resource(move || {
+        let _reconnect = RECONNECT_COUNT.read();
+        let client = API_CLIENT.read().as_ref().cloned();
+        async move {
+            let Some(client) = client else {
+                tracing::warn!("subscribe_set_meta: no client");
+                return;
+            };
+            if let Err(e) = client.object_open(&space_id(), &list_id()).await {
+                tracing::error!("subscribe_set_meta failed: {e:#}");
+            }
+        }
+    });
+
+    use_drop(move || {
+        *SET_META.write() = SetMetaState::default();
+        spawn(async move {
+            if let Some(client) = API_CLIENT.read().as_ref().cloned() {
+                client.object_close(&space_id(), &list_id()).await.ok();
+            }
+        });
+    });
     let view_id = use_store(|| SET_META.read().active_view_id.clone());
     let open_edit = use_store(|| true);
+
     rsx! {
         Column {
             ListHeader {
@@ -212,19 +235,6 @@ pub fn Objects(
     positions: ReadSignal<TileTree>,
     all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
-    use_resource(move || {
-        let _reconnect = RECONNECT_COUNT.read();
-        let client = API_CLIENT.read().as_ref().cloned();
-        async move {
-            let Some(client) = client else {
-                tracing::warn!("subscribe_set_meta: no client");
-                return;
-            };
-            if let Err(e) = client.object_open(&space_id(), &list_id()).await {
-                tracing::error!("subscribe_set_meta failed: {e:#}");
-            }
-        }
-    });
     let keys = use_memo(move || pane_keys(&positions.read()));
     use_resource(move || {
         let _reconnect = RECONNECT_COUNT.read();
@@ -317,12 +327,10 @@ pub fn Objects(
     });
 
     use_drop(move || {
-        *SET_META.write() = SetMetaState::default();
         *LIST_OBJECTS.write() = ListObjectsState::default();
         let lid = list_id.peek().clone();
         spawn(async move {
             if let Some(client) = API_CLIENT.read().as_ref().cloned() {
-                client.object_close(&space_id(), &list_id()).await.ok();
                 client.unsubscribe_list_objects(&lid).await.ok();
             }
         });
