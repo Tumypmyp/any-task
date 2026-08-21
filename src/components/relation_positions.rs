@@ -13,7 +13,7 @@ use std::rc::Rc;
 use std::vec;
 
 #[component]
-pub fn RelationPositionsCleaner(positions: Store<TileTree>) -> Element {
+pub fn RelationPositionsCleaner(positions: Signal<TileTree>) -> Element {
     rsx! {
         Button {
             variant: ButtonVariant::Ghost,
@@ -28,7 +28,7 @@ pub fn RelationPositionsCleaner(positions: Store<TileTree>) -> Element {
 pub fn RelationPositionsEditor(
     id: NodeId,
     delete_mode: ReadSignal<bool>,
-    positions: Store<TileTree>,
+    positions: Signal<TileTree>,
     all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
     let node = positions()
@@ -204,7 +204,7 @@ pub fn RelationPositionsEditor(
 #[component]
 pub fn Property(
     id: NodeId,
-    positions: Store<TileTree>,
+    positions: Signal<TileTree>,
     delete_mode: ReadSignal<bool>,
     all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {

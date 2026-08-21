@@ -15,8 +15,67 @@ use std::vec;
 
 #[component]
 pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Element {
-    let view_id = use_store(|| "".to_string());
-    let storage_view_tree_key = format!("list-view-relations-tree-{}", list_id());
+    use_resource(move || {
+        let _reconnect = RECONNECT_COUNT.read();
+        let client = API_CLIENT.read().as_ref().cloned();
+        async move {
+            let Some(client) = client else {
+                tracing::warn!("object_open failed: no client");
+                return;
+            };
+            if let Err(e) = client.object_open(&space_id(), &list_id()).await {
+                tracing::error!("object_open failed: {e:#}");
+            }
+        }
+    });
+
+    use_drop(move || {
+        *SET_META.write() = SetMetaState::default();
+        spawn(async move {
+            let Some(client) = API_CLIENT.read().as_ref().cloned() else {
+                tracing::warn!("object_close failed: no client");
+                return;
+            };
+            if let Err(e) = client.object_close(&space_id(), &list_id()).await {
+                tracing::error!("object_close failed: {e:#}");
+            }
+        });
+    });
+    let view_id = use_memo(move || SET_META.resolve().active_view_id().cloned());
+    let open_edit = use_signal(|| true);
+
+    rsx! {
+        Column {
+            ListHeader {
+                space_id,
+                list_id,
+                open_edit,
+            }
+            // use key hack
+            for _ in [()] {
+                ListWithView {
+                    key: "{list_id}-{view_id}",
+                    list_id,
+                    space_id,
+                    view_id,
+                    open_edit,
+                }
+            }
+        }
+    }
+}
+#[component]
+pub fn ListWithView(
+    space_id: ReadSignal<String>,
+    list_id: ReadSignal<String>,
+    view_id: ReadSignal<String>,
+    open_edit: ReadSignal<bool>,
+) -> Element {
+    let storage_view_tree_key = format!(
+        "list-view-relations-tree-list-{}-view-{}",
+        list_id(),
+        view_id()
+    );
 
     let mut positions =
         use_synced_storage::<LocalStorage, TileTree>(storage_view_tree_key.clone(), || TileTree {
@@ -78,19 +137,22 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
     }
 
     rsx! {
-        ListHeader {
-            space_id,
-            list_id,
-            view_id,
-            positions: positions_store,
-            all_properties,
-        }
-        Objects {
-            space_id,
-            list_id,
-            view_id,
-            all_properties,
-            positions: positions_store,
+        Column {
+            EditView {
+                open: open_edit,
+                space_id,
+                list_id,
+                positions,
+                all_properties,
+            }
+
+            Objects {
+                space_id,
+                list_id,
+                view_id,
+                all_properties,
+                positions,
+            }
         }
     }
 }
@@ -98,34 +160,22 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
 pub fn ListHeader(
     space_id: ReadSignal<String>,
     list_id: ReadSignal<String>,
-    view_id: Store<String>,
-    positions: Store<TileTree>,
-    all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
+    open_edit: Signal<bool>,
 ) -> Element {
-    let name = SET_META.read().name.clone();
-    let mut open = use_signal(|| true);
+    let name = SET_META.resolve().name();
     rsx! {
-        Column {
-            Row {
-                Row { position: RowPosition::Middle,
-                    Title { title: "{name}" }
-                }
-                Row { position: RowPosition::Right,
-                    Views { list_id, space_id }
-                    Button {
-                        variant: ButtonVariant::Secondary,
-                        onclick: move |_| open.toggle(),
-                        aria_label: "Edit view",
-                        Settings2 {}
-                    }
-                }
+        Row {
+            Row { position: RowPosition::Middle,
+                Title { title: "{name}" }
             }
-            EditView {
-                open,
-                space_id,
-                list_id,
-                positions,
-                all_properties,
+            Row { position: RowPosition::Right,
+                Views { list_id, space_id }
+                Button {
+                    variant: ButtonVariant::Secondary,
+                    onclick: move |_| open_edit.toggle(),
+                    aria_label: "Edit view",
+                    Settings2 {}
+                }
             }
         }
     }
@@ -133,21 +183,21 @@ pub fn ListHeader(
 
 #[component]
 pub fn Views(list_id: ReadSignal<String>, space_id: ReadSignal<String>) -> Element {
-    let selected = use_memo(move || Some(SET_META.read().active_view_id.clone()));
-    let selected_signal: ReadSignal<Option<String>> = selected.into();
-
     let views: Vec<(String, String)> = SET_META
-        .read()
-        .views
+        .resolve()
+        .views()
         .iter()
-        .map(|view| (view.id.clone(), view.name.clone()))
+        .map(|view| (view().id.clone(), view().name.clone()))
         .collect();
 
+    let selected = use_memo(move || Some(SET_META.read().active_view_id.clone()));
+    let selected_signal: ReadSignal<Option<String>> = selected.into();
     rsx! {
         Select::<String> {
             value: Some(selected_signal),
             on_value_change: move |new_id: Option<String>| {
                 if let Some(id) = new_id {
+                    // view_id.set(id.clone());
                     SET_META.write().active_view_id = id.clone();
                     spawn(async move {
                         if let Some(client) = API_CLIENT.read().as_ref().cloned() {
@@ -179,22 +229,9 @@ pub fn Objects(
     space_id: ReadSignal<String>,
     list_id: ReadSignal<String>,
     view_id: ReadSignal<String>,
-    positions: Store<TileTree>,
+    positions: ReadSignal<TileTree>,
     all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
-    use_resource(move || {
-        let _reconnect = RECONNECT_COUNT.read();
-        let client = API_CLIENT.read().as_ref().cloned();
-        async move {
-            let Some(client) = client else {
-                tracing::warn!("subscribe_set_meta: no client");
-                return;
-            };
-            if let Err(e) = client.object_open(&space_id(), &list_id()).await {
-                tracing::error!("subscribe_spaces failed: {e:#}");
-            }
-        }
-    });
     let keys = use_memo(move || pane_keys(&positions.read()));
     use_resource(move || {
         let _reconnect = RECONNECT_COUNT.read();
@@ -287,12 +324,10 @@ pub fn Objects(
     });
 
     use_drop(move || {
-        *SET_META.write() = SetMetaState::default();
         *LIST_OBJECTS.write() = ListObjectsState::default();
         let lid = list_id.peek().clone();
         spawn(async move {
             if let Some(client) = API_CLIENT.read().as_ref().cloned() {
-                client.object_close(&space_id(), &list_id()).await.ok();
                 client.unsubscribe_list_objects(&lid).await.ok();
             }
         });

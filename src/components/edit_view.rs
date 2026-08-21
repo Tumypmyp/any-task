@@ -17,7 +17,7 @@ pub fn EditView(
     open: ReadSignal<bool>,
     space_id: String,
     list_id: String,
-    positions: Store<TileTree>,
+    positions: Signal<TileTree>,
     all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
     let mut delete_mode = use_signal(|| false);
@@ -152,7 +152,7 @@ pub fn EditView(
 }
 #[component]
 fn RootDropZone(
-    positions: Store<TileTree>,
+    positions: Signal<TileTree>,
     mut new_pane_drag: Signal<NewPaneDrag>,
     zone: DropZone,
 ) -> Element {

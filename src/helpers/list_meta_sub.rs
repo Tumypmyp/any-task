@@ -4,7 +4,7 @@ use crate::protos::event::block::dataview::view_update::*;
 use crate::protos::event::block::dataview::*;
 use crate::protos::event::object::details::*;
 use dioxus::prelude::*;
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Store)]
 pub struct SetMetaState {
     pub id: String,
     pub name: String,
@@ -13,47 +13,57 @@ pub struct SetMetaState {
     pub active_view_id: String,
 }
 
-pub static SET_META: GlobalSignal<SetMetaState> = Signal::global(SetMetaState::default);
+pub static SET_META: GlobalStore<SetMetaState> = Global::new(SetMetaState::default);
 
-impl SetMetaState {
-    pub fn handle_set(&mut self, v: Set) {
+#[store(pub)]
+impl Store<SetMetaState> {
+    fn handle_set(&mut self, v: Set) {
         let Some(fields) = v.details.map(|d| d.fields) else {
             return;
         };
-        self.name = extract_string(fields.get("name"));
-        self.set_of = extract_list_strings(fields.get("setOf"));
+        self.name().set(extract_string(fields.get("name")));
+        self.set_of().set(extract_list_strings(fields.get("setOf")));
     }
-    pub fn handle_amend(&mut self, v: Amend) {
+    fn handle_amend(&mut self, v: Amend) {
         for kv in v.details {
             match kv.key.as_str() {
-                "name" => self.name = get_string(kv.value.unwrap_or_default()),
-                "setOf" => self.set_of = extract_list_strings(kv.value.as_ref()),
+                "name" => self.name().set(get_string(kv.value.unwrap_or_default())),
+                "setOf" => self.set_of().set(extract_list_strings(kv.value.as_ref())),
                 _ => {}
             }
         }
     }
-    pub fn handle_view_set(&mut self, v: ViewSet) {
+    fn handle_view_set(&mut self, v: ViewSet) {
         let Some(new_view) = v.view else { return };
 
-        if let Some(existing) = self.views.iter_mut().find(|view| view.id == v.view_id) {
+        if let Some(existing) = self
+            .views()
+            .write()
+            .iter_mut()
+            .find(|view| view.id == v.view_id)
+        {
             *existing = new_view;
         } else {
-            self.views.push(new_view);
+            self.views().write().push(new_view);
         }
     }
-    pub fn handle_view_delete(&mut self, v: ViewDelete) {
-        self.views.retain(|view| view.id != v.view_id);
-        if self.active_view_id == v.view_id {
-            self.active_view_id = self
-                .views
-                .first()
-                .map(|view| view.id.clone())
-                .unwrap_or_default();
+    fn handle_view_delete(&mut self, v: ViewDelete) {
+        self.views().write().retain(|view| view.id != v.view_id);
+        if self.active_view_id() == v.view_id {
+            self.active_view_id().set(
+                self.views()
+                    .write()
+                    .first()
+                    .map(|view| view.id.clone())
+                    .unwrap_or_default(),
+            )
         }
     }
 
-    pub fn handle_view_update(&mut self, v: ViewUpdate) {
-        let Some(view) = self.views.iter_mut().find(|view| view.id == v.view_id) else {
+    fn handle_view_update(&mut self, v: ViewUpdate) {
+        let mut binding = self.views();
+        let mut binding = binding.write();
+        let Some(view) = binding.iter_mut().find(|view| view.id == v.view_id) else {
             tracing::error!("got update on nonexisting view: {}", v.view_id);
             return;
         };
@@ -142,8 +152,8 @@ impl SetMetaState {
             }
         }
     }
-    pub fn handle_view_order(&mut self, v: ViewOrder) {
-        self.views.sort_by_cached_key(|view| {
+    fn handle_view_order(&mut self, v: ViewOrder) {
+        self.views().write().sort_by_cached_key(|view| {
             v.view_ids
                 .iter()
                 .position(|id| id == &view.id)

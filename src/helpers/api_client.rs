@@ -1,3 +1,4 @@
+use crate::helpers::list_meta_sub::SetMetaStateStoreImplExt;
 use crate::protos::Event;
 use crate::protos::StreamRequest;
 use crate::protos::anytype_model::RelationFormat;
@@ -744,7 +745,7 @@ pub fn handle_msg(context_id: &str, msg: Message) {
             {
                 LIST_OBJECTS.write().handle_set(v);
             } else if v.sub_ids.is_empty() && SET_META.read().id.contains(context_id) {
-                SET_META.write().handle_set(v);
+                SET_META.resolve().handle_set(v);
             } else if v.sub_ids.iter().any(|s| s.starts_with("relation-options-")) {
                 RELATION_OPTIONS.write().handle_set(v);
             }
@@ -788,7 +789,7 @@ pub fn handle_msg(context_id: &str, msg: Message) {
             {
                 LIST_OBJECTS.write().handle_amend(v);
             } else if v.sub_ids.is_empty() && SET_META.read().id.contains(context_id) {
-                SET_META.write().handle_amend(v);
+                SET_META.resolve().handle_amend(v);
             } else if v.sub_ids.iter().any(|s| s.starts_with("relation-options-")) {
                 RELATION_OPTIONS.write().handle_amend(v);
             }
@@ -812,16 +813,16 @@ pub fn handle_msg(context_id: &str, msg: Message) {
             }
         }
         Some(BlockDataviewViewSet(v)) => {
-            SET_META.write().handle_view_set(v);
+            SET_META.resolve().handle_view_set(v);
         }
         Some(BlockDataviewViewDelete(v)) => {
-            SET_META.write().handle_view_delete(v);
+            SET_META.resolve().handle_view_delete(v);
         }
         Some(BlockDataviewViewUpdate(v)) => {
-            SET_META.write().handle_view_update(v);
+            SET_META.resolve().handle_view_update(v);
         }
         Some(BlockDataviewViewOrder(v)) => {
-            SET_META.write().handle_view_order(v);
+            SET_META.resolve().handle_view_order(v);
         }
         _ => {}
     }

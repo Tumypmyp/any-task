@@ -14,6 +14,7 @@ dioxus-history = "0.7"
 dioxus-html = "0.7"
 dioxus-icons = { version = "0.1.0", default-features = false }
 dioxus-primitives = { git = "https://github.com/DioxusLabs/components", default-features = false, version = "0.0.1" }
+dioxus-stores = {version= "0.7", features = ["macro"]}
 
 serde = { version = "1.0", features = ["derive"] }
 tracing = "0.1"
