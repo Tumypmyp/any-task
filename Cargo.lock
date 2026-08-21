@@ -194,6 +194,7 @@ dependencies = [
  "dioxus-liveview",
  "dioxus-primitives",
  "dioxus-sdk-storage",
+ "dioxus-stores",
  "form_urlencoded",
  "futures-util",
  "http",

@@ -20,11 +20,11 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
         let client = API_CLIENT.read().as_ref().cloned();
         async move {
             let Some(client) = client else {
-                tracing::warn!("subscribe_set_meta: no client");
+                tracing::warn!("object_open failed: no client");
                 return;
             };
             if let Err(e) = client.object_open(&space_id(), &list_id()).await {
-                tracing::error!("subscribe_set_meta failed: {e:#}");
+                tracing::error!("object_open failed: {e:#}");
             }
         }
     });
@@ -32,28 +32,31 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
     use_drop(move || {
         *SET_META.write() = SetMetaState::default();
         spawn(async move {
-            if let Some(client) = API_CLIENT.read().as_ref().cloned() {
-                client.object_close(&space_id(), &list_id()).await.ok();
+            let Some(client) = API_CLIENT.read().as_ref().cloned() else {
+                tracing::warn!("object_close failed: no client");
+                return;
+            };
+            if let Err(e) = client.object_close(&space_id(), &list_id()).await {
+                tracing::error!("object_close failed: {e:#}");
             }
         });
     });
-    let view_id = use_store(|| SET_META.read().active_view_id.clone());
-    let open_edit = use_store(|| true);
+    let view_id = use_memo(move || SET_META.resolve().active_view_id().cloned());
+    let open_edit = use_signal(|| true);
 
     rsx! {
         Column {
             ListHeader {
                 space_id,
                 list_id,
-                view_id,
                 open_edit,
             }
             // use key hack
             for _ in [()] {
                 ListWithView {
                     key: "{list_id}-{view_id}",
-                    space_id,
                     list_id,
+                    space_id,
                     view_id,
                     open_edit,
                 }
@@ -157,17 +160,16 @@ pub fn ListWithView(
 pub fn ListHeader(
     space_id: ReadSignal<String>,
     list_id: ReadSignal<String>,
-    view_id: Store<String>,
-    open_edit: Store<bool>,
+    open_edit: Signal<bool>,
 ) -> Element {
-    let name = SET_META.read().name.clone();
+    let name = SET_META.resolve().name();
     rsx! {
         Row {
             Row { position: RowPosition::Middle,
                 Title { title: "{name}" }
             }
             Row { position: RowPosition::Right,
-                Views { list_id, space_id, view_id }
+                Views { list_id, space_id }
                 Button {
                     variant: ButtonVariant::Secondary,
                     onclick: move |_| open_edit.toggle(),
@@ -180,27 +182,22 @@ pub fn ListHeader(
 }
 
 #[component]
-pub fn Views(
-    list_id: ReadSignal<String>,
-    space_id: ReadSignal<String>,
-    view_id: Store<String>,
-) -> Element {
-    let selected = use_memo(move || Some(SET_META.read().active_view_id.clone()));
-    let selected_signal: ReadSignal<Option<String>> = selected.into();
-
+pub fn Views(list_id: ReadSignal<String>, space_id: ReadSignal<String>) -> Element {
     let views: Vec<(String, String)> = SET_META
-        .read()
-        .views
+        .resolve()
+        .views()
         .iter()
-        .map(|view| (view.id.clone(), view.name.clone()))
+        .map(|view| (view().id.clone(), view().name.clone()))
         .collect();
 
+    let selected = use_memo(move || Some(SET_META.read().active_view_id.clone()));
+    let selected_signal: ReadSignal<Option<String>> = selected.into();
     rsx! {
         Select::<String> {
             value: Some(selected_signal),
             on_value_change: move |new_id: Option<String>| {
                 if let Some(id) = new_id {
-                    view_id.set(id.clone());
+                    // view_id.set(id.clone());
                     SET_META.write().active_view_id = id.clone();
                     spawn(async move {
                         if let Some(client) = API_CLIENT.read().as_ref().cloned() {
