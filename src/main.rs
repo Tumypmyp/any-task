@@ -18,7 +18,6 @@ use crate::protos::Event;
 use views::*;
 mod components;
 mod views;
-use helpers::API_CLIENT;
 use helpers::*;
 mod helpers;
 use serde::{Deserialize, Serialize};
@@ -104,6 +103,8 @@ fn App() -> Element {
             account_id: "".to_string(),
         });
     use_context_provider(|| settings);
+    let mut api_client = use_context_provider(|| ApiClient(Signal::new(None)));
+
     use_future(move || async move {
         let account_id = settings.peek().account_id.clone();
         if !account_id.is_empty() {
@@ -111,7 +112,7 @@ fn App() -> Element {
                 let root_path_str = get_app_data_dir().to_string_lossy().to_string();
                 match Client::init_from_mnemonic(mnemonic, account_id, root_path_str).await {
                     Ok(client) => {
-                        *API_CLIENT.write() = Some(client);
+                        *api_client.0.write() = Some(client);
                     }
                     Err(_) => {}
                 }
@@ -129,7 +130,7 @@ fn App() -> Element {
         };
 
         loop {
-            *RECONNECT_COUNT.write() += 1;
+            // *RECONNECT_COUNT.write() += 1;
             match client.clone().listen_session_events().await {
                 Ok(resp) => {
                     let mut stream: Streaming<Event> = resp.into_inner();
@@ -160,7 +161,7 @@ fn App() -> Element {
     });
 
     use_effect(move || {
-        if let Some(client) = API_CLIENT.read().as_ref().cloned() {
+        if let Some(client) = api_client.0.read().as_ref().cloned() {
             event_loop.send(client);
         }
     });

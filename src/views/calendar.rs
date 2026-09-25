@@ -41,6 +41,7 @@ pub fn Calendar(
             .map(|v| v.group_relation_key.clone())
             .unwrap_or_default()
     });
+    let api_client = use_context::<ApiClient>();
     use_resource(move || {
         let _reconnect = RECONNECT_COUNT.read();
         let sid = space_id.read().clone();
@@ -78,7 +79,7 @@ pub fn Calendar(
         }
         drop(meta);
 
-        let client = API_CLIENT.read().as_ref().cloned();
+        let client = api_client.0.read().as_ref().cloned();
         async move {
             let Some(client) = client else { return };
             if set_of_ids.is_empty() {
@@ -124,7 +125,7 @@ pub fn Calendar(
         *LIST_OBJECTS.write() = ListObjectsState::default();
         let lid = list_id.peek().clone();
         spawn(async move {
-            if let Some(client) = API_CLIENT.read().as_ref().cloned() {
+            if let Some(client) = api_client.0.read().as_ref().cloned() {
                 client.unsubscribe_list_objects(&lid).await.ok();
             }
         });
