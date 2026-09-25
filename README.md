@@ -26,8 +26,7 @@
 - [x] List views
 - [x] Live relation updates
 - [x] Open last visited view after app reload
-
-<!--- [ ] Timeline/Calendar view-->
+- [x] Timeline/Calendar view
 
 ## Developing
 

@@ -137,16 +137,19 @@ pub fn Calendar(
             .filter_map(|id| state.details.get(id).cloned())
             .collect()
     };
+    let mut first_run = use_signal(|| true);
     use_effect(move || {
-        let _ = selected_date(); // rerun when the date changes
+        let _ = selected_date();
+        let behavior = if *first_run.peek() {
+            "instant"
+        } else {
+            "smooth"
+        };
+        *first_run.write() = false;
         spawn(async move {
-            let _ = document::eval(
-                r#"
-                document
-                    .getElementById("selected-day")
-                    ?.scrollIntoView({ inline: "center", behavior: "smooth", block: "nearest" })
-                "#,
-            )
+            let _ = document::eval(&format!(
+                r#"document.getElementById("selected-day")?.scrollIntoView({{ inline: "center", behavior: "{behavior}", block: "nearest" }})"#,
+            ))
             .await;
         });
     });
@@ -166,12 +169,14 @@ pub fn Calendar(
                             let day_ts = selected_date() + offset * SECONDS_PER_DAY;
                             let is_selected = offset == 0;
                             let today = (today_ts / SECONDS_PER_DAY) == (day_ts / SECONDS_PER_DAY);
+                            let weekend = is_weekend(day_ts);
                             rsx! {
                                 Button {
                                     key: "{day_ts}",
                                     id: if is_selected { "selected-day" } else { "" },
                                     variant: if is_selected { ButtonVariant::Primary }
-                                    else if today { ButtonVariant::Secondary }
+                                    else if today { ButtonVariant::Outline }
+                                    else if weekend { ButtonVariant::Destructive }
                                     else { ButtonVariant::Ghost },
                                     onclick: move |_| {
                                         selected_date.set(day_ts);
@@ -194,7 +199,8 @@ pub fn Calendar(
         }
     }
 }
-use time::OffsetDateTime;
+
+use time::{OffsetDateTime, Weekday};
 
 fn day_of_month(unix_secs: i64) -> u32 {
     OffsetDateTime::from_unix_timestamp(unix_secs)
@@ -232,4 +238,10 @@ fn pane_keys(tree: &TileTree) -> Vec<String> {
         }
     }
     keys
+}
+
+fn is_weekend(unix_secs: i64) -> bool {
+    OffsetDateTime::from_unix_timestamp(unix_secs)
+        .map(|dt| matches!(dt.weekday(), Weekday::Saturday | Weekday::Sunday))
+        .unwrap_or(false)
 }
