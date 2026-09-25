@@ -8,8 +8,8 @@
   dioxus-src = pkgs.fetchFromGitHub {
     owner = "DioxusLabs";
     repo = "dioxus";
-    rev = "v0.7.9";
-    hash = "sha256-4XkV/gkytFefvliaK/JMERFqWIp6LycM/O/Dm294xS4=";
+    rev = "v0.7.10";
+    hash = "sha256-89hiXoe3NPTRdSBOE0v3LEn+ytSU+xhT1hfVN8291+M=";
   };
   dioxus-cli = pkgs.rustPlatform.buildRustPackage {
     name = "dioxus-cli";
@@ -36,6 +36,7 @@ in {
   languages.rust = {
     enable = true;
     channel = "nightly";
+    components = [ "rustc" "cargo" "clippy" "rustfmt" "rust-analyzer" ];
     targets = [
       "wasm32-unknown-unknown"
       "aarch64-linux-android"

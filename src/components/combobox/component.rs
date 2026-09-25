@@ -64,7 +64,6 @@ pub struct ComboboxProps<T: Clone + PartialEq + 'static = String> {
 #[component]
 pub fn Combobox<T: Clone + PartialEq + 'static>(props: ComboboxProps<T>) -> Element {
     let base = attributes!(div {
-        style: "max-width: 100%; min-width: 0;",
         class: Styles::dx_combobox
     });
     let merged = merge_attributes(vec![base, props.attributes]);
@@ -84,20 +83,13 @@ pub fn Combobox<T: Clone + PartialEq + 'static>(props: ComboboxProps<T>) -> Elem
             roving_loop: props.roving_loop,
             filter: props.filter,
             attributes: merged,
-            div {
-                style: "max-width: 100%; min-width: 0;",
-                class: Styles::dx_combobox_input_wrapper,
+            div { class: Styles::dx_combobox_input_wrapper,
                 combobox::ComboboxInput {
-                    style: "max-width: 100%; min-width: 0;",
                     class: Styles::dx_combobox_input,
                     placeholder: props.placeholder,
                     aria_label: props.aria_label.clone(),
                 }
-                ChevronsUpDown {
-                    class: Styles::dx_combobox_expand_icon,
-                    style: "max-width: 100%; min-width: 0;",
-                    size: "16px",
-                }
+                ChevronsUpDown { class: Styles::dx_combobox_expand_icon, size: "16px" }
             }
             combobox::ComboboxList {
                 class: Styles::dx_combobox_list,
@@ -111,7 +103,6 @@ pub fn Combobox<T: Clone + PartialEq + 'static>(props: ComboboxProps<T>) -> Elem
 #[component]
 pub fn ComboboxEmpty(props: ComboboxEmptyProps) -> Element {
     let base = attributes!(div {
-        style: "max-width: 100%; min-width: 0;",
         class: Styles::dx_combobox_empty
     });
     let merged = merge_attributes(vec![base, props.attributes]);
@@ -124,14 +115,12 @@ pub fn ComboboxEmpty(props: ComboboxEmptyProps) -> Element {
 #[component]
 pub fn ComboboxOption<T: Clone + PartialEq + 'static>(props: ComboboxOptionProps<T>) -> Element {
     let base = attributes!(div {
-        style: "max-width: 100%; min-width: 0;",
         class: Styles::dx_combobox_option
     });
     let merged = merge_attributes(vec![base, props.attributes]);
 
     rsx! {
         combobox::ComboboxOption::<T> {
-            style: "max-width: 100%; min-width: 0;",
             value: props.value,
             text_value: props.text_value,
             disabled: props.disabled,

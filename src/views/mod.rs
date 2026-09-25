@@ -12,3 +12,6 @@ pub use space_layout::SpaceLayout;
 
 mod settings;
 pub use settings::Settings;
+
+mod calendar;
+mod objects;

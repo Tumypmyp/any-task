@@ -1,11 +1,15 @@
 use crate::components::button::*;
+use crate::protos::anytype_model::block::content::dataview::view::Type;
+
 use crate::components::column::*;
 use crate::components::edit_view::*;
 use crate::components::header::{Header, Title};
-use crate::components::object::*;
 use crate::components::row::*;
+use crate::views::objects::ObjectsList;
+
 use crate::components::select::*;
 use crate::helpers::*;
+use crate::views::calendar::Calendar;
 use dioxus::prelude::*;
 use dioxus_icons::lucide::Settings2;
 use dioxus_sdk_storage::LocalStorage;
@@ -46,12 +50,7 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
 
     rsx! {
         Column {
-            ListHeader {
-                space_id,
-                list_id,
-                open_edit,
-            }
-            // use key hack
+            ListHeader { space_id, list_id, open_edit }
             for _ in [()] {
                 ListWithView {
                     key: "{list_id}-{view_id}",
@@ -156,6 +155,7 @@ pub fn ListWithView(
         }
     }
 }
+
 #[component]
 pub fn ListHeader(
     space_id: ReadSignal<String>,
@@ -183,11 +183,17 @@ pub fn ListHeader(
 
 #[component]
 pub fn Views(list_id: ReadSignal<String>, space_id: ReadSignal<String>) -> Element {
-    let views: Vec<(String, String)> = SET_META
+    let views: Vec<(String, String, i32)> = SET_META
         .resolve()
         .views()
         .iter()
-        .map(|view| (view().id.clone(), view().name.clone()))
+        .map(|view| {
+            (
+                view().id.clone(),
+                view().name.clone(),
+                view().r#type.clone(),
+            )
+        })
         .collect();
 
     let selected = use_memo(move || Some(SET_META.read().active_view_id.clone()));
@@ -209,7 +215,7 @@ pub fn Views(list_id: ReadSignal<String>, space_id: ReadSignal<String>) -> Eleme
             SelectTrigger { SelectValue {} }
             SelectList {
                 SelectGroup {
-                    for (i, (view_id, view_name)) in views.into_iter().enumerate() {
+                    for (i, (view_id, view_name, view_type)) in views.into_iter().enumerate() {
                         SelectOption::<String> {
                             key: "{view_id}",
                             index: i,
@@ -232,138 +238,34 @@ pub fn Objects(
     positions: ReadSignal<TileTree>,
     all_properties: ReadSignal<HashMap<RelationKey, RelationInfo>>,
 ) -> Element {
-    let keys = use_memo(move || pane_keys(&positions.read()));
-    use_resource(move || {
-        let _reconnect = RECONNECT_COUNT.read();
-        let sid = space_id.read().clone();
-        let lid = list_id.read().clone();
-
+    let _reconnect = RECONNECT_COUNT.read();
+    let view_type = {
         let meta = SET_META.read();
-        let set_of_ids = meta.set_of.clone();
-        let active_view_id = meta.active_view_id.clone();
-        let (filters, sorts) = meta
-            .views
+        meta.views
             .iter()
-            .find(|v| v.id == active_view_id)
-            .map(|v| (v.filters.clone(), v.sorts.clone()))
-            .unwrap_or_default();
-        drop(meta);
-
-        let client = API_CLIENT.read().as_ref().cloned();
-        async move {
-            let Some(client) = client else { return };
-            if set_of_ids.is_empty() {
-                return;
-            }
-            // preload first objects of a set
-            let phase1 = tokio::spawn({
-                let client = client.clone();
-                let sid = sid.clone();
-                let lid = lid.clone();
-                let set_of_ids = set_of_ids.clone();
-                let keys = keys();
-                let filters = filters.clone();
-                let sorts = sorts.clone();
-                async move {
-                    client
-                        .subscribe_list_objects(&sid, &lid, set_of_ids, keys, filters, sorts, 15)
-                        .await
-                }
-            });
-
-            match phase1.await {
-                Ok(Ok(resp)) => {
-                    let mut new_order = Vec::new();
-                    let mut new_details = HashMap::new();
-                    for record in resp.records {
-                        let id = extract_string(record.fields.get("id"));
-                        let det = parse_object_details(&id, &record.fields);
-                        new_order.push(id.clone());
-                        new_details.insert(id, det);
-                    }
-                    let mut state = LIST_OBJECTS.write();
-                    state.order = new_order;
-                    state.details = new_details;
-                }
-                Ok(Err(e)) => tracing::error!("subscribe_list_objects phase1: {e:#}"),
-                Err(e) => tracing::error!("subscribe_list_objects phase1 panicked: {e}"),
-            }
-
-            // load 100 objects of a set (with all objects tile edit is still slow)
-            // todo: load all objects
-            let phase2 = tokio::spawn({
-                let client = client.clone();
-                let sid = sid.clone();
-                let lid = lid.clone();
-                let keys = keys();
-                async move {
-                    client
-                        .subscribe_list_objects(&sid, &lid, set_of_ids, keys, filters, sorts, 100)
-                        .await
-                }
-            });
-
-            match phase2.await {
-                Ok(Ok(resp)) => {
-                    let mut new_order = Vec::new();
-                    let mut new_details = HashMap::new();
-                    for record in resp.records {
-                        let id = extract_string(record.fields.get("id"));
-                        let det = parse_object_details(&id, &record.fields);
-                        new_order.push(id.clone());
-                        new_details.insert(id, det);
-                    }
-                    let mut state = LIST_OBJECTS.write();
-                    state.order = new_order;
-                    state.details = new_details;
-                }
-                Ok(Err(e)) => tracing::error!("subscribe_list_objects phase2: {e:#}"),
-                Err(e) => tracing::error!("subscribe_list_objects phase2 panicked: {e}"),
-            }
-        }
-    });
-
-    use_drop(move || {
-        *LIST_OBJECTS.write() = ListObjectsState::default();
-        let lid = list_id.peek().clone();
-        spawn(async move {
-            if let Some(client) = API_CLIENT.read().as_ref().cloned() {
-                client.unsubscribe_list_objects(&lid).await.ok();
-            }
-        });
-    });
-    let items: Vec<ObjectDetails> = {
-        let state = LIST_OBJECTS.read();
-        state
-            .order
-            .iter()
-            .filter_map(|id| state.details.get(id).cloned())
-            .collect()
+            .find(|v| v.id == meta.active_view_id)
+            .map(|v| Type::try_from(v.r#type).unwrap_or_default())
+            .unwrap_or_default()
     };
-
-    rsx! {
-        Column { style: "width: 98vw;",
-            for det in items {
-                Object {
-                    key: "{det.id}",
-                    positions,
-                    details: det,
-                    all_properties,
-                }
+    match view_type {
+        Type::List | Type::Table => rsx! {
+            ObjectsList {
+                space_id,
+                list_id,
+                view_id,
+                all_properties,
+                positions,
             }
-        }
-    }
-}
-
-fn pane_keys(tree: &TileTree) -> Vec<String> {
-    let mut keys = vec!["id".to_string(), "name".to_string()];
-    for node in tree.nodes.values() {
-        if let Node::Pane { relation_key, .. } = node {
-            let k = relation_key.as_str().to_string();
-            if !keys.contains(&k.clone()) {
-                keys.push(k.to_string());
+        },
+        Type::Calendar => rsx! {
+            Calendar {
+                space_id,
+                list_id,
+                view_id,
+                positions,
+                all_properties,
             }
-        }
+        },
+        _ => rsx! {},
     }
-    keys
 }
