@@ -116,9 +116,11 @@ pub fn ListWithView(
     });
 
     let all_properties_res = use_resource(move || async move {
-        let client_guard = api_client.0.read();
-        let client = client_guard
+        let client = api_client
+            .0
+            .read()
             .as_ref()
+            .cloned()
             .ok_or_else(|| anyhow::anyhow!("No API client available"))?;
         client.fetch_properties(&space_id()).await
     });
