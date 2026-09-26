@@ -1,4 +1,3 @@
-use crate::API_CLIENT;
 use crate::Route;
 use crate::components::action::*;
 use crate::components::button::Button;
@@ -15,9 +14,11 @@ pub fn Space(space_id: String) -> Element {
 }
 #[component]
 pub fn Collections(space_id: ReadSignal<String>) -> Element {
+    let api_client = use_context::<ApiClient>();
     use_resource(move || {
         let _reconnect = RECONNECT_COUNT.read();
-        let client = API_CLIENT.read().as_ref().cloned();
+
+        let client = api_client.0.read().as_ref().cloned();
         let space_id = space_id.clone();
         async move {
             let Some(client) = client else {
@@ -29,9 +30,10 @@ pub fn Collections(space_id: ReadSignal<String>) -> Element {
         }
     });
 
+    let api_client = use_context::<ApiClient>();
     use_drop(move || {
         spawn(async move {
-            if let Some(client) = API_CLIENT.read().as_ref().cloned() {
+            if let Some(client) = api_client.0.read().as_ref().cloned() {
                 client.unsubscribe_sets(&space_id()).await.ok();
             }
         });

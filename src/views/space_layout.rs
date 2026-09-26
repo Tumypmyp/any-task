@@ -1,4 +1,3 @@
-use crate::API_CLIENT;
 use crate::Route;
 use crate::components::action::*;
 use crate::components::button::Button;
@@ -9,9 +8,11 @@ use dioxus::prelude::*;
 #[component]
 pub fn SpaceLayout(space_id: String) -> Element {
     let space_id = use_signal(|| space_id.clone());
+    let api_client = use_context::<ApiClient>();
+
     use_resource(move || {
         let _reconnect = RECONNECT_COUNT.read();
-        let client = API_CLIENT.read().as_ref().cloned();
+        let client = api_client.0.read().as_ref().cloned();
         let space_id = space_id();
         async move {
             let Some(client) = client else {
@@ -43,9 +44,10 @@ pub fn SpaceLayout(space_id: String) -> Element {
             }
         }
     });
+    let api_client = use_context::<ApiClient>();
     use_drop(move || {
         spawn(async move {
-            if let Some(client) = API_CLIENT.read().as_ref().cloned() {
+            if let Some(client) = api_client.0.read().as_ref().cloned() {
                 client.unsubscribe_relation_options(&space_id()).await.ok();
             }
         });

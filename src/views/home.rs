@@ -1,4 +1,3 @@
-use crate::API_CLIENT;
 use crate::Logout;
 use crate::Route;
 use crate::components::action::*;
@@ -32,9 +31,11 @@ pub fn Home() -> Element {
 }
 #[component]
 fn Spaces() -> Element {
+    let api_client = use_context::<ApiClient>();
+
     use_resource(move || {
         let _reconnect = RECONNECT_COUNT.read();
-        let client = API_CLIENT.read().as_ref().cloned();
+        let client = api_client.0.read().as_ref().cloned();
         async move {
             let Some(client) = client else {
                 tracing::warn!("subscribe_spaces: no client yet");
@@ -45,9 +46,11 @@ fn Spaces() -> Element {
             }
         }
     });
+    let api_client = use_context::<ApiClient>();
+
     use_drop(move || {
         spawn(async move {
-            if let Some(client) = API_CLIENT.read().as_ref().cloned() {
+            if let Some(client) = api_client.0.read().as_ref().cloned() {
                 client.unsubscribe_spaces().await.ok();
             }
         });
@@ -96,6 +99,8 @@ enum JoinStatus {
 pub fn JoinSpace() -> Element {
     let mut invite_url = use_signal(String::new);
     let mut status = use_signal(|| JoinStatus::Idle);
+    let api_client = use_context::<ApiClient>();
+
     let on_join = move |_| {
         let url = invite_url.read().clone();
         if url.is_empty() {
@@ -103,7 +108,7 @@ pub fn JoinSpace() -> Element {
         }
         spawn(async move {
             status.set(JoinStatus::Loading);
-            let client_guard = API_CLIENT.read();
+            let client_guard = api_client.0.read();
             let Some(client) = client_guard.as_ref() else {
                 status.set(JoinStatus::Error("API client not available".to_string()));
                 return;

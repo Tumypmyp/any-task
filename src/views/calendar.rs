@@ -41,6 +41,7 @@ pub fn Calendar(
             .map(|v| v.group_relation_key.clone())
             .unwrap_or_default()
     });
+    let api_client = use_context::<ApiClient>();
     use_resource(move || {
         let _reconnect = RECONNECT_COUNT.read();
         let sid = space_id.read().clone();
@@ -78,7 +79,7 @@ pub fn Calendar(
         }
         drop(meta);
 
-        let client = API_CLIENT.read().as_ref().cloned();
+        let client = api_client.0.read().as_ref().cloned();
         async move {
             let Some(client) = client else { return };
             if set_of_ids.is_empty() {
@@ -124,7 +125,7 @@ pub fn Calendar(
         *LIST_OBJECTS.write() = ListObjectsState::default();
         let lid = list_id.peek().clone();
         spawn(async move {
-            if let Some(client) = API_CLIENT.read().as_ref().cloned() {
+            if let Some(client) = api_client.0.read().as_ref().cloned() {
                 client.unsubscribe_list_objects(&lid).await.ok();
             }
         });
@@ -153,8 +154,24 @@ pub fn Calendar(
             .await;
         });
     });
-    const SECONDS_PER_DAY: i64 = 86_400;
-    const DAYS_RANGE: i64 = 20;
+
+    let days: Vec<time::Date> = {
+        let today = today_date();
+        let mut v = Vec::new();
+        let mut d =
+            time::Date::from_calendar_date(today.year() - 1, time::Month::July, 1).unwrap_or(today);
+        let end = time::Date::from_calendar_date(today.year() + 1, time::Month::June, 30)
+            .unwrap_or(today);
+        while d <= end {
+            v.push(d);
+            match d.checked_add(time::Duration::days(1)) {
+                Some(next) => d = next,
+                None => break,
+            }
+        }
+        v
+    };
+
     rsx! {
         Column { style: "width: 98vw;",
             ScrollArea {
@@ -164,12 +181,16 @@ pub fn Calendar(
                 scroll_type: ScrollType::Hidden,
                 // style: "width: 100%;",
                 Row {
-                    for offset in -DAYS_RANGE..=DAYS_RANGE {
+                    for day in days {
                         {
-                            let day_ts = selected_date() + offset * SECONDS_PER_DAY;
-                            let is_selected = offset == 0;
-                            let today = (today_ts / SECONDS_PER_DAY) == (day_ts / SECONDS_PER_DAY);
-                            let weekend = is_weekend(day_ts);
+                            let day_ts = day
+                                .with_time(time::Time::MIDNIGHT)
+                                .assume_utc()
+                                .unix_timestamp();
+                            let is_selected = normalize_day(selected_date()) == day_ts;
+                            let today = day == today_date();
+                            let weekend = matches!(day.weekday(), Weekday::Saturday | Weekday::Sunday);
+
                             rsx! {
                                 Button {
                                     key: "{day_ts}",
@@ -240,8 +261,21 @@ fn pane_keys(tree: &TileTree) -> Vec<String> {
     keys
 }
 
-fn is_weekend(unix_secs: i64) -> bool {
-    OffsetDateTime::from_unix_timestamp(unix_secs)
-        .map(|dt| matches!(dt.weekday(), Weekday::Saturday | Weekday::Sunday))
-        .unwrap_or(false)
+fn today_date() -> time::Date {
+    OffsetDateTime::from_unix_timestamp(
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    )
+    .map(|dt| dt.date())
+    .unwrap_or_else(|_| {
+        time::Date::from_calendar_date(2000, time::Month::January, 1)
+            .unwrap_or_else(|_| unreachable!())
+    })
+}
+
+const SECONDS_PER_DAY: i64 = 86_400;
+fn normalize_day(unix_secs: i64) -> i64 {
+    unix_secs - unix_secs.rem_euclid(SECONDS_PER_DAY)
 }

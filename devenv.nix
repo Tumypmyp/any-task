@@ -36,7 +36,7 @@ in {
   languages.rust = {
     enable = true;
     channel = "nightly";
-    components = [ "rustc" "cargo" "clippy" "rustfmt" "rust-analyzer" ];
+    components = ["rustc" "cargo" "clippy" "rustfmt" "rust-analyzer"];
     targets = [
       "wasm32-unknown-unknown"
       "aarch64-linux-android"

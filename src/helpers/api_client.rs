@@ -18,7 +18,8 @@ use tonic::Request;
 use tonic::metadata::MetadataValue;
 use tonic::service::interceptor::InterceptedService;
 use tonic::transport::Channel;
-pub static API_CLIENT: GlobalSignal<Option<Client>> = Signal::global(|| None);
+#[derive(Clone, Copy)]
+pub struct ApiClient(pub Signal<Option<Client>>);
 pub static RECONNECT_COUNT: GlobalSignal<u32> = Signal::global(|| 0);
 
 use crate::helpers::*;

@@ -1,4 +1,3 @@
-use crate::API_CLIENT;
 use crate::AppSettings;
 use crate::Route;
 use crate::components::base::message;
@@ -17,12 +16,13 @@ use dioxus_icons::lucide::{Eye, EyeOff};
 pub fn Logout() -> Element {
     let mut settings = use_context::<Signal<AppSettings>>();
     let nav = navigator();
+    let mut api_client = use_context::<ApiClient>();
     rsx! {
         Button {
             onclick: move |_| {
                 delete_mnemonic().ok();
                 settings.write().account_id = String::new();
-                *API_CLIENT.write() = None;
+                *api_client.0.write() = None;
                 tracing::info!("removed the token");
                 nav.push(Route::Login {});
             },
@@ -37,7 +37,7 @@ pub fn Login() -> Element {
     let nav = navigator();
     let mut loading = use_signal(|| false);
     let root_path = use_memo(|| get_app_data_dir().to_string_lossy().to_string());
-
+    let mut api_client = use_context::<ApiClient>();
     let on_success = use_callback(move |(mnemonic, client): (String, Client)| {
         loading.set(false);
         if let Err(e) = save_mnemonic(&mnemonic) {
@@ -45,7 +45,7 @@ pub fn Login() -> Element {
             return;
         }
         settings.write().account_id = client.account_id.clone();
-        *API_CLIENT.write() = Some(client);
+        *api_client.0.write() = Some(client);
         nav.push(Route::Home {});
     });
 

@@ -19,9 +19,10 @@ use std::vec;
 
 #[component]
 pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Element {
+    let api_client = use_context::<ApiClient>();
     use_resource(move || {
         let _reconnect = RECONNECT_COUNT.read();
-        let client = API_CLIENT.read().as_ref().cloned();
+        let client = api_client.0.read().as_ref().cloned();
         async move {
             let Some(client) = client else {
                 tracing::warn!("object_open failed: no client");
@@ -36,7 +37,7 @@ pub fn List(space_id: ReadSignal<String>, list_id: ReadSignal<String>) -> Elemen
     use_drop(move || {
         *SET_META.write() = SetMetaState::default();
         spawn(async move {
-            let Some(client) = API_CLIENT.read().as_ref().cloned() else {
+            let Some(client) = api_client.0.read().as_ref().cloned() else {
                 tracing::warn!("object_close failed: no client");
                 return;
             };
@@ -70,6 +71,7 @@ pub fn ListWithView(
     view_id: ReadSignal<String>,
     open_edit: ReadSignal<bool>,
 ) -> Element {
+    let api_client = use_context::<ApiClient>();
     let storage_view_tree_key = format!(
         "list-view-relations-tree-list-{}-view-{}",
         list_id(),
@@ -114,9 +116,11 @@ pub fn ListWithView(
     });
 
     let all_properties_res = use_resource(move || async move {
-        let client_guard = API_CLIENT.read();
-        let client = client_guard
+        let client = api_client
+            .0
+            .read()
             .as_ref()
+            .cloned()
             .ok_or_else(|| anyhow::anyhow!("No API client available"))?;
         client.fetch_properties(&space_id()).await
     });
@@ -183,6 +187,7 @@ pub fn ListHeader(
 
 #[component]
 pub fn Views(list_id: ReadSignal<String>, space_id: ReadSignal<String>) -> Element {
+    let api_client = use_context::<ApiClient>();
     let views: Vec<(String, String, i32)> = SET_META
         .resolve()
         .views()
@@ -206,7 +211,7 @@ pub fn Views(list_id: ReadSignal<String>, space_id: ReadSignal<String>) -> Eleme
                     // view_id.set(id.clone());
                     SET_META.write().active_view_id = id.clone();
                     spawn(async move {
-                        if let Some(client) = API_CLIENT.read().as_ref().cloned() {
+                        if let Some(client) = api_client.0.read().as_ref().cloned() {
                             client.set_active_view(&space_id(), &list_id(), &id).await.ok();
                         }
                     });
